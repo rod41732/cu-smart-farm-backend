@@ -16,7 +16,7 @@ var MqttClient *service.Client
 // CheckErr : return true and print if error
 func CheckErr(source string, err error) bool {
 	if err != nil {
-		fmt.Printf("[ERR] IN %s || %s\n", source, err)
+		fmt.Printf("\n[ERR] IN %s || %s\n", source, err)
 		return true
 	}
 	return false
@@ -53,7 +53,7 @@ func ParseJSON(payload []byte) gin.H {
 // ConnectToInfluxDB : connect to influx DB and return client
 func ConnectToInfluxDB() client.Client {
 	influxConn, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr:     "tcp://localhost:8086",
+		Addr:     "http://localhost:8086",
 		Username: "admin",
 		Password: "4fs,mg-0zv",
 	})
