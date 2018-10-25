@@ -81,29 +81,39 @@ func QueryInfluxDB(query string) []client.Result {
 	return []client.Result{}
 }
 
-// WriteInfluxDB : Write a data point in to influxDB
+var deferredPoints, err = client.NewBatchPoints(client.BatchPointsConfig{
+	Database:  "CUSmartFarm",
+	Precision: "ms",
+})
+
+// WriteInfluxDB : (deferred) Write a data point in to influxDB
 func WriteInfluxDB(measurement string, tags map[string]string, fields map[string]interface{}) error {
 	clnt, err := ConnectToInfluxDB()
-
+	defer clnt.Close()
 	CheckErr("connect to query influx", err)
 	if err == nil {
-		batchPoints, err := client.NewBatchPoints(client.BatchPointsConfig{
-			Database:  "CUSmartFarm",
-			Precision: "ms",
-		})
-		if CheckErr("create batch points", err) {
-			return err
-		}
 
 		point, err := client.NewPoint("air_sensor", tags, fields, time.Now())
 		if CheckErr("create new point", err) {
 			return err
 		}
-
-		batchPoints.AddPoint(point)
-		err = clnt.Write(batchPoints)
-		if !CheckErr("querying influx", err) {
-			fmt.Printf("DB Write Succeeded\n")
+		deferredPoints.AddPoint(point)
+		if ln := len(deferredPoints.Points()); ln < 10 {
+			fmt.Printf("write deferred %d/10 points\n", ln)
+		}
+		if len(deferredPoints.Points()) >= 10 {
+			err = clnt.Write(deferredPoints)
+			if !CheckErr("querying influx", err) {
+				fmt.Println("DB Write Succeeded", err)
+			}
+			// create new batch to remove all points
+			deferredPoints, err = client.NewBatchPoints(client.BatchPointsConfig{
+				Database:  "CUSmartFarm",
+				Precision: "ms",
+			})
+			if CheckErr("Recreating batch points", err) {
+				return nil
+			}
 		}
 		return nil
 	}
