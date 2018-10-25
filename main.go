@@ -1,10 +1,13 @@
 package main
 
 import (
+	"./router"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+
+	go router.MQTT()
 
 	r := gin.Default()
 
