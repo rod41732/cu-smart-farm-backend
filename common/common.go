@@ -33,13 +33,14 @@ func ConnectToMQTT() error {
 	msg := message.NewConnectMessage()
 	msg.SetUsername([]byte("admin"))
 	msg.SetPassword([]byte("iyddyoot"))
+	// msg.SetWillQos(2)
 	msg.SetWillQos(2)
-	msg.SetKeepAlive(120)
+	msg.SetKeepAlive(60)
 	msg.SetVersion(3)
+	msg.SetCleanSession(true)
 	msg.SetClientId([]byte("smart-farm-backend"))
 	msg.SetWillTopic([]byte("backend-service"))
 	msg.SetWillMessage([]byte("backend: connecting.."))
-
 	// msg.SetCleanSession(true)
 	return MqttClient.Connect("tcp://164.115.27.177:1883", msg)
 }
@@ -88,6 +89,7 @@ var deferredPoints, err = client.NewBatchPoints(client.BatchPointsConfig{
 
 // WriteInfluxDB : (deferred) Write a data point in to influxDB
 func WriteInfluxDB(measurement string, tags map[string]string, fields map[string]interface{}) error {
+
 	clnt, err := ConnectToInfluxDB()
 	defer clnt.Close()
 	CheckErr("connect to query influx", err)
@@ -98,10 +100,10 @@ func WriteInfluxDB(measurement string, tags map[string]string, fields map[string
 			return err
 		}
 		deferredPoints.AddPoint(point)
-		if ln := len(deferredPoints.Points()); ln < 10 {
-			fmt.Printf("write deferred %d/10 points\n", ln)
+		if ln := len(deferredPoints.Points()); ln < 3 {
+			fmt.Printf("write deferred %d/3 points\n", ln)
 		}
-		if len(deferredPoints.Points()) >= 10 {
+		if len(deferredPoints.Points()) >= 3 {
 			err = clnt.Write(deferredPoints)
 			if !CheckErr("querying influx", err) {
 				fmt.Println("DB Write Succeeded", err)

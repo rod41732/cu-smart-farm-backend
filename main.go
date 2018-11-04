@@ -15,6 +15,7 @@ func main() {
 		c.JSON(200, "Hello world")
 	})
 
+	router.SetUpHttpAPI(r)
 	r.Run(":3000")
 
 }

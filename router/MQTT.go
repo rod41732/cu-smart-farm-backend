@@ -37,15 +37,15 @@ func MQTT() error {
 		err := common.CheckErr("connect to MQTT", common.ConnectToMQTT())
 
 		if err {
-			fmt.Printf("[ERROR] error connecting to MQTT\n")
+			fmt.Println("[ERROR] error connecting to MQTT")
 			continue
 		}
 		subMsg := message.NewSubscribeMessage()
-		subMsg.AddTopic([]byte("CUSmartFarm"), 1)
+		subMsg.AddTopic([]byte("CUSmartFarm"), 2)
+		// subMsg.SetRemainingLength()
 		common.CheckErr("Subscribing", common.MqttClient.Subscribe(subMsg, handleSubscriptionComplete, handleMessage))
-
-		fmt.Print("Connected.")
-		time.Sleep(30 * time.Second)
-		fmt.Print("Reconnecting")
+		fmt.Println("Connected.")
+		time.Sleep(55 * time.Second)
+		fmt.Println("Reconnecting")
 	}
 }
