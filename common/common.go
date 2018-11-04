@@ -14,6 +14,9 @@ import (
 // MqttClient : this is MQTT client that listen to server
 var MqttClient *service.Client
 
+// BatchWriteSize : How many points to write at once (set to 1 isn't a problem)
+var BatchWriteSize = 3
+
 // CheckErr : return true and print if error
 func CheckErr(source string, err error) bool {
 	if err != nil {

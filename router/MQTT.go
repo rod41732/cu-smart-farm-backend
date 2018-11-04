@@ -34,14 +34,15 @@ func handleSubscriptionComplete(msg, ack message.Message, err error) error {
 // MQTT : intialize MQTT Client
 func MQTT() error {
 	for {
-		err := common.CheckErr("connect to MQTT", common.ConnectToMQTT())
-		if err {
+		if common.CheckErr("connect to MQTT", common.ConnectToMQTT()) {
 			fmt.Println("[ERROR] error connecting to MQTT")
 			continue
 		}
+
 		subMsg := message.NewSubscribeMessage()
 		subMsg.AddTopic([]byte("CUSmartFarm"), 2)
 		// subMsg.SetRemainingLength()
+		common.BatchWriteSize = 1
 		common.CheckErr("Subscribing", common.MqttClient.Subscribe(subMsg, handleSubscriptionComplete, handleMessage))
 		fmt.Println("Connected.")
 		time.Sleep(55 * time.Second)

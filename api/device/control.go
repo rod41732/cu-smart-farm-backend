@@ -29,7 +29,7 @@ func DeviceControlAPI(r *gin.RouterGroup) {
 		}
 
 		msg := message.NewPublishMessage()
-		msg.SetQoS(1)
+		msg.SetQoS(1) // dpn't set to 2 because SmartFarm Board doesn't support QoS level 2
 		msg.SetTopic([]byte("CUSmartFarm"))
 		x := map[int]string{
 			0: "OFF",
