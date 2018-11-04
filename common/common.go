@@ -16,6 +16,7 @@ var MqttClient *service.Client
 
 // BatchWriteSize : How many points to write at once (set to 1 isn't a problem)
 var BatchWriteSize = 3
+var ShouldPrintDebug = false
 
 // CheckErr : return true and print if error
 func CheckErr(source string, err error) bool {
@@ -104,12 +105,12 @@ func WriteInfluxDB(measurement string, tags map[string]string, fields map[string
 		}
 		deferredPoints.AddPoint(point)
 		if ln := len(deferredPoints.Points()); ln < 3 {
-			fmt.Printf("write deferred %d/3 points\n", ln)
+			Printf("write deferred %d/3 points\n", ln)
 		}
 		if len(deferredPoints.Points()) >= 3 {
 			err = clnt.Write(deferredPoints)
 			if !CheckErr("querying influx", err) {
-				fmt.Println("DB Write Succeeded", err)
+				Println("DB Write Succeeded", err)
 			}
 			// create new batch to remove all points
 			deferredPoints, err = client.NewBatchPoints(client.BatchPointsConfig{
@@ -123,4 +124,25 @@ func WriteInfluxDB(measurement string, tags map[string]string, fields map[string
 		return nil
 	}
 	return nil
+}
+
+// Print : this is literally fmt.Print but only print when ShouldPrintDebug flag is true
+func Print(a ...interface{}) {
+	if ShouldPrintDebug {
+		fmt.Print(a...)
+	}
+}
+
+// Println : this is literally fmt.Println but only print when ShouldPrintDebug flag is true
+func Println(a ...interface{}) {
+	if ShouldPrintDebug {
+		fmt.Println(a...)
+	}
+}
+
+// Printf : this is literally fmt.Printf but only print when ShouldPrintDebug flag is true
+func Printf(format string, a ...interface{}) {
+	if ShouldPrintDebug {
+		fmt.Printf(format, a...)
+	}
 }

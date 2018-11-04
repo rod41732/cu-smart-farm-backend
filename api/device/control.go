@@ -1,7 +1,6 @@
 package device
 
 import (
-	"fmt"
 	"strconv"
 
 	"../../common"
@@ -9,6 +8,7 @@ import (
 	"github.com/surgemq/message"
 )
 
+// DeviceControlAPI : sets up device control API
 func DeviceControlAPI(r *gin.RouterGroup) {
 	deviceAPI := r.Group("/device")
 
@@ -49,7 +49,7 @@ func DeviceControlAPI(r *gin.RouterGroup) {
 		msg.SetPayload([]byte(payload))
 		common.MqttClient.Publish(msg, func(msg, ack message.Message, err error) error {
 			if common.CheckErr("Sending device status message", err) == false {
-				fmt.Println("[Debug ] seng msg to MQTT success")
+				common.Println("[Debug ] seng msg to MQTT success")
 			}
 
 			return nil
