@@ -26,7 +26,7 @@ func handleMessage(msg *message.PublishMessage) error {
 
 func handleSubscriptionComplete(msg, ack message.Message, err error) error {
 	// fmt.Printf("Subscribed: %s\nAck: %s\n", msg.Decode([]byte("utf-8")), ack.Decode([]byte("utf-8")))
-	fmt.Print(msg, ack)
+	fmt.Println(msg, ack)
 	common.CheckErr("OnSubComplete Handler", err)
 	return nil
 }
@@ -35,7 +35,6 @@ func handleSubscriptionComplete(msg, ack message.Message, err error) error {
 func MQTT() error {
 	for {
 		err := common.CheckErr("connect to MQTT", common.ConnectToMQTT())
-
 		if err {
 			fmt.Println("[ERROR] error connecting to MQTT")
 			continue

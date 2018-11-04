@@ -33,16 +33,16 @@ func ConnectToMQTT() error {
 	msg := message.NewConnectMessage()
 	msg.SetUsername([]byte("admin"))
 	msg.SetPassword([]byte("iyddyoot"))
-	// msg.SetWillQos(2)
 	msg.SetWillQos(2)
-	msg.SetKeepAlive(60)
 	msg.SetVersion(3)
 	msg.SetCleanSession(true)
-	msg.SetClientId([]byte("smart-farm-backend"))
-	msg.SetWillTopic([]byte("backend-service"))
+	msg.SetClientId([]byte("backend"))
+	msg.SetKeepAlive(45)
+	msg.SetWillTopic([]byte("CUSmartFarm"))
 	msg.SetWillMessage([]byte("backend: connecting.."))
+	CheckErr("Connecting to MQTT", MqttClient.Connect("tcp://164.115.27.177:1883", msg))
 	// msg.SetCleanSession(true)
-	return MqttClient.Connect("tcp://164.115.27.177:1883", msg)
+	return nil
 }
 
 // ParseJSON : parse byte to json (gin.H)
