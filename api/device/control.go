@@ -1,6 +1,7 @@
 package device
 
 import (
+	"encoding/json"
 	"strconv"
 
 	"../../common"
@@ -27,10 +28,7 @@ func DeviceControlAPI(r *gin.RouterGroup) {
 				"msg":     "state must be 0 to 3",
 			})
 		}
-
-		msg := message.NewPublishMessage()
-		msg.SetQoS(1) // dpn't set to 2 because SmartFarm Board doesn't support QoS level 2
-		msg.SetTopic([]byte("CUSmartFarm"))
+		// dpn't set to 2 because SmartFarm Board doesn't support QoS level 2
 		x := map[int]string{
 			0: "OFF",
 			1: "ON",
@@ -46,14 +44,17 @@ func DeviceControlAPI(r *gin.RouterGroup) {
 			payload += "ALL"
 		}
 
-		msg.SetPayload([]byte(payload))
-		common.MqttClient.Publish(msg, func(msg, ack message.Message, err error) error {
-			if common.CheckErr("Sending device status message", err) == false {
-				common.Println("[Debug ] seng msg to MQTT success")
-			}
+		// payload2 := map[string]string{
+		// 	"command": payload,
+		// 	"type":    "test",
+		// }
 
-			return nil
-		})
+		msg := message.NewPublishMessage()
+		msg.SetTopic([]byte("CUSmartFarm"))
+		msg.SetQoS(0)
+		text, _ := json.Marshal(payload)
+		msg.SetPayload([]byte(text))
+		common.MqttClient.Publish(msg, nil)
 
 		c.JSON(200, gin.H{
 			"success": true,
