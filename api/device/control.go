@@ -2,64 +2,109 @@ package device
 
 import (
 	"encoding/json"
+	"fmt"
 	"strconv"
 
 	"../../common"
 	"github.com/gin-gonic/gin"
-	"github.com/surgemq/message"
+	"github.com/mongodb/mongo-go-driver/bson"
 )
+
+var num2state = map[string]string{
+	"0": "OFF",
+	"1": "ON",
+	"2": "AU",
+}
 
 // DeviceControlAPI : sets up device control API
 func DeviceControlAPI(r *gin.RouterGroup) {
 	deviceAPI := r.Group("/device")
 
 	deviceAPI.GET("/set", func(c *gin.Context) {
-		id, err := strconv.Atoi(c.DefaultQuery("id", "-1"))
-		if err != nil || !(1 <= id && id <= 5) { // 1-4 = each device, 5 = all device
-			c.JSON(400, gin.H{
-				"success": false,
-				"msg":     "id must be 1 to 5",
-			})
+		mdb, err := common.Mongo()
+		defer mdb.Close()
+
+		// check input
+		relay := c.Query("relay")
+		x, err := strconv.Atoi(relay)
+		if err != nil || !(1 <= x && x <= 5) { // 1-4 = each device, 5 = all device
+			c.JSON(400, "bad relay")
+			return
 		}
-		state, err := strconv.Atoi(c.DefaultQuery("state", "-1"))
-		if err != nil || !(0 <= state && state <= 3) {
-			c.JSON(400, gin.H{
-				"success": false,
-				"msg":     "state must be 0 to 3",
-			})
+		state, ok := num2state[c.Query("state")]
+		common.Println("============== state = ", state)
+		if !ok {
+			c.JSON(400, "bad state")
 		}
-		// dpn't set to 2 because SmartFarm Board doesn't support QoS level 2
-		x := map[int]string{
-			0: "OFF",
-			1: "ON",
-			2: "MA", // Mode Auto (Value Threshold)
-			3: "MM", // Mode Manual (Time)
+		deviceId := c.Query("id")
+
+		// update
+		var data, status map[string]interface{}
+		col := mdb.DB("CUSmartFarm").C("devices")
+		if common.CheckErr("connect to mongo", err) {
+			c.JSON(500, "something went wrong")
+			return
+		}
+		err = col.Find(bson.M{
+			"id": deviceId,
+		}).One(&data)
+		if err != nil {
+			c.JSON(404, "no device")
+			return
 		}
 
-		// payload is in for <State><relay_number>
-		payload := x[state]
-		if id < 5 {
-			payload += strconv.Itoa(id)
-		} else {
-			payload += "ALL"
+		// modify status
+		status = data["status"].(map[string]interface{})
+		status["relay"+c.Query("1234")] = state
+
+		err = col.Update(bson.M{
+			"id": deviceId,
+		}, bson.M{
+			"$set": bson.M{"status": status},
+		})
+		if common.CheckErr("update", err) {
+			c.JSON(500, err)
+			return
 		}
 
-		// payload2 := map[string]string{
-		// 	"command": payload,
-		// 	"type":    "test",
-		// }
-
-		msg := message.NewPublishMessage()
-		msg.SetTopic([]byte("CUSmartFarm"))
-		msg.SetQoS(0)
-		text, _ := json.Marshal(payload)
-		msg.SetPayload([]byte(text))
-		common.MqttClient.Publish(msg, nil)
-
+		payload := state + relay
+		common.PublishToMQTT([]byte("CUSmartFarm"), []byte(payload))
+		common.Println(data)
 		c.JSON(200, gin.H{
 			"success": true,
-			"msg":     "sent " + payload + " to MQTT",
+			"msg":     "sent " + payload + " to MQTT update",
 		})
+	})
 
+	deviceAPI.GET("/greeting", func(c *gin.Context) {
+		mdb, err := common.Mongo()
+		defer mdb.Close()
+
+		// check input
+		deviceId := c.Query("id")
+
+		// update
+		var data map[string]interface{}
+		col := mdb.DB("CUSmartFarm").C("devices")
+		if common.CheckErr("connect to mongo", err) {
+			c.JSON(500, "something went wrong")
+			return
+		}
+		err = col.Find(bson.M{
+			"id": deviceId,
+		}).One(&data)
+		if err != nil {
+			c.JSON(404, "no device")
+			return
+		}
+		common.Println("-------", data["status"])
+		payload, err := json.Marshal(data["status"])
+		spayload := fmt.Sprintf("%s", payload)
+		common.PublishToMQTT([]byte("CUSmartFarm"), payload)
+		common.Println("======= sending", spayload)
+		c.JSON(200, gin.H{
+			"success": true,
+			"msg":     spayload,
+		})
 	})
 }

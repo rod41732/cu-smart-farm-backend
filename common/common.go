@@ -9,6 +9,7 @@ import (
 	"github.com/influxdata/influxdb/client/v2"
 	"github.com/surgemq/message"
 	"github.com/surgemq/surgemq/service"
+	"gopkg.in/mgo.v2"
 )
 
 // MqttClient : this is MQTT client that listen to server
@@ -16,7 +17,7 @@ var MqttClient *service.Client
 
 // BatchWriteSize : How many points to write at once (set to 1 isn't a problem)
 var BatchWriteSize = 3
-var ShouldPrintDebug = false
+var ShouldPrintDebug = true
 
 // CheckErr : return true and print if error
 func CheckErr(source string, err error) bool {
@@ -25,6 +26,21 @@ func CheckErr(source string, err error) bool {
 		return true
 	}
 	return false
+}
+
+func ErrResp(source string, err error, c *gin.Context) {
+	if CheckErr(source, err) {
+		if !ShouldPrintDebug {
+			c.JSON(500, "something went wrong")
+		} else {
+			c.JSON(500, "At"+source+":"+err.Error())
+		}
+	}
+}
+
+// Mongo returns a session
+func Mongo() (*mgo.Session, error) {
+	return mgo.Dial("mongodb://127.0.0.1:27017")
 }
 
 // ConnectToMQTT : connects to mqtt server and return error if error
@@ -49,9 +65,20 @@ func ConnectToMQTT() error {
 	return nil
 }
 
+// PublishToMQTT : Shorthand for creating message and publish
+func PublishToMQTT(topic, payload []byte) {
+	msg := message.NewPublishMessage()
+	msg.SetTopic([]byte(topic))
+	msg.SetQoS(0)
+	text, _ := json.Marshal(payload)
+	msg.SetPayload([]byte(text))
+	MqttClient.Publish(msg, nil)
+}
+
 // ParseJSON : parse byte to json (gin.H)
-func ParseJSON(payload []byte) gin.H {
-	var jsonData gin.H
+func ParseJSON(payload []byte) map[string]interface{} {
+	var jsonData map[string]interface{}
+	// fmt.Println("In === ", json.Unmarshal(payload, jsonData))
 	CheckErr("Parsing JSON", json.Unmarshal(payload, &jsonData))
 	return jsonData
 }
