@@ -8,6 +8,7 @@ import (
 func OwnerCheck(c *gin.Context) {
 	mdb, err := common.Mongo()
 	if common.Resp(500, err, c) {
+		c.Abort()
 		return
 	}
 	deviceId := c.Query("deviceId")
@@ -20,15 +21,22 @@ func OwnerCheck(c *gin.Context) {
 	v, found := c.Get("username")
 	if !found {
 		c.JSON(403, "Unauthorized")
+		c.Abort()
+		return
 	}
 	user, ok := v.(*User)
 	if !ok || user == nil {
 		c.JSON(403, "Unauthorized")
+		c.Abort()
 		return
 	}
-	if user.Username != deviceId {
+	common.Printf("============ %#v , %#v\n", user, deviceId)
+	common.Println(user.Username == deviceId)
+	if user.Username == deviceId {
 		c.Next()
 	} else {
 		c.JSON(403, "Not your device")
+		c.Abort()
+		return
 	}
 }
