@@ -28,14 +28,14 @@ func handleSubscriptionComplete(msg, ack message.Message, err error) error {
 	// fmt.Printf("Subscribed: %s\nAck: %s\n", msg.Decode([]byte("utf-8")), ack.Decode([]byte("utf-8")))
 	fmt.Println(msg)
 	fmt.Println(ack)
-	common.CheckErr("OnSubComplete Handler", err)
+	common.PrintError(err)
 	return nil
 }
 
 // MQTT : intialize MQTT Client
 func MQTT() error {
 	for {
-		if common.CheckErr("connect to MQTT", common.ConnectToMQTT()) {
+		if common.PrintError(common.ConnectToMQTT()) {
 			fmt.Println("[ERROR] error connecting to MQTT")
 			continue
 		}
@@ -44,7 +44,7 @@ func MQTT() error {
 		subMsg.AddTopic([]byte("CUSmartFarm"), 2)
 		// subMsg.SetRemainingLength()
 		common.BatchWriteSize = 1
-		common.CheckErr("Subscribing", common.MqttClient.Subscribe(subMsg, handleSubscriptionComplete, handleMessage))
+		common.PrintError(common.MqttClient.Subscribe(subMsg, handleSubscriptionComplete, handleMessage))
 		fmt.Println("Connected.")
 		time.Sleep(45 * time.Second)
 		fmt.Println("Reconnecting")

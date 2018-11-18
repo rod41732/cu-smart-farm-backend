@@ -1,15 +1,19 @@
 package main
 
 import (
+	"./api/middleware"
+	"./common"
 	"./router"
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
 
-	go router.MQTT()
+	common.InitializeKeyPair()
 
+	go router.MQTT()
 	r := gin.Default()
+	middleware.Initialize()
 
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, "Hello world")

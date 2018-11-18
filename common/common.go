@@ -3,6 +3,8 @@ package common
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -12,30 +14,60 @@ import (
 	"gopkg.in/mgo.v2"
 )
 
+const (
+	privKeyPath = "key.rsa"
+	pubKeyPath  = "key.rsa.pub"
+)
+
+var (
+	// SignKey = private key
+	SignKey []byte
+
+	// VerifyKey = public key
+	VerifyKey []byte
+)
+
 // MqttClient : this is MQTT client that listen to server
 var MqttClient *service.Client
 
 // BatchWriteSize : How many points to write at once (set to 1 isn't a problem)
 var BatchWriteSize = 3
-var ShouldPrintDebug = true
 
-// CheckErr : return true and print if error
-func CheckErr(source string, err error) bool {
+// ShouldPrintDebug this flag control whether we should print debug
+var ShouldPrintDebug = false
+
+// InitializeKeyPair initializes public/private key pair
+func InitializeKeyPair() {
+	SignKey, err = ioutil.ReadFile(privKeyPath)
 	if err != nil {
-		fmt.Printf("\n[ERR] IN %s || %s\n", source, err)
+		log.Fatal(err)
+	}
+	VerifyKey, err = ioutil.ReadFile(pubKeyPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+// PrintError : return true and print if error
+func PrintError(err error) bool {
+	if err != nil {
+		fmt.Printf("[Error] %s\n", err)
 		return true
 	}
 	return false
 }
 
-func ErrResp(source string, err error, c *gin.Context) {
-	if CheckErr(source, err) {
+// Resp : response with that status and return true if error
+func Resp(statusCode int, err error, c *gin.Context) bool {
+	if err != nil {
 		if !ShouldPrintDebug {
-			c.JSON(500, "something went wrong")
-		} else {
-			c.JSON(500, "At"+source+":"+err.Error())
+			c.JSON(statusCode, "something went wrong")
+			return true
 		}
+		c.JSON(statusCode, err.Error())
+		return true
 	}
+	return false
 }
 
 // Mongo returns a session
@@ -60,7 +92,7 @@ func ConnectToMQTT() error {
 	msg.SetKeepAlive(45)
 	msg.SetWillTopic([]byte("CUSmartFarm"))
 	msg.SetWillMessage([]byte("backend: connecting.."))
-	CheckErr("Connecting to MQTT", MqttClient.Connect("tcp://164.115.27.177:1883", msg))
+	PrintError(MqttClient.Connect("tcp://164.115.27.177:1883", msg))
 	// msg.SetCleanSession(true)
 	return nil
 }
@@ -70,8 +102,7 @@ func PublishToMQTT(topic, payload []byte) {
 	msg := message.NewPublishMessage()
 	msg.SetTopic([]byte(topic))
 	msg.SetQoS(0)
-	text, _ := json.Marshal(payload)
-	msg.SetPayload([]byte(text))
+	msg.SetPayload([]byte(payload))
 	MqttClient.Publish(msg, nil)
 }
 
@@ -79,7 +110,7 @@ func PublishToMQTT(topic, payload []byte) {
 func ParseJSON(payload []byte) map[string]interface{} {
 	var jsonData map[string]interface{}
 	// fmt.Println("In === ", json.Unmarshal(payload, jsonData))
-	CheckErr("Parsing JSON", json.Unmarshal(payload, &jsonData))
+	json.Unmarshal(payload, &jsonData)
 	return jsonData
 }
 
@@ -90,7 +121,7 @@ func ConnectToInfluxDB() (client.Client, error) {
 		Username: "admin",
 		Password: "4fs,mg-0zv",
 	})
-	CheckErr("Influx Connection", err)
+	PrintError(err)
 	return influxConn, err
 }
 
@@ -98,13 +129,13 @@ func ConnectToInfluxDB() (client.Client, error) {
 func QueryInfluxDB(query string) []client.Result {
 	clnt, err := ConnectToInfluxDB()
 
-	CheckErr("connect to query influx", err)
+	PrintError(err)
 	if err == nil {
 		resp, err := clnt.Query(client.Query{
 			Command:  query,
 			Database: "CUSmartFarm",
 		})
-		CheckErr("querying influx", err)
+		PrintError(err)
 		if err == nil {
 			fmt.Printf("Query Success: %v \n", resp)
 		}
@@ -123,11 +154,11 @@ func WriteInfluxDB(measurement string, tags map[string]string, fields map[string
 
 	clnt, err := ConnectToInfluxDB()
 	defer clnt.Close()
-	CheckErr("connect to query influx", err)
+	PrintError(err)
 	if err == nil {
 
 		point, err := client.NewPoint("air_sensor", tags, fields, time.Now())
-		if CheckErr("create new point", err) {
+		if PrintError(err) {
 			return err
 		}
 		deferredPoints.AddPoint(point)
@@ -136,7 +167,7 @@ func WriteInfluxDB(measurement string, tags map[string]string, fields map[string
 		}
 		if len(deferredPoints.Points()) >= 3 {
 			err = clnt.Write(deferredPoints)
-			if !CheckErr("querying influx", err) {
+			if !PrintError(err) {
 				Println("DB Write Succeeded", err)
 			}
 			// create new batch to remove all points
@@ -144,7 +175,7 @@ func WriteInfluxDB(measurement string, tags map[string]string, fields map[string
 				Database:  "CUSmartFarm",
 				Precision: "ms",
 			})
-			if CheckErr("Recreating batch points", err) {
+			if PrintError(err) {
 				return nil
 			}
 		}
