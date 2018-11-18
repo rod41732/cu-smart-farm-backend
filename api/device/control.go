@@ -27,7 +27,6 @@ func setState(c *gin.Context) {
 		return
 	}
 	state, ok := num2state[c.Query("state")]
-	common.Println("============== state = ", state)
 	if !ok {
 		c.JSON(400, "bad state")
 	}
