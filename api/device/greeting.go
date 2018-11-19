@@ -33,6 +33,7 @@ func greeting(c *gin.Context) {
 		"t":      "cmd",
 		"status": data["status"],
 	})
+	common.Println("greeting" + string(payload))
 	common.PublishToMQTT([]byte("CUSmartFarm"), []byte(string(payload)))
 	c.JSON(200, gin.H{
 		"success": true,

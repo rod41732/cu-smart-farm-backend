@@ -30,7 +30,7 @@ func setState(c *gin.Context) {
 	if !ok {
 		c.JSON(400, "bad state")
 	}
-	deviceID := c.Query("deviceId")
+	deviceID := c.Query("id")
 
 	// update
 	var data, status map[string]interface{}
@@ -60,6 +60,7 @@ func setState(c *gin.Context) {
 		c.JSON(500, err)
 		return
 	}
+
 	status = map[string]interface{}{"t": "cmd", "status": status}
 	payload, err := json.Marshal(status)
 	common.PublishToMQTT([]byte("CUSmartFarm"), []byte(payload))

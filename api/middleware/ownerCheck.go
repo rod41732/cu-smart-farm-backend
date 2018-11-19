@@ -5,18 +5,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// OwnerCheck this middleware check whether `id` in query match `Username`
 func OwnerCheck(c *gin.Context) {
 	mdb, err := common.Mongo()
 	if common.Resp(500, err, c) {
 		c.Abort()
 		return
 	}
-	deviceId := c.Query("deviceId")
-	var device *gin.H
-	col := mdb.DB("CUSmartFarm").C("device")
+	deviceId := c.Query("id")
+	var device map[string]interface{}
+	col := mdb.DB("CUSmartFarm").C("devices")
 	col.Find(gin.H{
 		"id": deviceId,
-	}).One(device)
+	}).One(&device)
 
 	v, found := c.Get("username")
 	if !found {
@@ -30,9 +31,12 @@ func OwnerCheck(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	common.Printf("============ %#v , %#v\n", user, deviceId)
-	common.Println(user.Username == deviceId)
-	if user.Username == deviceId {
+
+	common.Printf("============ user %#v , %#v %#v\n", user.Username, device["owner"], device)
+	// common.Println(user.Username == device["owner"])
+	if user.Username == device["owner"] {
+		// if true {
+		common.Println("ownerchecko ok")
 		c.Next()
 	} else {
 		c.JSON(403, "Not your device")
