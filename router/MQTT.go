@@ -11,10 +11,14 @@ import (
 
 func handleMessage(msg *message.PublishMessage) error {
 	parsedData := common.ParseJSON(bytes.Trim(msg.Payload(), "\x00"))
-	fmt.Printf("%#v\n", parsedData)
+	if parsedData["t"] != "data" {
+		return nil
+	}
+	parsedData = parsedData["data"].(map[string]interface{})
 	_, ok1 := parsedData["Humidity"]
 	_, ok2 := parsedData["Temp"]
-	if !ok1 || !ok2 {
+	_, ok3 := parsedData["Soil"]
+	if !ok1 || !ok2 || !ok3 {
 		fmt.Println("Error, invalid data")
 		return nil
 	}
