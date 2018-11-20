@@ -12,7 +12,7 @@ import (
 var num2state = map[string]string{
 	"0": "OFF",
 	"1": "ON",
-	"2": "AU",
+	"2": "AUTO",
 }
 
 func setState(c *gin.Context) {
@@ -22,7 +22,7 @@ func setState(c *gin.Context) {
 	// check input
 	relay := c.Query("relay")
 	x, err := strconv.Atoi(relay)
-	if err != nil || !(1 <= x && x <= 5) { // 1-4 = each device, 5 = all device
+	if err != nil || !(1 <= x && x <= 4) { // 1-4 = each device, 5 = all device
 		c.JSON(400, "bad relay")
 		return
 	}
@@ -42,11 +42,6 @@ func setState(c *gin.Context) {
 	err = col.Find(bson.M{
 		"id": deviceID,
 	}).One(&data)
-	if err != nil {
-		c.JSON(404, "no device")
-		return
-	}
-
 	// modify status
 	status = data["status"].(map[string]interface{})
 	status[relay] = state
@@ -61,11 +56,28 @@ func setState(c *gin.Context) {
 		return
 	}
 
-	status = map[string]interface{}{"t": "cmd", "status": status}
+	status = map[string]interface{}{"t": "cmd", "cmd": "set", "state": status}
 	payload, err := json.Marshal(status)
 	common.PublishToMQTT([]byte("CUSmartFarm"), []byte(payload))
 	c.JSON(200, gin.H{
 		"success": true,
 		"msg":     "sent " + string(payload) + " to MQTT update",
+	})
+}
+
+func fetchInfo(c *gin.Context) {
+	payload, err := json.Marshal(map[string]interface{}{
+		"t":   "cmd",
+		"cmd": "fetch",
+	})
+	if common.PrintError(err) {
+		c.JSON(500, "server error")
+		return
+	}
+
+	common.PublishToMQTT([]byte("CUSmartFarm"), []byte(payload))
+	c.JSON(200, gin.H{
+		"success": true,
+		"msg":     "sent " + string(payload) + " to MQTT",
 	})
 }
