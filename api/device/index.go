@@ -9,7 +9,9 @@ import (
 func DeviceControlAPI(r *gin.RouterGroup) {
 	deviceAPI := r.Group("/device")
 	userAuth := middleware.UserAuth.MiddlewareFunc()
+	ownerCheck := middleware.OwnerCheck
+	deviceAPI.GET("/set", userAuth, ownerCheck, setState)
+	deviceAPI.GET("/fetch", userAuth, ownerCheck, fetchInfo)
 
-	deviceAPI.GET("/set", userAuth, middleware.OwnerCheck, setState)
 	deviceAPI.GET("/greeting", greeting)
 }
