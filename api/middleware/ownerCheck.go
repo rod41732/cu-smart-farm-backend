@@ -19,6 +19,11 @@ func OwnerCheck(c *gin.Context) {
 		"id": deviceId,
 	}).One(&device)
 
+	if device == nil {
+		c.JSON(404, "device not found")
+		c.Abort()
+	}
+
 	v, found := c.Get("username")
 	if !found {
 		c.JSON(403, "Unauthorized")
