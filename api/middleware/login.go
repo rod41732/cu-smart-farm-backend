@@ -97,9 +97,14 @@ func Initialize() {
 				"message": message,
 			})
 		},
-		TokenLookup:   "header: Authorization, query: token, cookie: jwt",
-		TokenHeadName: "Bearer",
-		TimeFunc:      time.Now,
+		TokenLookup:    "header: Authorization, query: token, cookie: token",
+		TokenHeadName:  "Bearer",
+		TimeFunc:       time.Now,
+		SendCookie:     true,
+		SecureCookie:   false, //non HTTPS dev environments
+		CookieHTTPOnly: true,  // JS can't modify
+		CookieDomain:   "127.0.0.1",
+		CookieName:     "token", // default jwt
 	})
 
 	if err != nil {
