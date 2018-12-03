@@ -12,7 +12,7 @@
     },
     "3": { // auto (sensor)
       "st": "auto",
-      "thr": 30 // threshold
+      "thr": [30, 32] // threshold, relay use 2 sensors as threshold, up to device to interpret
     },
     "4": {
       "st": "off"
