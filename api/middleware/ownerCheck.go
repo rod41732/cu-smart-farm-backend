@@ -12,7 +12,12 @@ func OwnerCheck(c *gin.Context) {
 		c.Abort()
 		return
 	}
+
 	deviceId := c.Query("id")
+	if deviceId == "" {
+		deviceId = c.PostForm("id")
+	}
+	common.Println(deviceId)
 	var device map[string]interface{}
 	col := mdb.DB("CUSmartFarm").C("devices")
 	col.Find(gin.H{
@@ -20,8 +25,9 @@ func OwnerCheck(c *gin.Context) {
 	}).One(&device)
 
 	if device == nil {
-		c.JSON(404, "device not found")
+		c.JSON(404, "ownerchecl: device not found")
 		c.Abort()
+		return
 	}
 
 	v, found := c.Get("username")
