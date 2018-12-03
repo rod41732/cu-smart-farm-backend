@@ -6,7 +6,6 @@ import (
 
 	"../../common"
 	"github.com/gin-gonic/gin"
-	"github.com/mongodb/mongo-go-driver/bson"
 )
 
 var num2state = map[string]string{
@@ -39,17 +38,17 @@ func setState(c *gin.Context) {
 		c.JSON(500, "something went wrong")
 		return
 	}
-	err = col.Find(bson.M{
+	err = col.Find(gin.H{
 		"id": deviceID,
 	}).One(&data)
 	// modify status
 	status = data["status"].(map[string]interface{})
 	status[relay] = state
 
-	err = col.Update(bson.M{
+	err = col.Update(gin.H{
 		"id": deviceID,
-	}, bson.M{
-		"$set": bson.M{"status": status},
+	}, gin.H{
+		"$set": gin.H{"status": status},
 	})
 	if common.PrintError(err) {
 		c.JSON(500, err)

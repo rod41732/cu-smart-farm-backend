@@ -5,7 +5,6 @@ import (
 
 	"../../common"
 	"github.com/gin-gonic/gin"
-	"github.com/mongodb/mongo-go-driver/bson"
 )
 
 func greeting(c *gin.Context) {
@@ -16,20 +15,20 @@ func greeting(c *gin.Context) {
 	deviceID := c.Query("id")
 
 	// update
-	var data map[string]interface{}
+	var data gin.H
 	col := mdb.DB("CUSmartFarm").C("devices")
 	if common.PrintError(err) {
 		c.JSON(500, "something went wrong")
 		return
 	}
-	err = col.Find(bson.M{
+	err = col.Find(gin.H{
 		"id": deviceID,
 	}).One(&data)
 	if err != nil {
 		c.JSON(404, "no device")
 		return
 	}
-	payload, err := json.Marshal(map[string]interface{}{
+	payload, err := json.Marshal(gin.H{
 		"t":      "cmd",
 		"status": data["status"],
 	})
