@@ -10,6 +10,7 @@ import (
 )
 
 func handleMessage(msg *message.PublishMessage) error {
+	common.Println("[Debug] incoming message ", string(msg.Payload()))
 	parsedData := common.ParseJSON(bytes.Trim(msg.Payload(), "\x00"))
 	if parsedData["t"] != "data" {
 		return nil
