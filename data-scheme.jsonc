@@ -1,0 +1,33 @@
+[
+  { // type 1: set state
+  "t": "cmd",
+  "cmd": "set",
+  "st": {
+    "1": { // set schedule
+      "st": "time",  
+      "sch": [[1543817375897, 1543817385237],] // schedule
+    },
+    "2": { // set on-off
+      "st": "on"
+    },
+    "3": { // auto (sensor)
+      "st": "auto",
+      "thr": 30 // threshold
+    },
+    "4": {
+      "st": "off"
+    }
+  }
+  },
+  { // type 2: tell device to fetch
+    "t": "cmd",
+    "cmd": "fetch"
+  },
+  // ----------------- data that device send ------------------
+  { 
+    "t": "data",
+    "data": {
+      // whatever device want to send
+    },
+  }
+]
