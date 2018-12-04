@@ -7,6 +7,7 @@ import (
 	"log"
 	"time"
 
+	"../config"
 	"github.com/gin-gonic/gin"
 	"github.com/influxdata/influxdb/client/v2"
 	"github.com/surgemq/message"
@@ -72,7 +73,7 @@ func Resp(statusCode int, err error, c *gin.Context) bool {
 
 // Mongo returns a session
 func Mongo() (*mgo.Session, error) {
-	return mgo.Dial("mongodb://127.0.0.1:27017")
+	return mgo.Dial(config.Mongo["address"])
 }
 
 // ConnectToMQTT : connects to mqtt server and return error if error
@@ -83,8 +84,8 @@ func ConnectToMQTT() error {
 	MqttClient = &service.Client{}
 
 	msg := message.NewConnectMessage()
-	msg.SetUsername([]byte("admin"))
-	msg.SetPassword([]byte("iyddyoot"))
+	msg.SetUsername([]byte(config.MQTT["username"]))
+	msg.SetPassword([]byte(config.MQTT["password"]))
 	msg.SetWillQos(2)
 	msg.SetVersion(3)
 	msg.SetCleanSession(true)
@@ -92,7 +93,7 @@ func ConnectToMQTT() error {
 	msg.SetKeepAlive(45)
 	msg.SetWillTopic([]byte("CUSmartFarm"))
 	msg.SetWillMessage([]byte("backend: connecting.."))
-	PrintError(MqttClient.Connect("tcp://164.115.27.177:1883", msg))
+	PrintError(MqttClient.Connect(config.MQTT["address"], msg))
 	// msg.SetCleanSession(true)
 	return nil
 }
@@ -117,9 +118,9 @@ func ParseJSON(payload []byte) map[string]interface{} {
 // ConnectToInfluxDB : connect to influx DB and return client
 func ConnectToInfluxDB() (client.Client, error) {
 	influxConn, err := client.NewHTTPClient(client.HTTPConfig{
-		Addr:     "http://localhost:8086",
-		Username: "admin",
-		Password: "4fs,mg-0zv",
+		Addr:     config.Influx["address"],
+		Username: config.Influx["username"],
+		Password: config.Influx["password"],
 	})
 	PrintError(err)
 	return influxConn, err

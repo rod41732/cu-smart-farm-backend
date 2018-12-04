@@ -1,4 +1,5 @@
 config.txt
+config/
 main
 .vscode
 key.rsa.pub
