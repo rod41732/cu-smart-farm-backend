@@ -86,7 +86,7 @@ func Initialize() {
 		IdentityHandler: func(c *gin.Context) interface{} {
 			claims := jwt.ExtractClaims(c)
 			return &User{
-				Username: claims[identityKey].(string),
+				Username: claims["username"].(string),
 			}
 		},
 		// handle whether we should allow

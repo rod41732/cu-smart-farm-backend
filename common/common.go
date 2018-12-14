@@ -9,6 +9,7 @@ import (
 
 	"../config"
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 	"github.com/influxdata/influxdb/client/v2"
 	"github.com/surgemq/message"
 	"github.com/surgemq/surgemq/service"
@@ -203,5 +204,35 @@ func Println(a ...interface{}) {
 func Printf(format string, a ...interface{}) {
 	if ShouldPrintDebug {
 		fmt.Printf(format, a...)
+	}
+}
+
+var wsClients = make(map[string]*websocket.Conn)
+var wsDevices = make(map[string]*websocket.Conn)
+
+// AddClientConn : add Client to broadcasted
+func AddClientConn(deviceId string, conn *websocket.Conn) {
+	wsClients[deviceId] = conn
+}
+
+// RemoveClientConn : remove Client to be broadcasted
+func RemoveClientConn(deviceId string, conn *websocket.Conn) {
+	wsClients[deviceId] = nil
+}
+
+// AddDeviceConn : add Device to be sent to
+func AddDeviceConn(deviceId string, conn *websocket.Conn) {
+	wsDevices[deviceId] = conn
+}
+
+// RemoveDeviceConn : remove Device to be sent to
+func RemoveDeviceConn(deviceId string, conn *websocket.Conn) {
+	wsDevices[deviceId] = nil
+}
+
+func TellDevice(deviceId string) bool {
+	if conn, ok := wsDevices[deviceId]; ok {
+		// TODO: chage type
+		conn.WriteMessage(1, []byte(`{"t": "cmd", "cmd": "fetch"}`))
 	}
 }
