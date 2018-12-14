@@ -7,6 +7,7 @@ import (
 	"../../common"
 	"github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -52,12 +53,17 @@ func Initialize() {
 			col := mdb.DB("CUSmartFarm").C("users")
 			err = col.Find(bson.M{
 				"username": username,
-				"password": password,
 			}).One(&user)
 
 			if err != nil || user == nil {
 				return nil, jwt.ErrFailedAuthentication
 			}
+
+			err = bcrypt.CompareHashAndPassword([]byte(user["password"].(string)), []byte(password))
+			if err == nil {
+				return nil, jwt.ErrFailedAuthentication
+			}
+
 			return &User{
 				Username: username,
 			}, nil
