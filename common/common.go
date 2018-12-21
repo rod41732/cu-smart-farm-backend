@@ -8,13 +8,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/rod41732/cu-smart-farm-backend/model"
-
 	"github.com/gin-gonic/gin"
 	"github.com/influxdata/influxdb/client/v2"
 	"github.com/rod41732/cu-smart-farm-backend/config"
-	"github.com/surgemq/message"
-	"github.com/surgemq/surgemq/service"
 	mgo "gopkg.in/mgo.v2"
 )
 
@@ -37,16 +33,11 @@ var (
 	VerifyKey []byte
 )
 
-// MqttClient : this is MQTT client that listen to server
-var MqttClient *service.Client
-
 // BatchWriteSize : How many points to write at once (set to 1 isn't a problem)
 var BatchWriteSize = 3
 
 // ShouldPrintDebug this flag control whether we should print debug
 var ShouldPrintDebug = false
-
-var WebsocketConnectionInfo map[string]model.User
 
 // InitializeKeyPair initializes public/private key pair
 func InitializeKeyPair() {
@@ -92,37 +83,6 @@ func Resp(statusCode int, err error, c *gin.Context) bool {
 // Mongo returns a session
 func Mongo() (*mgo.Session, error) {
 	return mgo.Dial(config.Mongo["address"])
-}
-
-// ConnectToMQTT : connects to mqtt server and return error if error
-func ConnectToMQTT() error {
-	if MqttClient != nil {
-		MqttClient.Disconnect()
-	}
-	MqttClient = &service.Client{}
-
-	msg := message.NewConnectMessage()
-	msg.SetUsername([]byte(config.MQTT["username"]))
-	msg.SetPassword([]byte(config.MQTT["password"]))
-	msg.SetWillQos(2)
-	msg.SetVersion(3)
-	msg.SetCleanSession(true)
-	msg.SetClientId([]byte("backend"))
-	msg.SetKeepAlive(45)
-	msg.SetWillTopic([]byte("CUSmartFarm"))
-	msg.SetWillMessage([]byte("backend: connecting.."))
-	PrintError(MqttClient.Connect(config.MQTT["address"], msg))
-	// msg.SetCleanSession(true)
-	return nil
-}
-
-// PublishToMQTT : Shorthand for creating message and publish
-func PublishToMQTT(topic, payload []byte) {
-	msg := message.NewPublishMessage()
-	msg.SetTopic([]byte(topic))
-	msg.SetQoS(0)
-	msg.SetPayload([]byte(payload))
-	MqttClient.Publish(msg, nil)
 }
 
 // ParseJSON : parse byte to json (gin.H)
