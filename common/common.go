@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -14,7 +15,7 @@ import (
 	"github.com/rod41732/cu-smart-farm-backend/config"
 	"github.com/surgemq/message"
 	"github.com/surgemq/surgemq/service"
-	"gopkg.in/mgo.v2"
+	mgo "gopkg.in/mgo.v2"
 )
 
 // WsCommand : Message format for websocket message
@@ -26,6 +27,8 @@ type WsCommand struct {
 const (
 	privKeyPath = "key.rsa"
 	pubKeyPath  = "key.rsa.pub"
+	charset     = "abcdefghijklmnopqrstuvwxyz" +
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 )
 
 var (
@@ -33,7 +36,9 @@ var (
 	SignKey []byte
 
 	// VerifyKey = public key
-	VerifyKey []byte
+	VerifyKey  []byte
+	seededRand = rand.New(
+		rand.NewSource(time.Now().UnixNano()))
 )
 
 // MqttClient : this is MQTT client that listen to server
@@ -221,34 +226,16 @@ func Printf(format string, a ...interface{}) {
 	}
 }
 
-var wsClients = make(map[string]*websocket.Conn)
-var wsDevices = make(map[string]*websocket.Conn)
-
-// AddClientConn : add Client to broadcasted
-func AddClientConn(deviceId string, conn *websocket.Conn) {
-	wsClients[deviceId] = conn
-}
-
-// RemoveClientConn : remove Client to be broadcasted
-func RemoveClientConn(deviceId string, conn *websocket.Conn) {
-	wsClients[deviceId] = nil
-}
-
-// AddDeviceConn : add Device to be sent to
-func AddDeviceConn(deviceId string, conn *websocket.Conn) {
-	wsDevices[deviceId] = conn
-}
-
-// RemoveDeviceConn : remove Device to be sent to
-func RemoveDeviceConn(deviceId string, conn *websocket.Conn) {
-	wsDevices[deviceId] = nil
-}
-
-func TellDevice(deviceId string) bool {
-	if conn, ok := wsDevices[deviceId]; ok {
-		// TODO: chage type
-		conn.WriteMessage(1, []byte(`{"t": "cmd", "cmd": "fetch"}`))
-		return true
+// RandomStringWithCharset : Random string with custom length and charset
+func RandomStringWithCharset(length int, charset string) string {
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
 	}
-	return false
+	return string(b)
+}
+
+// RandomString : Random string with custom length and default charset
+func RandomString(length int) string {
+	return RandomStringWithCharset(length, charset)
 }
