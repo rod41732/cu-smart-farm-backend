@@ -1,8 +1,8 @@
 package user
 
 import (
-	"../../common"
 	"github.com/gin-gonic/gin"
+	"github.com/rod41732/cu-smart-farm-backend/common"
 )
 
 func Register(c *gin.Context) {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"../common"
+	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/surgemq/message"
 )
 

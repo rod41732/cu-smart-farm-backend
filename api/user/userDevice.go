@@ -1,15 +1,15 @@
 package user
 
 import (
-	"../../common"
-	"../middleware"
 	"github.com/gin-gonic/gin"
-	"gopkg.in/mgo.v2"
+	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
+	"github.com/rod41732/cu-smart-farm-backend/common"
+	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
 func addDevice(c *gin.Context) {
-	var match gin.H
+	var match bson.M
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
 		c.JSON(500, gin.H{
@@ -21,14 +21,14 @@ func addDevice(c *gin.Context) {
 	deviceID := c.PostForm("id")
 	deviceSecret := c.PostForm("secret")
 	common.Println(deviceID, deviceSecret)
-	col := mdb.DB("CUSmartFarm").C("devices")
+	collection := mdb.DB("CUSmartFarm").C("devices")
 
-	que := col.Find(gin.H{
+	query := collection.Find(bson.M{
 		"id":     deviceID,
 		"secret": deviceSecret,
 	})
 
-	que.One(&match)
+	query.One(&match)
 
 	if match == nil {
 		c.JSON(404, gin.H{
@@ -53,29 +53,26 @@ func addDevice(c *gin.Context) {
 		return
 	}
 
-	appendDevice := mgo.Change{
-		Update: bson.M{
-			"$push": bson.M{
-				"ownedDevices": deviceID,
-			},
-		},
-	}
-
-	var after interface{}
-
-	col.Find(gin.H{
+	collection.Update(bson.M{
 		"username": username,
-	}).Apply(appendDevice, after)
-
-	changeOwner := mgo.Change{
-		Update: gin.H{
-			"$set": gin.H{
-				"owner": username,
-			},
+	}, bson.M{
+		"$push": bson.M{
+			"ownedDevices": deviceID,
 		},
-	}
-	que.Apply(changeOwner, after)
-	c.JSON(200, "added device")
+	})
+
+	collection.Update(bson.M{
+		"id":     deviceID,
+		"secret": deviceSecret,
+	}, bson.M{
+		"$set": gin.H{
+			"owner": username,
+		},
+	})
+
+	c.JSON(200, gin.H{
+		"msg": "added device",
+	})
 }
 
 func removeDevice(c *gin.Context) {
@@ -87,14 +84,14 @@ func removeDevice(c *gin.Context) {
 
 	deviceID := c.PostForm("id")
 
-	col := mdb.DB("CUSmartFarm").C("devices")
+	collection := mdb.DB("CUSmartFarm").C("devices")
 	var match gin.H
 
-	que := col.Find(gin.H{
+	query := collection.Find(gin.H{
 		"id": deviceID,
 	})
 
-	que.One(&match)
+	query.One(&match)
 	if match == nil {
 		c.JSON(404, "userdevice: device not found")
 		return
@@ -111,7 +108,7 @@ func removeDevice(c *gin.Context) {
 
 	var after interface{}
 
-	col.Find(gin.H{
+	collection.Find(gin.H{
 		"username": user.(*middleware.User).Username,
 	}).Apply(removeDevice, after)
 
@@ -122,7 +119,7 @@ func removeDevice(c *gin.Context) {
 			},
 		},
 	}
-	que.Apply(changeOwner, after)
+	query.Apply(changeOwner, after)
 	c.JSON(200, "removed device")
 
 }

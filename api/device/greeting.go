@@ -3,8 +3,8 @@ package device
 import (
 	"encoding/json"
 
-	"../../common"
 	"github.com/gin-gonic/gin"
+	"github.com/rod41732/cu-smart-farm-backend/common"
 )
 
 func greeting(c *gin.Context) {

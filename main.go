@@ -1,10 +1,10 @@
 package main
 
 import (
-	"./api/middleware"
-	"./common"
-	"./router"
 	"github.com/gin-gonic/gin"
+	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
+	"github.com/rod41732/cu-smart-farm-backend/common"
+	"github.com/rod41732/cu-smart-farm-backend/router"
 )
 
 func main() {

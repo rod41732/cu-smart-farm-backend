@@ -1,10 +1,10 @@
 package router
 
 import (
-	"../api/middleware"
-	"../api/user"
-	"../common"
 	"github.com/gin-gonic/gin"
+	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
+	"github.com/rod41732/cu-smart-farm-backend/api/user"
+	"github.com/rod41732/cu-smart-farm-backend/common"
 )
 
 func SetUpHttpAPI(r *gin.Engine) {
@@ -17,6 +17,6 @@ func SetUpHttpAPI(r *gin.Engine) {
 	{
 		httpAPI.POST("/login", middleware.UserAuth.LoginHandler)
 		httpAPI.POST("/register", user.Register)
-		httpAPI.POST("/ws", userAuth /* WS*/)
+		httpAPI.POST("/ws", userAuth, user.WebSocket)
 	}
 }
