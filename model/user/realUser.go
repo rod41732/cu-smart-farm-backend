@@ -67,6 +67,9 @@ func (user *RealUser) RemoveDevice(payload map[string]interface{}) (bool, string
 	if err != nil {
 		return false, "Bad Request"
 	}
+	if !(common.StringInSlice(message.DeviceID, user.devices)) {
+		return false, "not your device"
+	}
 	return UserAPI.HandleRemoveDevice(message, user.Username)
 }
 
