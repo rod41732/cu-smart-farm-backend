@@ -4,12 +4,15 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
+	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/model"
+	"github.com/rod41732/cu-smart-farm-backend/mqtt"
+	"github.com/rod41732/cu-smart-farm-backend/storage"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
-	"github.com/rod41732/cu-smart-farm-backend/common"
+
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -42,17 +45,20 @@ func WebSocket(c *gin.Context) {
 	collection.Find(bson.M{
 		"username": username,
 	}).One(&userInfo)
+	for _, deviceID := range userInfo.ownedDevices {
+		mqtt.SubscribeDevice(deviceID)
+	}
 	// User Authorization
 	wsRouter(c.Writer, c.Request, userInfo)
 }
 
 func wsRouter(w http.ResponseWriter, r *http.Request, userInfo userData) {
-	// common.NewWebsocketConnectionInfo(userSession, conn)
-	clientState := model.RealUser{
+	client := model.RealUser{
 		Username: userInfo.username,
 	}
 	conn, err := wsupgrader.Upgrade(w, r, nil)
-	clientState.Init(userInfo.ownedDevices, conn)
+	client.Init(userInfo.ownedDevices, conn)
+	storage.SetUserStateInfo(userInfo.username, model.User(client))
 	if common.PrintError(err) {
 		return
 	}
