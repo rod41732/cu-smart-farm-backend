@@ -4,9 +4,13 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/rod41732/cu-smart-farm-backend/model"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
 	"github.com/rod41732/cu-smart-farm-backend/common"
+	"gopkg.in/mgo.v2/bson"
 )
 
 var wsupgrader = websocket.Upgrader{
@@ -15,8 +19,32 @@ var wsupgrader = websocket.Upgrader{
 	CheckOrigin:     wsCheckOrigin,
 }
 
+type userDevice struct {
+	ownedDevices []string
+}
+
 // WebSocket : WebSocket request handling
 func WebSocket(c *gin.Context) {
+	var userDev userDevice
+	userSession, _ := c.Get("username")
+	username := userSession.(*middleware.User).Username
+	mdb, err := common.Mongo()
+
+	if common.PrintError(err) {
+		c.JSON(500, gin.H{
+			"msg": "Connection to database failed",
+		})
+		return
+	}
+
+	collection := mdb.DB("CUSmartFarm").C("devices")
+	collection.Find(bson.M{
+		"username": username,
+	}).One(&userDev)
+
+	clientState := model.RealUser{
+		Username: username,
+	}
 	// User Authorization
 	wsRouter(c.Writer, c.Request)
 	// common.NewWebsocketConnectionInfo(userSession, conn)

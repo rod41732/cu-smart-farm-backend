@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -13,7 +14,7 @@ import (
 	"github.com/rod41732/cu-smart-farm-backend/config"
 	"github.com/surgemq/message"
 	"github.com/surgemq/surgemq/service"
-	"gopkg.in/mgo.v2"
+	mgo "gopkg.in/mgo.v2"
 )
 
 // WsCommand : Message format for websocket message
@@ -25,6 +26,8 @@ type WsCommand struct {
 const (
 	privKeyPath = "key.rsa"
 	pubKeyPath  = "key.rsa.pub"
+	charset     = "abcdefghijklmnopqrstuvwxyz" +
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 )
 
 var (
@@ -32,7 +35,9 @@ var (
 	SignKey []byte
 
 	// VerifyKey = public key
-	VerifyKey []byte
+	VerifyKey  []byte
+	seededRand = rand.New(
+		rand.NewSource(time.Now().UnixNano()))
 )
 
 // MqttClient : this is MQTT client that listen to server
@@ -218,4 +223,18 @@ func Printf(format string, a ...interface{}) {
 	if ShouldPrintDebug {
 		fmt.Printf(format, a...)
 	}
+}
+
+// RandomStringWithCharset : Random string with custom length and charset
+func RandomStringWithCharset(length int, charset string) string {
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
+	}
+	return string(b)
+}
+
+// RandomString : Random string with custom length and default charset
+func RandomString(length int) string {
+	return RandomStringWithCharset(length, charset)
 }
