@@ -5,7 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func register(c *gin.Context) {
+func Register(c *gin.Context) {
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
 		c.JSON(500, "error")

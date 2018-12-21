@@ -5,3 +5,4 @@ main
 key.rsa.pub
 key.rsa
 mongodb/
+vendor/
