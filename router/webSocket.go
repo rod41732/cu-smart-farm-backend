@@ -62,7 +62,8 @@ func wsRouter(w http.ResponseWriter, r *http.Request, username string) {
 				success, errmsg = user.AddDevice(payload.Payload)
 			case "removeDevice":
 				success, errmsg = user.RemoveDevice(payload.Payload)
-			case "setDevice":
+			default:
+				success, errmsg = false, "unknown command"
 			}
 		}
 

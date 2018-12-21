@@ -19,6 +19,7 @@ func HandleAddDevice(payload model.AddDeviceMessage, username string) (bool, str
 	deviceSecret := common.SHA256(payload.DeviceSecret)
 	col := mdb.DB("CUSmartFarm").C("devices")
 
+	common.Printf("id: %s secret %s\n", deviceID, deviceSecret)
 	var match bson.M
 	deviceQuery := col.Find(bson.M{
 		"id":     deviceID,

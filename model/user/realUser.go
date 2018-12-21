@@ -43,12 +43,13 @@ func (user *RealUser) ReportStatus(payload interface{}) {
 // AddDevice adds device into user's device list
 func (user *RealUser) AddDevice(payload map[string]interface{}) (bool, string) {
 	common.Println("addding device ?")
+	common.Println(payload)
 	str, err := json.Marshal(payload)
 	if err != nil {
 		return false, "Bad Request"
 	}
 	var message model.AddDeviceMessage
-	json.Unmarshal(str, message)
+	json.Unmarshal(str, &message)
 	if err != nil {
 		return false, "Bad Request"
 	}
@@ -62,7 +63,7 @@ func (user *RealUser) RemoveDevice(payload map[string]interface{}) (bool, string
 		return false, "Bad Request"
 	}
 	var message model.RemoveDeviceMessage
-	json.Unmarshal(str, message)
+	json.Unmarshal(str, &message)
 	if err != nil {
 		return false, "Bad Request"
 	}

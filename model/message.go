@@ -6,12 +6,6 @@ type APICall struct {
 	Payload  map[string]interface{} `json:"payload" binding:"required"` // json data depend on command
 }
 
-// DeviceCommand :
-type DeviceCommand struct {
-	CmdName  string `json:"cmdName"` // such as Set, ReportStatus
-	DeviceID string `json:"deviceID"`
-}
-
 type RelayMode struct { // use when set relay mode
 	Mode   string      `json:"mode"`
 	Detail interface{} `json:"detail"`
