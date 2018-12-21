@@ -183,3 +183,13 @@ func Printf(format string, a ...interface{}) {
 		fmt.Printf(format, a...)
 	}
 }
+
+// StringInSlice check whether string is in slice
+func StringInSlice(str string, slice []string) bool {
+	for _, x := range slice {
+		if x == str {
+			return true
+		}
+	}
+	return false
+}

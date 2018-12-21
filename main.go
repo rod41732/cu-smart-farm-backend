@@ -10,11 +10,14 @@ import (
 func main() {
 
 	common.InitializeKeyPair()
-
-	r := gin.Default()
 	middleware.Initialize()
 
+	go router.MQTT()
+
+	r := gin.Default()
+
 	router.SetUpHttpAPI(r)
+	r.GET("/ws", router.WebSocket)
 	r.Run(":3000")
 
 }

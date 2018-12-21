@@ -1,3 +1,0 @@
-influx:
-user admin
-password '4fs,mg-0zv'
