@@ -2,7 +2,8 @@ package model
 
 type APICall struct {
 	EndPoint string                 `json:"endPoint" binding:"required"` // addDevice, removeDevice, setDevice, pollDevice, listDevice...
-	Payload  map[string]interface{} `json:"payload" binding:"required"`  // json data depend on command
+	Token    string                 `json:"token" binding:"required"`
+	Payload  map[string]interface{} `json:"payload" binding:"required"` // json data depend on command
 }
 
 // DeviceCommand :

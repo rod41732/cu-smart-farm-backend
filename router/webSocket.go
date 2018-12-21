@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"../api/middleware"
-	"../common"
-	"../model"
-	myUser "../model/user"
+	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
+	"github.com/rod41732/cu-smart-farm-backend/common"
+	"github.com/rod41732/cu-smart-farm-backend/model"
+	User "github.com/rod41732/cu-smart-farm-backend/model/user"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -36,17 +36,15 @@ func WebSocket(c *gin.Context) {
 func wsRouter(w http.ResponseWriter, r *http.Request, username string) {
 	conn, err := wsUpgrader.Upgrade(w, r, nil)
 
-	user := myUser.User{
-		Username:     username,
-		CurrentToken: "XDDXD",
-	}
+	user := User.New(username, "random", conn)
 
 	if common.PrintError(err) {
 		return
 	}
 	for { // loop for command
 		t, msg, err := conn.ReadMessage()
-		if common.PrintError(err) {
+		if err != nil {
+
 			break
 		}
 
