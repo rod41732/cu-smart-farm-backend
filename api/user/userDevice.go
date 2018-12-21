@@ -5,12 +5,16 @@ import (
 	"../middleware"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 func addDevice(c *gin.Context) {
+	var match gin.H
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
-		c.JSON(500, "error")
+		c.JSON(500, gin.H{
+			"msg": "Connection to database failed",
+		})
 		return
 	}
 
@@ -18,7 +22,6 @@ func addDevice(c *gin.Context) {
 	deviceSecret := c.PostForm("secret")
 	common.Println(deviceID, deviceSecret)
 	col := mdb.DB("CUSmartFarm").C("devices")
-	var match gin.H
 
 	que := col.Find(gin.H{
 		"id":     deviceID,
@@ -26,8 +29,11 @@ func addDevice(c *gin.Context) {
 	})
 
 	que.One(&match)
+
 	if match == nil {
-		c.JSON(404, "userdevice: device not found")
+		c.JSON(404, gin.H{
+			"msg": "device not found.",
+		})
 		return
 	}
 
@@ -35,17 +41,21 @@ func addDevice(c *gin.Context) {
 	username := user.(*middleware.User).Username
 
 	if match["owner"] != nil && match["owner"] != username {
-		c.JSON(403, "device already owned")
+		c.JSON(403, gin.H{
+			"msg": "device already owned",
+		})
 		common.Println(match["owner"].(string) + "/" + username)
 		return
 	} else if match["owner"] == username {
-		c.JSON(200, "OK no change")
+		c.JSON(200, gin.H{
+			"msg": "already owned",
+		})
 		return
 	}
 
 	appendDevice := mgo.Change{
-		Update: gin.H{
-			"$push": gin.H{
+		Update: bson.M{
+			"$push": bson.M{
 				"ownedDevices": deviceID,
 			},
 		},

@@ -1,0 +1,24 @@
+version: '3'
+services:
+  backend:
+    image: intaniger/smartfarm_backend
+    volumes:
+     - ./:/go/src/app
+    environment:
+      - GIN_MODE=debug
+    command: ["go","run","main.go"]
+    ports:
+     - "3000:3000"
+    links:
+     - mongodb
+     - influxdb
+  influxdb:
+    image: "influxdb:1.4-alpine"
+    ports:
+     - "8086:8086"
+  mongodb:
+    image: mongo
+    volumes:
+     - "./mongodb:/data/db"
+    ports:
+     - "27017:27017"
