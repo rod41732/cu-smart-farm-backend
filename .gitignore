@@ -1,7 +1,10 @@
-config.txt
-config/
-main
 .vscode
+
+config/
+config.txt
 key.rsa.pub
 key.rsa
+
+
 mongodb/
+src/
