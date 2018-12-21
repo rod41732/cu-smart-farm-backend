@@ -1,7 +1,6 @@
 package router
 
 import (
-	"../api/device"
 	"../api/user"
 	"../common"
 	"github.com/gin-gonic/gin"
@@ -11,6 +10,6 @@ func SetUpHttpAPI(r *gin.Engine) {
 
 	common.ShouldPrintDebug = true
 	httpAPI := r.Group("api/v1")
-	device.DeviceControlAPI(httpAPI)
+	// device.DeviceControlAPI(httpAPI)
 	user.SetUpUserAPI(httpAPI)
 }

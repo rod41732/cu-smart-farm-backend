@@ -14,15 +14,23 @@ func register(c *gin.Context) {
 	defer mdb.Close()
 
 	username := c.PostForm("username")
-	password := c.PostForm("password")
+	password := common.SHA256(c.PostForm("password"))
+	province := c.PostForm("province")
+	address := c.PostForm("address")
+	nationalID := c.PostForm("nationalID")
 	email := c.PostForm("email")
 
 	col := mdb.DB("CUSmartFarm").C("users")
 	col.Insert(gin.H{
-		"username": username,
-		"password": password,
-		"email":    email,
+		"username":   username,
+		"password":   password,
+		"province":   province,
+		"address":    address,
+		"nationalID": nationalID,
+		"email":      email,
 	})
-	c.JSON(200, "register ok")
+	c.JSON(200, gin.H{
+		"status": "OK",
+	})
 
 }

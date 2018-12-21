@@ -41,7 +41,7 @@ func Initialize() {
 				return "", jwt.ErrMissingLoginValues
 			}
 			username := loginVals.Username
-			password := loginVals.Password
+			password := common.SHA256(loginVals.Password)
 
 			// auth using mongo
 			mdb, err := common.Mongo()

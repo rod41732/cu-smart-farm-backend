@@ -1,6 +1,7 @@
 package common
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -47,6 +48,13 @@ func InitializeKeyPair() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+// SHA256 : sha256 encrypt helper
+func SHA256(password string) string {
+	hasher := sha256.New()
+	hasher.Write([]byte(password))
+	return fmt.Sprintf("%x", hasher.Sum(nil))
 }
 
 // PrintError : return true and print if error
