@@ -1,11 +1,11 @@
 package user
 
 import (
-	"../../common"
 	"github.com/gin-gonic/gin"
+	"github.com/rod41732/cu-smart-farm-backend/common"
 )
 
-func register(c *gin.Context) {
+func Register(c *gin.Context) {
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
 		c.JSON(500, "error")

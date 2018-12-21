@@ -4,9 +4,9 @@ import (
 	"log"
 	"time"
 
-	"../../common"
 	"github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
+	"github.com/rod41732/cu-smart-farm-backend/common"
 	"gopkg.in/mgo.v2/bson"
 )
 

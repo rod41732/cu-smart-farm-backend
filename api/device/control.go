@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"../../common"
 	"github.com/gin-gonic/gin"
+	"github.com/rod41732/cu-smart-farm-backend/common"
 )
 
 var num2state = map[string]string{

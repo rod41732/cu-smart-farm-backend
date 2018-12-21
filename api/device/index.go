@@ -1,8 +1,8 @@
 package device
 
 import (
-	"../middleware"
 	"github.com/gin-gonic/gin"
+	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
 )
 
 // DeviceControlAPI : sets up device control API

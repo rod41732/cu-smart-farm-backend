@@ -8,14 +8,20 @@ import (
 	"log"
 	"time"
 
-	"../config"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/influxdata/influxdb/client/v2"
+	"github.com/rod41732/cu-smart-farm-backend/config"
 	"github.com/surgemq/message"
 	"github.com/surgemq/surgemq/service"
 	"gopkg.in/mgo.v2"
 )
+
+// WsCommand : Message format for websocket message
+type WsCommand struct {
+	Endpoint string
+	Payload  interface{}
+}
 
 const (
 	privKeyPath = "key.rsa"

@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"../../common"
 	"github.com/gin-gonic/gin"
+	"github.com/rod41732/cu-smart-farm-backend/common"
 )
 
 // OwnerCheck this middleware check whether `id` in query match `Username`

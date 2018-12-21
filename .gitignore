@@ -7,4 +7,4 @@ key.rsa
 
 
 mongodb/
-src/
+vendor/
