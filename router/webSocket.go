@@ -8,7 +8,7 @@ import (
 	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/model"
-	User "github.com/rod41732/cu-smart-farm-backend/model/user"
+	"github.com/rod41732/cu-smart-farm-backend/model/user"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -36,7 +36,7 @@ func WebSocket(c *gin.Context) {
 func wsRouter(w http.ResponseWriter, r *http.Request, username string) {
 	conn, err := wsUpgrader.Upgrade(w, r, nil)
 
-	user := User.New(username, "random", conn)
+	user := user.RealUser{Username: username}
 
 	if common.PrintError(err) {
 		return
@@ -44,23 +44,24 @@ func wsRouter(w http.ResponseWriter, r *http.Request, username string) {
 	for { // loop for command
 		t, msg, err := conn.ReadMessage()
 		if err != nil {
-
+			common.PrintError(err)
 			break
 		}
 
 		var payload model.APICall
-		err = json.Unmarshal(msg, payload)
+		err = json.Unmarshal(msg, &payload)
 
 		var success bool
 		var errmsg string
 		if err != nil {
+			common.PrintError(err)
 			success, errmsg = false, "No Command Specified"
 		} else {
 			switch payload.EndPoint {
 			case "addDevice":
-				user.AddDevice(payload.Payload)
+				success, errmsg = user.AddDevice(payload.Payload)
 			case "removeDevice":
-				user.RemoveDevice(payload.Payload)
+				success, errmsg = user.RemoveDevice(payload.Payload)
 			case "setDevice":
 			}
 		}

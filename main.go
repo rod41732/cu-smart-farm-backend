@@ -12,6 +12,8 @@ func main() {
 	common.InitializeKeyPair()
 	middleware.Initialize()
 
+	go router.MQTT()
+
 	r := gin.Default()
 
 	router.SetUpHttpAPI(r)

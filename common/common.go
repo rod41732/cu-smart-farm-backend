@@ -11,7 +11,6 @@ import (
 	"github.com/rod41732/cu-smart-farm-backend/model"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 	"github.com/influxdata/influxdb/client/v2"
 	"github.com/rod41732/cu-smart-farm-backend/config"
 	"github.com/surgemq/message"
@@ -223,4 +222,14 @@ func Printf(format string, a ...interface{}) {
 	if ShouldPrintDebug {
 		fmt.Printf(format, a...)
 	}
+}
+
+// StringInSlice check whether string is in slice
+func StringInSlice(str string, slice []string) bool {
+	for _, x := range slice {
+		if x == str {
+			return true
+		}
+	}
+	return false
 }
