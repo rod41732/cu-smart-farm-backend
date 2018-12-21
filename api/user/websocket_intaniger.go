@@ -7,6 +7,7 @@ import (
 	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/model"
+	ModelUsers "github.com/rod41732/cu-smart-farm-backend/model/model_users"
 	"github.com/rod41732/cu-smart-farm-backend/mqtt"
 	"github.com/rod41732/cu-smart-farm-backend/storage"
 
@@ -53,7 +54,7 @@ func WebSocket(c *gin.Context) {
 }
 
 func wsRouter(w http.ResponseWriter, r *http.Request, userInfo userData) {
-	client := model.RealUser{
+	client := ModelUsers.RealUser{
 		Username: userInfo.username,
 	}
 	conn, err := wsupgrader.Upgrade(w, r, nil)

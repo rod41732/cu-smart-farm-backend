@@ -1,4 +1,4 @@
-package user
+package ModelUsers
 
 import (
 	"encoding/json"
