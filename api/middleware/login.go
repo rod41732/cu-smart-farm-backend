@@ -7,14 +7,15 @@ import (
 	"../../common"
 	"github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
 	"gopkg.in/mgo.v2/bson"
 )
 
 /// UserAuth is middleware for authenticating user
 var UserAuth *jwt.GinJWTMiddleware
 
-type login struct {
+var identityKey = "user"
+
+type Login struct {
 	Username string `form:"username" json:"username" binding:"required"`
 	Password string `form:"password" json:"password" binding:"required"`
 }
@@ -24,8 +25,6 @@ type User struct {
 	Username string
 }
 
-var identityKey = "username"
-
 func Initialize() {
 	var err error
 	UserAuth, err = jwt.New(&jwt.GinJWTMiddleware{
@@ -33,11 +32,11 @@ func Initialize() {
 		Key:         common.SignKey,
 		Timeout:     time.Hour * 99999,
 		MaxRefresh:  time.Hour * 99999,
-		IdentityKey: "username",
+		IdentityKey: identityKey,
 		// ------------------------ creation of JWT token --------------------
 		// handle auth via request and return some info when success
 		Authenticator: func(c *gin.Context) (interface{}, error) {
-			var loginVals login
+			var loginVals Login
 			if err := c.ShouldBind(&loginVals); err != nil {
 				return "", jwt.ErrMissingLoginValues
 			}
@@ -49,18 +48,16 @@ func Initialize() {
 			if common.PrintError(err) {
 				return nil, jwt.ErrFailedAuthentication
 			}
+
 			var user map[string]interface{}
 			col := mdb.DB("CUSmartFarm").C("users")
+
 			err = col.Find(bson.M{
 				"username": username,
+				"password": password,
 			}).One(&user)
 
 			if err != nil || user == nil {
-				return nil, jwt.ErrFailedAuthentication
-			}
-
-			err = bcrypt.CompareHashAndPassword([]byte(user["password"].(string)), []byte(password))
-			if err == nil {
 				return nil, jwt.ErrFailedAuthentication
 			}
 

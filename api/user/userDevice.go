@@ -2,127 +2,85 @@ package user
 
 import (
 	"../../common"
-	"../middleware"
-	"github.com/gin-gonic/gin"
+	"../../model"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
-func addDevice(c *gin.Context) {
-	var match gin.H
+// HandleAddDevice handle add device payload, return boolean indicating success
+func HandleAddDevice(payload model.AddDeviceMessage, username string) (bool, string) {
 	mdb, err := common.Mongo()
+	defer mdb.Close()
 	if common.PrintError(err) {
-		c.JSON(500, gin.H{
-			"msg": "Connection to database failed",
-		})
-		return
+		return false, "Something went wrong"
 	}
 
-	deviceID := c.PostForm("id")
-	deviceSecret := c.PostForm("secret")
-	common.Println(deviceID, deviceSecret)
+	deviceID := payload.DeviceID
+	deviceSecret := common.SHA256(payload.DeviceSecret)
 	col := mdb.DB("CUSmartFarm").C("devices")
 
-	que := col.Find(gin.H{
+	var match bson.M
+	deviceQuery := col.Find(bson.M{
 		"id":     deviceID,
 		"secret": deviceSecret,
 	})
-
-	que.One(&match)
+	deviceQuery.One(&match)
 
 	if match == nil {
-		c.JSON(404, gin.H{
-			"msg": "device not found.",
-		})
-		return
+		return false, "Invalid device ID/ Secret"
+	}
+	if match["owner"] != nil {
+		return false, "Device already owned"
 	}
 
-	user, _ := c.Get("username")
-	username := user.(*middleware.User).Username
-
-	if match["owner"] != nil && match["owner"] != username {
-		c.JSON(403, gin.H{
-			"msg": "device already owned",
-		})
-		common.Println(match["owner"].(string) + "/" + username)
-		return
-	} else if match["owner"] == username {
-		c.JSON(200, gin.H{
-			"msg": "already owned",
-		})
-		return
-	}
-
+	var result interface{}
 	appendDevice := mgo.Change{
-		Update: bson.M{
-			"$push": bson.M{
-				"ownedDevices": deviceID,
-			},
-		},
+		Update: bson.M{"$push": bson.M{"ownedDevices": deviceID}},
 	}
-
-	var after interface{}
-
-	col.Find(gin.H{
-		"username": username,
-	}).Apply(appendDevice, after)
-
 	changeOwner := mgo.Change{
-		Update: gin.H{
-			"$set": gin.H{
-				"owner": username,
-			},
-		},
+		Update: bson.M{"$set": bson.M{"owner": username}},
 	}
-	que.Apply(changeOwner, after)
-	c.JSON(200, "added device")
+
+	col.Find(bson.M{
+		"username": username,
+	}).Apply(appendDevice, result)
+	deviceQuery.Apply(changeOwner, result)
+	return true, "OK"
 }
 
-func removeDevice(c *gin.Context) {
+// HandleRemoveDevice handles removal of device (and check owner before doing so)
+func HandleRemoveDevice(payload model.RemoveDeviceMessage, username string) (bool, string) {
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
-		c.JSON(500, "error")
-		return
+		return false, "Something went wrong"
 	}
 
-	deviceID := c.PostForm("id")
-
+	deviceID := payload.DeviceID
 	col := mdb.DB("CUSmartFarm").C("devices")
-	var match gin.H
 
-	que := col.Find(gin.H{
-		"id": deviceID,
+	var match bson.M
+	deviceQuery := col.Find(bson.M{
+		"id":    deviceID,
+		"owner": username,
 	})
+	deviceQuery.One(&match)
 
-	que.One(&match)
 	if match == nil {
-		c.JSON(404, "userdevice: device not found")
-		return
+		return false, "Invalid DeviceID or Not Your Device"
 	}
 
-	user, _ := c.Get("username")
+	var result interface{}
 	removeDevice := mgo.Change{
-		Update: gin.H{
-			"$pull": gin.H{
-				"ownedDevices": deviceID,
-			},
-		},
+		Update: bson.M{"$pull": bson.M{"ownedDevices": deviceID}},
 	}
-
-	var after interface{}
-
-	col.Find(gin.H{
-		"username": user.(*middleware.User).Username,
-	}).Apply(removeDevice, after)
-
 	changeOwner := mgo.Change{
-		Update: gin.H{
-			"$set": gin.H{
-				"owner": nil,
-			},
-		},
+		Update: bson.M{"$set": bson.M{"owner": nil}},
 	}
-	que.Apply(changeOwner, after)
-	c.JSON(200, "removed device")
 
+	col.Find(bson.M{
+		"username": username,
+	}).Apply(removeDevice, result)
+	deviceQuery.Apply(changeOwner, result)
+
+	return true, "OK"
 }

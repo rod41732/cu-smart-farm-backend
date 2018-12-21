@@ -7,9 +7,12 @@ import (
 
 	"../api/middleware"
 	"../common"
-	"github.com/gin-contrib/sessions"
+	"../model"
+	myUser "../model/user"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"gopkg.in/mgo.v2/bson"
 )
 
 var wsUpgrader = websocket.Upgrader{
@@ -24,16 +27,20 @@ func wsCheckOrigin(r *http.Request) bool {
 
 // WebSocket : WS request handler
 func WebSocket(c *gin.Context) {
-	sess := sessions.Default(c)
-	user, _ := c.Get("username").(middleware.User)
-	deviceId, ok := c.Get("id")
-	sess.set("username", user.Username)
-	sess.set("deviceId", deviceId)
-	wsRouter(c.Writer, c.Request, sess)
+	// tmp, _ := c.Get("username")
+	// user := tmp.(middleware.User)
+	user := middleware.User{Username: "rod41732"}
+	wsRouter(c.Writer, c.Request, user.Username)
 }
 
-func wsRouter(w http.ResponseWriter, r *http.Request, userSession sessions.Session) {
+func wsRouter(w http.ResponseWriter, r *http.Request, username string) {
 	conn, err := wsUpgrader.Upgrade(w, r, nil)
+
+	user := myUser.User{
+		Username:     username,
+		CurrentToken: "XDDXD",
+	}
+
 	if common.PrintError(err) {
 		return
 	}
@@ -42,31 +49,27 @@ func wsRouter(w http.ResponseWriter, r *http.Request, userSession sessions.Sessi
 		if common.PrintError(err) {
 			break
 		}
-		var payload map[string]interface{}
-		err := json.Unmarshal(msg, &payload)
-		if !err {
-			command, err := payload["cmd"].(string)
-			if !err && command == "fetch" {
-				if common.TellDevice(userSession.get("deviceId").(string)) {
-					conn.WriteMessage(t, "OK");
-				}
-				else {
-					conn.WriteMessage(t, "Error");
-				}
+
+		var payload model.APICall
+		err = json.Unmarshal(msg, payload)
+
+		var success bool
+		var errmsg string
+		if err != nil {
+			success, errmsg = false, "No Command Specified"
+		} else {
+			switch payload.EndPoint {
+			case "addDevice":
+				user.AddDevice(payload.Payload)
+			case "removeDevice":
+				user.RemoveDevice(payload.Payload)
+			case "setDevice":
 			}
 		}
-		time.Sleep(time.Millisecond * 10)
 
+		resp, err := json.Marshal(bson.M{"success": success, "errmsg": errmsg})
+		conn.WriteMessage(t, resp)
+		time.Sleep(time.Millisecond * 10)
 	}
 
-}
-func deviceWebSocket(c *gin.Context) {
-	sess := sessions.Default(c)
-	deviceId, ok := c.Get("id")
-	sess.set("deviceId", deviceId)
-	deviceWsRouter(c.Writer, c.Request, sess)
-}
-
-func deviceWsRouter(w http.ResponseWriter, r *http.Request, userSession sessions.Session) {
-	userSession.Set()
 }

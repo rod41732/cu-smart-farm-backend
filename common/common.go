@@ -242,5 +242,7 @@ func TellDevice(deviceId string) bool {
 	if conn, ok := wsDevices[deviceId]; ok {
 		// TODO: chage type
 		conn.WriteMessage(1, []byte(`{"t": "cmd", "cmd": "fetch"}`))
+		return true
 	}
+	return false
 }
