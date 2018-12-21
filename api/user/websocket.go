@@ -19,13 +19,14 @@ var wsupgrader = websocket.Upgrader{
 	CheckOrigin:     wsCheckOrigin,
 }
 
-type userDevice struct {
+type userData struct {
+	username     string
 	ownedDevices []string
 }
 
 // WebSocket : WebSocket request handling
 func WebSocket(c *gin.Context) {
-	var userDev userDevice
+	var userInfo userData
 	userSession, _ := c.Get("username")
 	username := userSession.(*middleware.User).Username
 	mdb, err := common.Mongo()
@@ -40,18 +41,18 @@ func WebSocket(c *gin.Context) {
 	collection := mdb.DB("CUSmartFarm").C("devices")
 	collection.Find(bson.M{
 		"username": username,
-	}).One(&userDev)
-
-	clientState := model.RealUser{
-		Username: username,
-	}
+	}).One(&userInfo)
 	// User Authorization
-	wsRouter(c.Writer, c.Request)
-	// common.NewWebsocketConnectionInfo(userSession, conn)
+	wsRouter(c.Writer, c.Request, userInfo)
 }
 
-func wsRouter(w http.ResponseWriter, r *http.Request) {
+func wsRouter(w http.ResponseWriter, r *http.Request, userInfo userData) {
+	// common.NewWebsocketConnectionInfo(userSession, conn)
+	clientState := model.RealUser{
+		Username: userInfo.username,
+	}
 	conn, err := wsupgrader.Upgrade(w, r, nil)
+	clientState.Init(userInfo.ownedDevices, conn)
 	if common.PrintError(err) {
 		return
 	}

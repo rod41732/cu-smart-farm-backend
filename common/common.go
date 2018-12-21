@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"time"
+
+	"github.com/rod41732/cu-smart-farm-backend/model"
 
 	"github.com/gin-gonic/gin"
 	"github.com/influxdata/influxdb/client/v2"
@@ -26,8 +27,6 @@ type WsCommand struct {
 const (
 	privKeyPath = "key.rsa"
 	pubKeyPath  = "key.rsa.pub"
-	charset     = "abcdefghijklmnopqrstuvwxyz" +
-		"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 )
 
 var (
@@ -35,9 +34,7 @@ var (
 	SignKey []byte
 
 	// VerifyKey = public key
-	VerifyKey  []byte
-	seededRand = rand.New(
-		rand.NewSource(time.Now().UnixNano()))
+	VerifyKey []byte
 )
 
 // MqttClient : this is MQTT client that listen to server
@@ -48,6 +45,8 @@ var BatchWriteSize = 3
 
 // ShouldPrintDebug this flag control whether we should print debug
 var ShouldPrintDebug = false
+
+var WebsocketConnectionInfo map[string]model.User
 
 // InitializeKeyPair initializes public/private key pair
 func InitializeKeyPair() {
@@ -223,18 +222,4 @@ func Printf(format string, a ...interface{}) {
 	if ShouldPrintDebug {
 		fmt.Printf(format, a...)
 	}
-}
-
-// RandomStringWithCharset : Random string with custom length and charset
-func RandomStringWithCharset(length int, charset string) string {
-	b := make([]byte, length)
-	for i := range b {
-		b[i] = charset[seededRand.Intn(len(charset))]
-	}
-	return string(b)
-}
-
-// RandomString : Random string with custom length and default charset
-func RandomString(length int) string {
-	return RandomStringWithCharset(length, charset)
 }
