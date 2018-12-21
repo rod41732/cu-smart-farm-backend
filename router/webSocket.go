@@ -33,10 +33,24 @@ func WebSocket(c *gin.Context) {
 	wsRouter(c.Writer, c.Request, user.Username)
 }
 
+type userData struct {
+	Devices []string `json:"devices"`
+}
+
 func wsRouter(w http.ResponseWriter, r *http.Request, username string) {
 	conn, err := wsUpgrader.Upgrade(w, r, nil)
+	mdb, err := common.Mongo()
+	defer mdb.Close()
+	if common.PrintError(err) {
+		return
+	}
+	var temp userData
+	mdb.DB("CUSmartFarm").C("users").Find(bson.M{
+		"username": username,
+	}).One(&temp)
 
 	user := user.RealUser{Username: username}
+	user.Init(temp.Devices, conn)
 
 	if common.PrintError(err) {
 		return

@@ -1,5 +1,6 @@
 package user
 
+/*
 import (
 	"encoding/json"
 	"net/http"
@@ -98,3 +99,4 @@ func wsReponseStatus(endpoint string, err error, conn *websocket.Conn, msgType i
 	jsonMsg, _ := json.Marshal(callbackMessage)
 	conn.WriteMessage(msgType, jsonMsg)
 }
+*/
