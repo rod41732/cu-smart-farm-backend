@@ -1,4 +1,4 @@
-package model
+package modelmessage
 
 type APICall struct {
 	EndPoint string                 `json:"endPoint" binding:"required"` // addDevice, removeDevice, setDevice, pollDevice, listDevice...

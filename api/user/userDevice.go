@@ -2,13 +2,13 @@ package user
 
 import (
 	"github.com/rod41732/cu-smart-farm-backend/common"
-	"github.com/rod41732/cu-smart-farm-backend/model"
-	"gopkg.in/mgo.v2"
+	modelmessage "github.com/rod41732/cu-smart-farm-backend/model/model_message"
+	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
 // HandleAddDevice handle add device payload, return boolean indicating success
-func HandleAddDevice(payload model.AddDeviceMessage, username string) (bool, string) {
+func HandleAddDevice(payload modelmessage.AddDeviceMessage, username string) (bool, string) {
 	mdb, err := common.Mongo()
 	defer mdb.Close()
 	if common.PrintError(err) {
@@ -50,7 +50,7 @@ func HandleAddDevice(payload model.AddDeviceMessage, username string) (bool, str
 }
 
 // HandleRemoveDevice handles removal of device (and check owner before doing so)
-func HandleRemoveDevice(payload model.RemoveDeviceMessage, username string) (bool, string) {
+func HandleRemoveDevice(payload modelmessage.RemoveDeviceMessage, username string) (bool, string) {
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
 		return false, "Something went wrong"

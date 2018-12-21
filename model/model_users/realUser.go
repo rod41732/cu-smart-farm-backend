@@ -1,4 +1,4 @@
-package ModelUsers
+package modelusers
 
 import (
 	"encoding/json"
