@@ -1,9 +1,14 @@
 package mqtt
 
 import (
-	"bytes"
+	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
+
+	"github.com/rod41732/cu-smart-farm-backend/model"
+
+	"github.com/rod41732/cu-smart-farm-backend/storage"
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/config"
@@ -14,22 +19,26 @@ import (
 var mqttClient *service.Client
 
 func handleMessage(msg *message.PublishMessage) error {
-	common.Println("[Debug] incoming message ", string(msg.Payload()))
-	parsedData := common.ParseJSON(bytes.Trim(msg.Payload(), "\x00"))
-	if parsedData["t"] != "data" {
+	message := []byte(string(msg.Payload()))
+	fmt.Println("[Debug] incoming message ", string(message))
+	var parsedData model.DeviceMessage
+	err := json.Unmarshal(message, &parsedData)
+	if err != nil || parsedData.Type != "data" {
 		return nil
 	}
-	parsedData = parsedData["data"].(map[string]interface{})
-	_, ok1 := parsedData["Humidity"]
-	_, ok2 := parsedData["Temp"]
-	_, ok3 := parsedData["Soil"]
-	if !ok1 || !ok2 || !ok3 {
-		fmt.Println("Error, invalid data")
-		return nil
+	// send data to user
+	deviceID := strings.TrimSuffix(strings.TrimPrefix(string(msg.Topic()), "CUSmartFarm/"), "_svr_recv")
+	device, err := common.FindDeviceByID(deviceID)
+	user := storage.GetUserStateInfo(device.Owner)
+	if user != nil {
+		user.ReportStatus(parsedData)
 	}
+	if err != nil && err.Error() != "not found" { // ignore device not found
+		common.PrintError(err)
+		return err
+	}
+	common.WriteInfluxDB("air_sensor", map[string]string{"device": deviceID}, parsedData.ToMap())
 
-	// fake device name for now
-	common.WriteInfluxDB("air_sensor", map[string]string{"device": "1234"}, parsedData)
 	return nil
 }
 
@@ -50,7 +59,7 @@ func connectToMQTTServer() error {
 	msg := message.NewConnectMessage()
 	msg.SetUsername([]byte(config.MQTT["username"]))
 	msg.SetPassword([]byte(config.MQTT["password"]))
-	msg.SetWillQos(2)
+	msg.SetWillQos(1)
 	msg.SetVersion(3)
 	msg.SetCleanSession(true)
 	msg.SetClientId([]byte("backend"))
@@ -64,7 +73,9 @@ func connectToMQTTServer() error {
 
 // SendMessageToDevice : Shorthand for creating message and publish
 func SendMessageToDevice(deviceID string, payload []byte) {
+	common.Printf("send message: %s to %s\n", string(payload), deviceID)
 	publishToMQTT([]byte("CUSmartFarm/"+deviceID+"_svr_out"), payload)
+	// publishToMQTT([]byte("CUSmartFarm"), payload)
 }
 
 func publishToMQTT(topic, payload []byte) {
@@ -80,7 +91,13 @@ func SubscribeDevice(deviceID string) {
 	subMsg := message.NewSubscribeMessage()
 	subMsg.AddTopic([]byte("CUSmartFarm/"+deviceID+"_svr_recv"), 2)
 	common.PrintError(mqttClient.Subscribe(subMsg, handleSubscriptionComplete, handleMessage))
+}
 
+func subAll() {
+	subMsg := message.NewSubscribeMessage()
+	subMsg.AddTopic([]byte("CUSmartFarm"), 2)
+	subMsg.AddTopic([]byte("CUSmartFarm/+"), 2)
+	common.PrintError(mqttClient.Subscribe(subMsg, handleSubscriptionComplete, handleMessage))
 }
 
 // MQTT : intialize MQTT Client
@@ -90,6 +107,7 @@ func MQTT() error {
 			fmt.Println("[ERROR] error connecting to MQTT")
 			continue
 		}
+		subAll()
 		common.ShouldPrintDebug = true
 		common.BatchWriteSize = 1
 		fmt.Println("Connected.")
