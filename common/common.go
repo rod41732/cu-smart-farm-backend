@@ -8,7 +8,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/mongodb/mongo-go-driver/bson"
+	"github.com/rod41732/cu-smart-farm-backend/model"
+
 	"github.com/influxdata/influxdb/client/v2"
 	"github.com/rod41732/cu-smart-farm-backend/config"
 	mgo "gopkg.in/mgo.v2"
@@ -62,19 +64,6 @@ func SHA256(password string) string {
 func PrintError(err error) bool {
 	if err != nil {
 		fmt.Printf("[Error] %s\n", err)
-		return true
-	}
-	return false
-}
-
-// Resp : response with that status and return true if error
-func Resp(statusCode int, err error, c *gin.Context) bool {
-	if err != nil {
-		if !ShouldPrintDebug {
-			c.JSON(statusCode, "something went wrong")
-			return true
-		}
-		c.JSON(statusCode, err.Error())
 		return true
 	}
 	return false
@@ -202,4 +191,16 @@ func RemoveStringFromSlice(str string, slice []string) {
 			slice[idx] = slice[len(slice)-1]
 		}
 	}
+}
+
+// FindDeviceByID : find Device in mongo return (device, error) if not found return device is nil
+func FindDeviceByID(deviceID string) (match model.Device, err error) {
+	mdb, err := Mongo()
+	if PrintError(err) {
+		return
+	}
+	err = mdb.DB("CUSmartFarm").C("devices").Find(bson.M{
+		"id": deviceID,
+	}).One(&match)
+	return
 }
