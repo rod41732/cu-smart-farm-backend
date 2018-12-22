@@ -5,13 +5,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
-	"github.com/rod41732/cu-smart-farm-backend/common"
-	"github.com/rod41732/cu-smart-farm-backend/model"
-	"github.com/rod41732/cu-smart-farm-backend/model/user"
+	"github.com/rod41732/cu-smart-farm-backend/storage"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
+	"github.com/rod41732/cu-smart-farm-backend/common"
+	mMessage "github.com/rod41732/cu-smart-farm-backend/model/message"
+	"github.com/rod41732/cu-smart-farm-backend/model/user"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -38,6 +39,7 @@ type userData struct {
 }
 
 func wsRouter(w http.ResponseWriter, r *http.Request, username string) {
+	common.Println("Web socket Connected")
 	conn, err := wsUpgrader.Upgrade(w, r, nil)
 	mdb, err := common.Mongo()
 	defer mdb.Close()
@@ -49,8 +51,9 @@ func wsRouter(w http.ResponseWriter, r *http.Request, username string) {
 		"username": username,
 	}).One(&temp)
 
-	user := user.RealUser{Username: username}
-	user.Init(temp.Devices, conn)
+	client := user.RealUser{Username: username}
+	client.Init(temp.Devices, conn)
+	storage.SetUserStateInfo(username, &client)
 
 	if common.PrintError(err) {
 		return
@@ -62,7 +65,7 @@ func wsRouter(w http.ResponseWriter, r *http.Request, username string) {
 			break
 		}
 
-		var payload model.APICall
+		var payload mMessage.APICall
 		err = json.Unmarshal(msg, &payload)
 
 		var success bool
@@ -73,9 +76,11 @@ func wsRouter(w http.ResponseWriter, r *http.Request, username string) {
 		} else {
 			switch payload.EndPoint {
 			case "addDevice":
-				success, errmsg = user.AddDevice(payload.Payload)
+				success, errmsg = client.AddDevice(payload.Payload)
 			case "removeDevice":
-				success, errmsg = user.RemoveDevice(payload.Payload)
+				success, errmsg = client.RemoveDevice(payload.Payload)
+			case "pollDevice":
+				success, errmsg = client.PollDevice(payload.Payload)
 			default:
 				success, errmsg = false, "unknown command"
 			}
@@ -85,5 +90,6 @@ func wsRouter(w http.ResponseWriter, r *http.Request, username string) {
 		conn.WriteMessage(t, resp)
 		time.Sleep(time.Millisecond * 10)
 	}
-
+	storage.SetUserStateInfo(username, &user.NullUser{})
+	common.Println("Web socket Disconnected")
 }
