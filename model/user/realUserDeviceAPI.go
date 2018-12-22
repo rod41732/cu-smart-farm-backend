@@ -119,11 +119,44 @@ func (user *RealUser) PollDevice(payload map[string]interface{}) (bool, string) 
 	return true, "OK"
 }
 
-// Command set relay state of device (specified via payload)
-func (user *RealUser) Command(deviceID string, relay string, workmode string, payload interface{}) (bool, string) {
-	if !user.ownsDevice(deviceID) {
+// SetDevice : set relay state of device (specified via payload)
+func (user *RealUser) SetDevice(payload map[string]interface{}) (bool, string) {
+	var message mMessage.DeviceCommandMessage
+	if message.FromMap(payload) != nil {
+		return false, "Bad request"
+	}
+	if !user.ownsDevice(message.DeviceID) {
 		return false, "Not your device"
 	}
 
+	// make mqtt message
+	var relayData bson.M // just shortcut for map[string]interface{}
+	switch message.State.Mode {
+	case "ON":
+		relayData = bson.M{"st": "on"}
+	case "OFF":
+		relayData = bson.M{"st": "off"}
+	case "AUTO":
+		relayData = bson.M{
+			"st":  "auto",
+			"thr": message.State.Detail, // should be [2]float of threshold
+		}
+	case "TIME":
+		relayData = bson.M{
+			"st":  "time",
+			"sch": message.State.Detail, // should be [2][]int of unix time
+		}
+	}
+	jsonData := bson.M{
+		"t":   "cmd",
+		"cmd": "set",
+		"st": bson.M{
+			message.RelayID: relayData,
+		},
+	}
+
+	msg, _ := json.Marshal(jsonData)
+
+	mqtt.SendMessageToDevice(message.DeviceID, msg)
 	return true, "OK"
 }

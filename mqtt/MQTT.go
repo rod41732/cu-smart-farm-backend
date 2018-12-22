@@ -20,16 +20,18 @@ var mqttClient *service.Client
 
 func handleMessage(msg *message.PublishMessage) error {
 	message := []byte(string(msg.Payload()))
-	fmt.Println("[Debug] incoming message ", string(message))
+	common.Println("[MQTT] incoming message ", string(message))
 	var parsedData model.DeviceMessage
 	err := json.Unmarshal(message, &parsedData)
 	if err != nil || parsedData.Type != "data" {
+		common.Println("[MQTT] Error: Invalid message format or non data")
 		return nil
 	}
 	// send data to user
 	deviceID := strings.TrimSuffix(strings.TrimPrefix(string(msg.Topic()), "CUSmartFarm/"), "_svr_recv")
 	device, err := common.FindDeviceByID(deviceID)
 	user := storage.GetUserStateInfo(device.Owner)
+	common.Printf("[MQTT] device=%s owner=%s\n", deviceID, device.Owner)
 	if user != nil {
 		user.ReportStatus(parsedData)
 	}
@@ -37,6 +39,7 @@ func handleMessage(msg *message.PublishMessage) error {
 		common.PrintError(err)
 		return err
 	}
+	common.Printf("[MQTT] parsed Data=%#v\n", parsedData)
 	common.WriteInfluxDB("air_sensor", map[string]string{"device": deviceID}, parsedData.ToMap())
 
 	return nil
