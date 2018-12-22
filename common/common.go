@@ -193,3 +193,13 @@ func StringInSlice(str string, slice []string) bool {
 	}
 	return false
 }
+
+// RemoveStringFromSlice removes string from slice
+func RemoveStringFromSlice(str string, slice []string) {
+	for idx, x := range slice {
+		if x == str {
+			slice[idx] = ""
+			slice[idx] = slice[len(slice)-1]
+		}
+	}
+}
