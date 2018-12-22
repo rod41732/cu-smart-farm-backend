@@ -1,4 +1,4 @@
-package ModelUsers
+package user
 
 // NullUser is "placeholder" when client is disconnected
 type NullUser struct {
