@@ -1,4 +1,4 @@
-package model
+package modelmessage
 
 import "encoding/json"
 
