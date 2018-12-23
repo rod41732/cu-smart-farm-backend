@@ -112,7 +112,6 @@ func (user *RealUser) PollDevice(payload map[string]interface{}) (bool, string) 
 		return false, "Not your device"
 	}
 	mqttMessage, _ := json.Marshal(bson.M{
-		"t":   "cmd",
 		"cmd": "fetch",
 	})
 	mqtt.SendMessageToDevice(deviceID, mqttMessage)
@@ -121,42 +120,34 @@ func (user *RealUser) PollDevice(payload map[string]interface{}) (bool, string) 
 
 // SetDevice : set relay state of device (specified via payload)
 func (user *RealUser) SetDevice(payload map[string]interface{}) (bool, string) {
-	var message mMessage.DeviceCommandMessage
-	if message.FromMap(payload) != nil {
+	var msg mMessage.DeviceCommandMessage
+	if msg.FromMap(payload) != nil {
 		return false, "Bad request"
 	}
-	if !user.ownsDevice(message.DeviceID) {
+	if !user.ownsDevice(msg.DeviceID) {
 		return false, "Not your device"
 	}
 
-	// make mqtt message
-	var relayData bson.M // just shortcut for map[string]interface{}
-	switch message.State.Mode {
-	case "ON":
-		relayData = bson.M{"st": "on"}
-	case "OFF":
-		relayData = bson.M{"st": "off"}
-	case "AUTO":
-		relayData = bson.M{
-			"st":  "auto",
-			"thr": message.State.Detail, // should be [2]float of threshold
-		}
-	case "TIME":
-		relayData = bson.M{
-			"st":  "time",
-			"sch": message.State.Detail, // should be [2][]int of unix time
-		}
-	}
-	jsonData := bson.M{
-		"t":   "cmd",
+	mqttMsg, _ := json.Marshal(bson.M{
 		"cmd": "set",
-		"st": bson.M{
-			message.RelayID: relayData,
+		"state": bson.M{
+			msg.RelayID: msg.State,
 		},
+	})
+
+	mdb, err := common.Mongo()
+	defer mdb.Close()
+	if common.PrintError(err) {
+		return false, "Something went wrong"
 	}
+	mdb.DB("CUSmartFarm").C("devices").Find(bson.M{
+		"id": msg.DeviceID,
+	}).Apply(mgo.Change{
+		Update: bson.M{
+			"$set": bson.M{"state." + msg.RelayID: msg.State},
+		},
+	}, make(bson.M, 0))
 
-	msg, _ := json.Marshal(jsonData)
-
-	mqtt.SendMessageToDevice(message.DeviceID, msg)
+	mqtt.SendMessageToDevice(msg.DeviceID, mqttMsg)
 	return true, "OK"
 }
