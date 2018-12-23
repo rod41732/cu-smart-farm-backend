@@ -1,33 +1,45 @@
 [
+  // ============================ Server to Device Message 
   { // type 1: set state
-  "t": "cmd",
   "cmd": "set",
-  "st": {
+  "state": {
     "1": { // set schedule
-      "st": "time",  
-      "sch": [[1543817375897, 1543817385237],] // schedule
+      "mode": "time",  
+      "detail": [[1543817375897, 1543817385237],] // schedule
     },
     "2": { // set on-off
-      "st": "on"
+      "mode": "on",
+      "detail": null // this is optional 
     },
     "3": { // auto (sensor)
-      "st": "auto",
-      "thr": [30, 32] // threshold, relay use 2 sensors as threshold, up to device to interpret
+      "mode": "auto",
+      "detail": [30, 32] // threshold, relay use 2 sensors as threshold, up to device to interpret
     },
-    "4": {
-      "st": "off"
+    "4": { // on-off (same as relay 2)
+      "mode": "off"
     }
   }
   },
-  { // type 2: tell device to fetch
-    "t": "cmd",
+  { 
     "cmd": "fetch"
   },
-  // ----------------- data that device send ------------------
+  // ============================ Device to Server Message
   { 
     "t": "data",
     "data": {
       // whatever device want to send
     },
+  },
+  {
+    "t": "greeting"
+  },
+  // ============================= DB Schema 
+  {
+    "id": "1f7e204a", 
+    "secret": "4cc348cd11d7018f42331197525d8e1bb4cf7a7fb934dd2d597f8f1845996756", // sha256
+    "owner": "john_smith", // username of owner
+    "state": {
+      // same as Server to Device Message
+    }
   }
 ]
