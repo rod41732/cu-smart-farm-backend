@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/rod41732/cu-smart-farm-backend/model"
 
 	"github.com/rod41732/cu-smart-farm-backend/storage"
@@ -18,17 +20,46 @@ import (
 
 var mqttClient *service.Client
 
+// idFromTopic return <DeviceID> from CUSmartFarm/<DeviceId>_svr_recv
+func idFromTopic(topic []byte) string {
+	return strings.TrimSuffix(strings.TrimPrefix(string(topic), "CUSmartFarm/"), "_svr_recv")
+}
+
+// greetDevice : send last device state to device
+func greetDevice(deviceID string) error {
+	mdb, err := common.Mongo()
+	defer mdb.Close()
+	if common.PrintError(err) {
+		return err
+	}
+	device, _ := common.FindDeviceByID(deviceID)
+	common.Printf("[MQTT] device id %s => %#v\n", deviceID, device)
+	msg, err := json.Marshal(bson.M{
+		"cmd":   "set",
+		"state": device.RelayStates,
+	})
+	common.PrintError(err)
+	SendMessageToDevice(deviceID, msg)
+	return nil
+}
+
 func handleMessage(msg *message.PublishMessage) error {
 	message := []byte(string(msg.Payload()))
+	deviceID := idFromTopic(msg.Topic())
 	common.Println("[MQTT] incoming message ", string(message))
+
 	var parsedData model.DeviceMessage
 	err := json.Unmarshal(message, &parsedData)
-	if err != nil || parsedData.Type != "data" {
+	common.PrintError(err)
+	if err == nil && parsedData.Type == "greeting" {
+		return greetDevice(deviceID)
+	} else if err != nil || parsedData.Type != "data" {
+		// common.Println("[error] :" + err.Error())
 		common.Println("[MQTT] Error: Invalid message format or non data")
 		return nil
 	}
 	// send data to user
-	deviceID := strings.TrimSuffix(strings.TrimPrefix(string(msg.Topic()), "CUSmartFarm/"), "_svr_recv")
+
 	device, err := common.FindDeviceByID(deviceID)
 	user := storage.GetUserStateInfo(device.Owner)
 	common.Printf("[MQTT] device=%s owner=%s\n", deviceID, device.Owner)
@@ -76,7 +107,7 @@ func connectToMQTTServer() error {
 
 // SendMessageToDevice : Shorthand for creating message and publish
 func SendMessageToDevice(deviceID string, payload []byte) {
-	common.Printf("send message: %s to %s\n", string(payload), deviceID)
+	common.Printf("[MQTT] send message: %s to %s\n", string(payload), deviceID)
 	publishToMQTT([]byte("CUSmartFarm/"+deviceID+"_svr_out"), payload)
 	// publishToMQTT([]byte("CUSmartFarm"), payload)
 }
