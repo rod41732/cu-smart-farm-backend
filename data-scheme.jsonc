@@ -40,6 +40,21 @@
     "owner": "john_smith", // username of owner
     "state": {
       // same as Server to Device Message
+      // except TIMER mode
+      "2": {
+        "mode": "time",
+        "detail": {
+          "schedules": [
+            { // schedult 1:30 - 4:00 on Sun Mon Wed
+              "startHour": 1,
+              "startMin": 30,
+              "endHour": 4,
+              "endMin": 0,
+              "dows": [0, 1, 3]
+            }
+          ]
+        }
+      }
     }
   }
 ]

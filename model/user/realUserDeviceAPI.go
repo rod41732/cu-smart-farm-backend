@@ -131,7 +131,7 @@ func (user *RealUser) SetDevice(payload map[string]interface{}) (bool, string) {
 	mqttMsg, _ := json.Marshal(bson.M{
 		"cmd": "set",
 		"state": bson.M{
-			msg.RelayID: msg.State,
+			msg.RelayID: msg.State.ToDeviceState(),
 		},
 	})
 

@@ -8,12 +8,10 @@ import (
 
 	"gopkg.in/mgo.v2/bson"
 
-	"github.com/rod41732/cu-smart-farm-backend/model"
-
-	"github.com/rod41732/cu-smart-farm-backend/storage"
-
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/config"
+	"github.com/rod41732/cu-smart-farm-backend/model"
+	"github.com/rod41732/cu-smart-farm-backend/storage"
 	"github.com/surgemq/message"
 	"github.com/surgemq/surgemq/service"
 )
@@ -23,6 +21,15 @@ var mqttClient *service.Client
 // idFromTopic return <DeviceID> from CUSmartFarm/<DeviceId>_svr_recv
 func idFromTopic(topic []byte) string {
 	return strings.TrimSuffix(strings.TrimPrefix(string(topic), "CUSmartFarm/"), "_svr_recv")
+}
+
+// return new map with each RelayStaet converted
+func toDeviceStateMap(relayStateMap map[string]model.RelayState) map[string]model.RelayState {
+	result := make(map[string]model.RelayState)
+	for k, v := range relayStateMap {
+		result[k] = v.ToDeviceState()
+	}
+	return result
 }
 
 // greetDevice : send last device state to device
@@ -36,7 +43,7 @@ func greetDevice(deviceID string) error {
 	common.Printf("[MQTT] device id %s => %#v\n", deviceID, device)
 	msg, err := json.Marshal(bson.M{
 		"cmd":   "set",
-		"state": device.RelayStates,
+		"state": toDeviceStateMap(device.RelayStates),
 	})
 	common.PrintError(err)
 	SendMessageToDevice(deviceID, msg)
