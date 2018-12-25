@@ -61,12 +61,11 @@ func handleMessage(msg *message.PublishMessage) error {
 	if err == nil && parsedData.Type == "greeting" {
 		return greetDevice(deviceID)
 	} else if err != nil || parsedData.Type != "data" {
-		// common.Println("[error] :" + err.Error())
 		common.Println("[MQTT] Error: Invalid message format or non data")
 		return nil
 	}
-	// send data to user
 
+	// send data to user
 	device, err := common.FindDeviceByID(deviceID)
 	user := storage.GetUserStateInfo(device.Owner)
 	common.Printf("[MQTT] device=%s owner=%s\n", deviceID, device.Owner)
@@ -78,15 +77,17 @@ func handleMessage(msg *message.PublishMessage) error {
 		return err
 	}
 	common.Printf("[MQTT] parsed Data=%#v\n", parsedData)
-	common.WriteInfluxDB("air_sensor", map[string]string{"device": deviceID}, parsedData.ToMap())
+	out := parsedData.ToMap()
+	delete(out, "t")
+	common.WriteInfluxDB("air_sensor", map[string]string{"device": deviceID}, out)
 
 	return nil
 }
 
 func handleSubscriptionComplete(msg, ack message.Message, err error) error {
 	// fmt.Printf("Subscribed: %s\nAck: %s\n", msg.Decode([]byte("utf-8")), ack.Decode([]byte("utf-8")))
-	fmt.Println(msg)
-	fmt.Println(ack)
+	common.Println(msg)
+	common.Println(ack)
 	common.PrintError(err)
 	return nil
 }
@@ -131,14 +132,14 @@ func publishToMQTT(topic, payload []byte) {
 func SubscribeDevice(deviceID string) {
 	subMsg := message.NewSubscribeMessage()
 	subMsg.AddTopic([]byte("CUSmartFarm/"+deviceID+"_svr_recv"), 2)
-	common.PrintError(mqttClient.Subscribe(subMsg, handleSubscriptionComplete, handleMessage))
+	common.PrintError(mqttClient.Subscribe(subMsg, nil, handleMessage))
 }
 
 func subAll() {
 	subMsg := message.NewSubscribeMessage()
 	subMsg.AddTopic([]byte("CUSmartFarm"), 2)
 	subMsg.AddTopic([]byte("CUSmartFarm/+"), 2)
-	common.PrintError(mqttClient.Subscribe(subMsg, handleSubscriptionComplete, handleMessage))
+	common.PrintError(mqttClient.Subscribe(subMsg, nil, handleMessage))
 }
 
 // MQTT : intialize MQTT Client
