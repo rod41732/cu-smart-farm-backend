@@ -28,31 +28,44 @@ func wsCheckOrigin(r *http.Request) bool {
 
 // WebSocket : WS request handler
 func WebSocket(c *gin.Context) {
+	// get user part
 	// tmp, _ := c.Get("username")
-	// user := tmp.(middleware.User)
-	user := middleware.User{Username: "rod41732"}
-	wsRouter(c.Writer, c.Request, user.Username)
+	// headerUser := tmp.(middleware.User)
+	headerUser := middleware.User{Username: "rod41732"}
+	username := headerUser.Username
+
+	// db part
+	mdb, err := common.Mongo()
+	var dbUser userData
+	defer mdb.Close()
+	if common.PrintError(err) {
+		c.JSON(500, gin.H{
+			"msg": "Connection to database failed",
+		})
+		return
+	}
+	mdb.DB("CUSmartFarm").C("devices").Find(bson.M{
+		"username": username,
+	}).One(&dbUser)
+
+	// for _, deviceID := range userInfo.ownedDevices {
+	// 	mqtt.SubscribeDevice(deviceID)
+	// }
+	wsRouter(c.Writer, c.Request, &dbUser)
 }
 
 type userData struct {
-	Devices []string `json:"devices"`
+	Username string   `json:"username"`
+	Devices  []string `json:"devices"`
 }
 
-func wsRouter(w http.ResponseWriter, r *http.Request, username string) {
+func wsRouter(w http.ResponseWriter, r *http.Request, dbUser *userData) { // pass as pointer to prevent copying array
 	common.Println("Web socket Connected")
 	conn, err := wsUpgrader.Upgrade(w, r, nil)
-	mdb, err := common.Mongo()
-	defer mdb.Close()
-	if common.PrintError(err) {
-		return
-	}
-	var temp userData
-	mdb.DB("CUSmartFarm").C("users").Find(bson.M{
-		"username": username,
-	}).One(&temp)
 
+	username := dbUser.Username
 	client := user.RealUser{Username: username}
-	client.Init(temp.Devices, conn)
+	client.Init(dbUser.Devices, conn)
 	storage.SetUserStateInfo(username, &client)
 
 	resp, _ := json.Marshal(bson.M{"token": client.CurrentToken()}) // give client first token
