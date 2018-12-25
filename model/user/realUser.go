@@ -44,6 +44,11 @@ func (user *RealUser) CheckToken(token string) bool {
 	return token == user.currentToken
 }
 
+// CurrentToken return user's current token
+func (user *RealUser) CurrentToken() string {
+	return user.currentToken
+}
+
 // randomString : helper function for random string with custom length and charset
 func randomString(length int) string {
 	var seededRand = rand.New(
