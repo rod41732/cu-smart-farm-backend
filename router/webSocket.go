@@ -55,6 +55,9 @@ func wsRouter(w http.ResponseWriter, r *http.Request, username string) {
 	client.Init(temp.Devices, conn)
 	storage.SetUserStateInfo(username, &client)
 
+	resp, _ := json.Marshal(bson.M{"token": client.CurrentToken()}) // give client first token
+	conn.WriteMessage(1, resp)
+
 	if common.PrintError(err) {
 		return
 	}
@@ -72,23 +75,33 @@ func wsRouter(w http.ResponseWriter, r *http.Request, username string) {
 		var errmsg string
 		if err != nil {
 			common.PrintError(err)
-			success, errmsg = false, "No Command Specified"
+			success, errmsg = false, "Bad Payload"
 		} else {
-			switch payload.EndPoint {
-			case "addDevice":
-				success, errmsg = client.AddDevice(payload.Payload)
-			case "removeDevice":
-				success, errmsg = client.RemoveDevice(payload.Payload)
-			case "pollDevice":
-				success, errmsg = client.PollDevice(payload.Payload)
-			case "setDevice":
-				success, errmsg = client.SetDevice(payload.Payload)
-			default:
-				success, errmsg = false, "unknown command"
+			if !client.CheckToken(payload.Token) {
+				success, errmsg = false, "Invalid token"
+			} else {
+				client.RegenerateToken()
+				switch payload.EndPoint {
+				case "addDevice":
+					success, errmsg = client.AddDevice(payload.Payload)
+				case "removeDevice":
+					success, errmsg = client.RemoveDevice(payload.Payload)
+				case "pollDevice":
+					success, errmsg = client.PollDevice(payload.Payload)
+				case "setDevice":
+					success, errmsg = client.SetDevice(payload.Payload)
+				default:
+					success, errmsg = false, "unknown command"
+				}
 			}
 		}
-
-		resp, err := json.Marshal(bson.M{"success": success, "errmsg": errmsg})
+		var nextToken string
+		if success {
+			nextToken = client.CurrentToken()
+		} else {
+			nextToken = ""
+		}
+		resp, err := json.Marshal(bson.M{"success": success, "errmsg": errmsg, "token": nextToken})
 		conn.WriteMessage(t, resp)
 		time.Sleep(time.Millisecond * 10)
 	}
