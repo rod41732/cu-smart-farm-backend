@@ -3,7 +3,7 @@ package message
 import (
 	"encoding/json"
 
-	"github.com/rod41732/cu-smart-farm-backend/model"
+	"github.com/rod41732/cu-smart-farm-backend/model/device"
 )
 
 // APICall represent payload for API Calls via WS
@@ -26,9 +26,9 @@ type RemoveDeviceMessage struct {
 
 // DeviceCommandMessage is payload format for setDevice API
 type DeviceCommandMessage struct {
-	DeviceID string           `json:"deviceID" binding:"required"`
-	RelayID  string           `json:"relayID" binding:"required"`
-	State    model.RelayState `json:"state" binding:"required"`
+	DeviceID string            `json:"deviceID" binding:"required"`
+	RelayID  string            `json:"relayID" binding:"required"`
+	State    device.RelayState `json:"state" binding:"required"`
 }
 
 // FromMap is "constructor" for converting map[string]interface{} to AddDeviceMessage  return error if can't convert

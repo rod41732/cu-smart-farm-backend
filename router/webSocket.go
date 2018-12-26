@@ -44,10 +44,12 @@ func WebSocket(c *gin.Context) {
 		})
 		return
 	}
-	mdb.DB("CUSmartFarm").C("devices").Find(bson.M{
+	common.Printf("finding %s\n", username)
+	mdb.DB("CUSmartFarm").C("users").Find(bson.M{
 		"username": username,
 	}).One(&dbUser)
 
+	common.Printf("user = %#v\n", dbUser)
 	// for _, deviceID := range userInfo.ownedDevices {
 	// 	mqtt.SubscribeDevice(deviceID)
 	// }
@@ -61,6 +63,7 @@ type userData struct {
 
 func wsRouter(w http.ResponseWriter, r *http.Request, dbUser *userData) { // pass as pointer to prevent copying array
 	common.Println("Web socket Connected")
+	common.Println("Hi,", dbUser.Username)
 	conn, err := wsUpgrader.Upgrade(w, r, nil)
 
 	username := dbUser.Username
@@ -84,16 +87,18 @@ func wsRouter(w http.ResponseWriter, r *http.Request, dbUser *userData) { // pas
 		var payload mMessage.APICall
 		err = json.Unmarshal(msg, &payload)
 
-		var success bool
-		var errmsg string
+		success := false
+		hasGenToken := false
+		errmsg := ""
 		if err != nil {
 			common.PrintError(err)
 			success, errmsg = false, "Bad Payload"
 		} else {
-			if !client.CheckToken(payload.Token) {
+			if !client.CheckToken(payload.Token) && false { // disable check
 				success, errmsg = false, "Invalid token"
 			} else {
 				client.RegenerateToken()
+				hasGenToken = true
 				switch payload.EndPoint {
 				case "addDevice":
 					success, errmsg = client.AddDevice(payload.Payload)
@@ -109,7 +114,7 @@ func wsRouter(w http.ResponseWriter, r *http.Request, dbUser *userData) { // pas
 			}
 		}
 		var nextToken string
-		if success {
+		if hasGenToken {
 			nextToken = client.CurrentToken()
 		} else {
 			nextToken = ""

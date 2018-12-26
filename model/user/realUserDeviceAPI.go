@@ -5,6 +5,7 @@ import (
 
 	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/rod41732/cu-smart-farm-backend/common"
+	"github.com/rod41732/cu-smart-farm-backend/model/device"
 	mMessage "github.com/rod41732/cu-smart-farm-backend/model/message"
 	"github.com/rod41732/cu-smart-farm-backend/mqtt"
 	mgo "gopkg.in/mgo.v2"
@@ -19,6 +20,7 @@ func (user *RealUser) AddDevice(payload map[string]interface{}) (bool, string) {
 	mdb, err := common.Mongo()
 	defer mdb.Close()
 	if common.PrintError(err) {
+		common.Println("Hello")
 		return false, "Something went wrong"
 	}
 
@@ -27,14 +29,13 @@ func (user *RealUser) AddDevice(payload map[string]interface{}) (bool, string) {
 	db := mdb.DB("CUSmartFarm")
 
 	// Find device and update
-	var match bson.M
+	var match device.Device
 	deviceCondition := bson.M{"id": deviceID, "secret": deviceSecret}
-	db.C("devices").Find(deviceCondition).One(&match)
-
-	if match == nil {
+	err = db.C("devices").Find(deviceCondition).One(&match)
+	common.Printf("[Add device] device = %#v\n", match)
+	if err != nil {
 		return false, "Invalid device ID/ Secret"
-	}
-	if match["owner"] != nil {
+	} else if match.Owner != "" {
 		return false, "Device already owned"
 	}
 

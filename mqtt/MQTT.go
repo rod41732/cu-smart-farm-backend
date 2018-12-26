@@ -6,8 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/mgo.v2/bson"
-
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/config"
 	"github.com/rod41732/cu-smart-farm-backend/model"
@@ -23,30 +21,21 @@ func idFromTopic(topic []byte) string {
 	return strings.TrimSuffix(strings.TrimPrefix(string(topic), "CUSmartFarm/"), "_svr_recv")
 }
 
-// return new map with each RelayStaet converted
-func toDeviceStateMap(relayStateMap map[string]model.RelayState) map[string]model.RelayState {
-	result := make(map[string]model.RelayState)
-	for k, v := range relayStateMap {
-		result[k] = v.ToDeviceState()
-	}
-	return result
-}
-
 // greetDevice : send last device state to device
 func greetDevice(deviceID string) error {
-	mdb, err := common.Mongo()
-	defer mdb.Close()
-	if common.PrintError(err) {
-		return err
-	}
-	device, _ := common.FindDeviceByID(deviceID)
-	common.Printf("[MQTT] device id %s => %#v\n", deviceID, device)
-	msg, err := json.Marshal(bson.M{
-		"cmd":   "set",
-		"state": toDeviceStateMap(device.RelayStates),
-	})
-	common.PrintError(err)
-	SendMessageToDevice(deviceID, msg)
+	// mdb, err := common.Mongo()
+	// defer mdb.Close()
+	// if common.PrintError(err) {
+	// 	return err
+	// }
+	// device, _ := common.FindDeviceByID(deviceID)
+	// common.Printf("[MQTT] device id %s => %#v\n", deviceID, device)
+	// msg, err := json.Marshal(bson.M{
+	// 	"cmd":   "set",
+	// 	"state": toDeviceStateMap(device.RelayStates),
+	// })
+	// common.PrintError(err)
+	// SendMessageToDevice(deviceID, msg)
 	return nil
 }
 
