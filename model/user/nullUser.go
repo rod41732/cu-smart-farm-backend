@@ -8,6 +8,6 @@ type NullUser struct {
 
 // ReportStatus for null user do nothing
 func (user *NullUser) ReportStatus(payload interface{}) {
-	common.Printf("received: %v\n", payload)
+	common.Printf("[NullUser] <<< %v\n", payload)
 	// return
 }

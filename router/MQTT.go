@@ -38,6 +38,8 @@ func handleMessage(msg *message.PublishMessage) error {
 
 	var message model.DeviceMessage
 	err := json.Unmarshal(inMessage, &message)
+	common.Printf("[MQTT] <<< parsed Data=%#v\n", message)
+
 	common.PrintError(err)
 	if err == nil && message.Type == "greeting" {
 		return greetDevice(deviceID)
@@ -52,9 +54,9 @@ func handleMessage(msg *message.PublishMessage) error {
 		fmt.Println("  At handleMessage : greetDevice")
 		return err
 	}
-	common.Printf("[MQTT] --- in device = %v id=[%s]\n", device, deviceID)
+	common.Printf("[MQTT] --- deviceID=[%s]\n", deviceID)
 	user := storage.GetUserStateInfo(device.Owner)
-	common.Printf("[MQTT] --- device=%s owner=%s\n", deviceID, device.Owner)
+	common.Printf("[MQTT] --- owner=%s\n", device.Owner)
 	if user != nil {
 		user.ReportStatus(message)
 	}
@@ -62,7 +64,6 @@ func handleMessage(msg *message.PublishMessage) error {
 		common.PrintError(err)
 		return err
 	}
-	common.Printf("[MQTT] --- parsed Data=%#v\n", message)
 	out := message.ToMap()
 	delete(out, "t")
 	common.WriteInfluxDB("air_sensor", map[string]string{"device": deviceID}, out)

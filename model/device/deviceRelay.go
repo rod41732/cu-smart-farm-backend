@@ -3,6 +3,8 @@ package device
 import (
 	"encoding/json"
 	"time"
+
+	"github.com/rod41732/cu-smart-farm-backend/common"
 )
 
 // RelayState : state of relay (ON/OFF/AUTO + extra detail of mode)
@@ -52,6 +54,9 @@ func (state *RelayState) ToDeviceState() RelayState {
 					break
 				}
 			}
+		}
+		if len(schedArray) == 0 && len(schedules.Schedules) != 0 {
+			common.Println("[DEBUG] device state converter: there's data in schedule but day doesn't match")
 		}
 		cpy.Detail = schedArray
 	}
