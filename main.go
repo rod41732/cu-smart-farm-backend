@@ -13,6 +13,7 @@ func main() {
 	common.InitializeKeyPair()
 	middleware.Initialize()
 
+	router.InitMQTT()
 	go mqtt.MQTT()
 
 	r := gin.Default()

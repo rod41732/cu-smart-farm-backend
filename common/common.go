@@ -8,10 +8,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/rod41732/cu-smart-farm-backend/model/device"
-
-	"github.com/mongodb/mongo-go-driver/bson"
-
 	"github.com/influxdata/influxdb/client/v2"
 	"github.com/rod41732/cu-smart-farm-backend/config"
 	mgo "gopkg.in/mgo.v2"
@@ -192,19 +188,4 @@ func RemoveStringFromSlice(str string, slice []string) {
 			slice[idx] = slice[len(slice)-1]
 		}
 	}
-}
-
-// FindDeviceByID : find Device in mongo return (device, error) if not found return device is nil
-func FindDeviceByID(deviceID string) (match device.Device, err error) {
-	var temp map[string]interface{}
-	mdb, err := Mongo()
-	if PrintError(err) {
-		return
-	}
-	err = mdb.DB("CUSmartFarm").C("devices").Find(bson.M{
-		"id": deviceID,
-	}).One(&temp)
-	str, _ := json.Marshal(temp)
-	_ = json.Unmarshal(str, &match)
-	return
 }

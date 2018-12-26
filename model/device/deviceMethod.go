@@ -108,6 +108,7 @@ func (device *Device) BroadCast() {
 		"cmd":   "set",
 		"state": toDeviceStateMap(device.RelayStates),
 	})
+	common.Printf("[BroadCast] deviceMap is %#v\n", toDeviceStateMap(device.RelayStates))
 	if common.PrintError(err) {
 		fmt.Println("  at device.Broadcast()")
 		return
@@ -117,13 +118,11 @@ func (device *Device) BroadCast() {
 
 // Poll : send "fetch" command to device
 func (device *Device) Poll() {
-	mqttMsg, err := json.Marshal(bson.M{
+	mqttMsg, _ := json.Marshal(bson.M{
 		"cmd": "fetch",
 	})
 	device.sendMsg(mqttMsg)
 }
-
-func 
 
 // send message to device
 func (device *Device) sendMsg(payload []byte) {
@@ -131,8 +130,8 @@ func (device *Device) sendMsg(payload []byte) {
 }
 
 // Utility function
-func toDeviceStateMap(relayStateMap map[string]device.RelayState) map[string]device.RelayState {
-	result := make(map[string]device.RelayState)
+func toDeviceStateMap(relayStateMap map[string]RelayState) map[string]RelayState {
+	result := make(map[string]RelayState)
 	for k, v := range relayStateMap {
 		result[k] = v.ToDeviceState()
 	}
