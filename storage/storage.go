@@ -9,7 +9,6 @@ import (
 	"gopkg.in/mgo.v2/bson"
 
 	"github.com/rod41732/cu-smart-farm-backend/model"
-	"github.com/rod41732/cu-smart-farm-backend/model/user"
 )
 
 var mappedUserObject = make(map[string]model.User)
@@ -24,22 +23,24 @@ func SetUserStateInfo(username string, user model.User) {
 func GetUserStateInfo(username string) model.User {
 	_, ok := mappedUserObject[username]
 	fmt.Printf("[Storage]get user: %s is ok=%v\n", username, ok)
-	if !ok {
-		mappedUserObject[username] = &user.NullUser{}
-	}
+	// temporaray removed coz import cycle
+	// if !ok {
+	// 	mappedUserObject[username] = ni
+	// }
+
 	return mappedUserObject[username]
 }
 
-var mappedDeviceObject = make(map[string]device.Device)
+var mappedDeviceObject = make(map[string]*device.Device)
 
 // GetDevice get device object
-func GetDevice(deviceID string) (dev device.Device, err error) {
+func GetDevice(deviceID string) (dev *device.Device, err error) {
 	_, ok := mappedDeviceObject[deviceID]
 	if !ok { // then make the new device
 		mdb, err := common.Mongo()
 		if common.PrintError(err) {
 			fmt.Println("  At GetDevice()")
-			return device.Device{}, err
+			return &device.Device{}, err
 		}
 		var tmp map[string]interface{}
 		mdb.DB("CUSmartFarm").C("devices").Find(bson.M{
@@ -47,7 +48,7 @@ func GetDevice(deviceID string) (dev device.Device, err error) {
 		}).One(&tmp)
 		dev := device.Device{}
 		dev.FromMap(tmp)
-		mappedDeviceObject[deviceID] = dev
+		mappedDeviceObject[deviceID] = &dev
 
 	}
 	return mappedDeviceObject[deviceID], nil
