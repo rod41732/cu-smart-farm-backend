@@ -1,13 +1,12 @@
 package user
 
 import (
-	"encoding/json"
+	"fmt"
 
 	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/rod41732/cu-smart-farm-backend/common"
-	"github.com/rod41732/cu-smart-farm-backend/model/device"
 	mMessage "github.com/rod41732/cu-smart-farm-backend/model/message"
-	"github.com/rod41732/cu-smart-farm-backend/mqtt"
+	"github.com/rod41732/cu-smart-farm-backend/storage"
 	mgo "gopkg.in/mgo.v2"
 )
 
@@ -17,43 +16,37 @@ func (user *RealUser) AddDevice(payload map[string]interface{}) (bool, string) {
 	if message.FromMap(payload) != nil {
 		return false, "Bad Request"
 	}
+
 	mdb, err := common.Mongo()
-	defer mdb.Close()
 	if common.PrintError(err) {
-		common.Println("Hello")
-		return false, "Something went wrong"
+		return false, "!! DB Connect error"
 	}
 
-	deviceID := message.DeviceID
-	deviceSecret := common.SHA256(message.DeviceSecret)
-	db := mdb.DB("CUSmartFarm")
-
-	// Find device and update
-	var match device.Device
-	deviceCondition := bson.M{"id": deviceID, "secret": deviceSecret}
-	err = db.C("devices").Find(deviceCondition).One(&match)
-	common.Printf("[Add device] device = %#v\n", match)
+	device, err := storage.GetDevice(message.DeviceID)
+	common.Printf("[User] add device -> device=%#v\n", device)
 	if err != nil {
-		return false, "Invalid device ID/ Secret"
-	} else if match.Owner != "" {
-		return false, "Device already owned"
+		common.PrintError(err)
+		return false, "Device not found"
 	}
-
-	appendDevice := mgo.Change{
-		Update: bson.M{"$push": bson.M{"devices": deviceID}},
+	if device.Owner != "" {
+		common.Println("device is own")
+		return false, "Device already owned "
 	}
-	changeOwner := mgo.Change{
-		Update: bson.M{"$set": bson.M{"owner": user.Username}},
-	}
-
-	var temp map[string]interface{}
-	_, err1 := db.C("users").Find(bson.M{"username": user.Username}).Apply(appendDevice, &temp)
-	_, err2 := db.C("devices").Find(deviceCondition).Apply(changeOwner, &temp)
-	if !common.PrintError(err1) && !common.PrintError(err2) {
-		user.devices = append(user.devices, deviceID)
+	if device.SetOwner(user.Username) {
+		var temp map[string]interface{}
+		_, err = mdb.DB("CUSmartFarm").C("users").Find(bson.M{
+			"username": user.Username,
+		}).Apply(mgo.Change{
+			Update: bson.M{"$push": bson.M{"devices": message.DeviceID}},
+		}, &temp)
+		if common.PrintError(err) {
+			fmt.Println("  At modifying user")
+			return false, "!! user modify error"
+		}
+		user.devices = append(user.devices, message.DeviceID)
 		return true, "OK"
 	}
-	return false, "Something went wrong"
+	return false, "!! Device modiy error"
 }
 
 // RemoveDevice removes device from user's device list
@@ -75,30 +68,28 @@ func (user *RealUser) RemoveDevice(payload map[string]interface{}) (bool, string
 		return false, "Something went wrong"
 	}
 
-	deviceID := message.DeviceID
-	db := mdb.DB("CUSmartFarm")
-
-	// no need to check owner as it's already checked
-	deviceCondition := bson.M{"id": deviceID}
-	if cnt, _ := db.C("devices").Find(deviceCondition).Count(); cnt == 0 {
+	device, err := storage.GetDevice(message.DeviceID)
+	if err != nil {
 		return false, "Device not found"
 	}
-
-	removeDevice := mgo.Change{
-		Update: bson.M{"$pull": bson.M{"devices": deviceID}},
+	if device.Owner != user.Username {
+		return false, "Not your device"
 	}
-	changeOwner := mgo.Change{
-		Update: bson.M{"$set": bson.M{"owner": nil}},
-	}
-
-	var temp map[string]interface{}
-	_, err1 := db.C("users").Find(bson.M{"username": user.Username}).Apply(removeDevice, &temp)
-	_, err2 := db.C("devices").Find(deviceCondition).Apply(changeOwner, &temp)
-	if !common.PrintError(err1) && !common.PrintError(err2) {
-		common.RemoveStringFromSlice(deviceID, user.devices)
+	if device.RemoveOwner() {
+		var temp map[string]interface{}
+		_, err = mdb.DB("CUSmartFarm").C("users").Find(bson.M{
+			"username": user.Username,
+		}).Apply(mgo.Change{
+			Update: bson.M{"$pull": bson.M{"devices": message.DeviceID}},
+		}, &temp)
+		if common.PrintError(err) {
+			fmt.Println("  At modifying user")
+			return false, "!! user modify error"
+		}
+		common.RemoveStringFromSlice(message.DeviceID, user.devices)
 		return true, "OK"
 	}
-	return false, "Something went wrong"
+	return false, "!! device modify error"
 }
 
 // PollDevice send "fetch" command to device
@@ -108,14 +99,12 @@ func (user *RealUser) PollDevice(payload map[string]interface{}) (bool, string) 
 	if message.FromMap(payload) != nil {
 		return false, "Bad request"
 	}
-	deviceID := message.DeviceID
-	if !user.ownsDevice(deviceID) {
-		return false, "Not your device"
+
+	device, err := storage.GetDevice(message.DeviceID)
+	if err != nil {
+		return false, "Device not found"
 	}
-	mqttMessage, _ := json.Marshal(bson.M{
-		"cmd": "fetch",
-	})
-	mqtt.SendMessageToDevice(deviceID, mqttMessage)
+	device.Poll()
 	return true, "OK"
 }
 
@@ -129,26 +118,12 @@ func (user *RealUser) SetDevice(payload map[string]interface{}) (bool, string) {
 		return false, "Not your device"
 	}
 
-	mqttMsg, _ := json.Marshal(bson.M{
-		"cmd": "set",
-		"state": bson.M{
-			msg.RelayID: msg.State.ToDeviceState(),
-		},
-	})
-
-	mdb, err := common.Mongo()
-	defer mdb.Close()
-	if common.PrintError(err) {
-		return false, "Something went wrong"
+	device, err := storage.GetDevice(msg.DeviceID)
+	if err != nil {
+		return false, "Device not found"
 	}
-	mdb.DB("CUSmartFarm").C("devices").Find(bson.M{
-		"id": msg.DeviceID,
-	}).Apply(mgo.Change{
-		Update: bson.M{
-			"$set": bson.M{"state." + msg.RelayID: msg.State},
-		},
-	}, make(bson.M, 0))
-
-	mqtt.SendMessageToDevice(msg.DeviceID, mqttMsg)
-	return true, "OK"
+	if device.SetRelay(msg.RelayID, msg.State) {
+		return true, "OK"
+	}
+	return false, "Something went wrong"
 }
