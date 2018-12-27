@@ -22,19 +22,12 @@ func (device *Device) SetOwner(newOwner string) bool {
 	}
 	db := mdb.DB("CUSmartFarm")
 
-	err = db.C("devices").Update(bson.M{
+	var temp map[string]interface{}
+	_, err = db.C("devices").Find(bson.M{
 		"id": device.ID,
-	}, mgo.Change{
+	}).Apply(mgo.Change{
 		Update: bson.M{"$set": bson.M{"owner": newOwner}},
-	})
-	if err != nil {
-		err = db.C("users").Update(bson.M{
-			"username": newOwner,
-		}, mgo.Change{
-			Update: bson.M{"$push": bson.M{"devices": device.ID}},
-		})
-	}
-
+	}, &temp)
 	if common.PrintError(err) {
 		fmt.Println("  At device.setOwner) - updating")
 		return false
@@ -52,19 +45,12 @@ func (device *Device) RemoveOwner() bool {
 	}
 	db := mdb.DB("CUSmartFarm")
 
-	err = db.C("devices").Update(bson.M{
+	var temp map[string]interface{}
+	_, err = db.C("devices").Find(bson.M{
 		"id": device.ID,
-	}, mgo.Change{
+	}).Apply(mgo.Change{
 		Update: bson.M{"$set": bson.M{"owner": nil}}, // it's set to null in DB
-	})
-	if err != nil {
-		err = db.C("users").Update(bson.M{
-			"username": "",
-		}, mgo.Change{
-			Update: bson.M{"$pull": bson.M{"devices": device.ID}},
-		})
-	}
-
+	}, &temp)
 	if common.PrintError(err) {
 		fmt.Println("  At device.setOwner) - updating")
 		return false
@@ -85,13 +71,14 @@ func (device *Device) SetRelay(relayID string, state RelayState) bool {
 		return false
 	}
 
-	err = mdb.DB("CUSmartFarm").C("devices").Update(bson.M{
+	var temp map[string]interface{}
+	_, err = mdb.DB("CUSmartFarm").C("devices").Find(bson.M{
 		"id": device.ID,
-	}, mgo.Change{
+	}).Apply(mgo.Change{
 		Update: bson.M{"$set": bson.M{
 			"state." + relayID: state,
 		}},
-	})
+	}, &temp)
 
 	if common.PrintError(err) {
 		fmt.Println("  At device.setOwner) - updating")
