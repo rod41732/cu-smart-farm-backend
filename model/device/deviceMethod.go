@@ -7,14 +7,17 @@ import (
 	"github.com/rod41732/cu-smart-farm-backend/mqtt"
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
-	"gopkg.in/mgo.v2"
+	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
 // Must check before call
 
 // SetOwner sets device owner
-func (device *Device) SetOwner(newOwner string) bool {
+func (device *Device) SetOwner(newOwner string, secret string) bool {
+	if secret != device.Secret {
+		return false
+	}
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
 		fmt.Println("  At device.setOwner() - db connect")

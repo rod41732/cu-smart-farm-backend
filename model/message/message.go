@@ -13,22 +13,21 @@ type APICall struct {
 	Payload  map[string]interface{} `json:"payload" binding:"required"` // json data depend on command
 }
 
-// AddDeviceMessage is payload format for addDevice API
-type AddDeviceMessage struct {
-	DeviceID     string `json:"deviceID" binding:"required"`
-	DeviceSecret string `json:"deviceSecret" binding:"required"`
+// Message is regular message format for any device API
+type Message struct {
+	DeviceID string                 `json:"deviceID" binding:"required"`
+	Param    map[string]interface{} `json:"param"` // json data depend on command
 }
 
-// RemoveDeviceMessage is payload format for removeDevice API
-type RemoveDeviceMessage struct {
-	DeviceID string `json:"deviceID" binding:"required"`
+// AddDeviceMessage is payload format for addDevice API
+type AddDeviceMessage struct {
+	DeviceSecret string `json:"deviceSecret" binding:"required"`
 }
 
 // DeviceCommandMessage is payload format for setDevice API
 type DeviceCommandMessage struct {
-	DeviceID string            `json:"deviceID" binding:"required"`
-	RelayID  string            `json:"relayID" binding:"required"`
-	State    device.RelayState `json:"state" binding:"required"`
+	RelayID string            `json:"relayID" binding:"required"`
+	State   device.RelayState `json:"state" binding:"required"`
 }
 
 // FromMap is "constructor" for converting map[string]interface{} to AddDeviceMessage  return error if can't convert
@@ -44,8 +43,8 @@ func (message *AddDeviceMessage) FromMap(val map[string]interface{}) error {
 	return nil
 }
 
-// FromMap is "constructor" for converting map[string]interface{} to RemoveDeviceMessage  return error if can't convert
-func (message *RemoveDeviceMessage) FromMap(val map[string]interface{}) error {
+// FromMap is "constructor" for converting map[string]interface{} to DeviceCommandMessage  return error if can't convert
+func (message *DeviceCommandMessage) FromMap(val map[string]interface{}) error {
 	str, err := json.Marshal(val)
 	if err != nil {
 		return err
@@ -57,8 +56,8 @@ func (message *RemoveDeviceMessage) FromMap(val map[string]interface{}) error {
 	return nil
 }
 
-// FromMap is "constructor" for converting map[string]interface{} to DeviceCommandMessage  return error if can't convert
-func (message *DeviceCommandMessage) FromMap(val map[string]interface{}) error {
+// FromMap is "constructor" for converting map[string]interface{} to Message  return error if can't convert
+func (message *Message) FromMap(val map[string]interface{}) error {
 	str, err := json.Marshal(val)
 	if err != nil {
 		return err

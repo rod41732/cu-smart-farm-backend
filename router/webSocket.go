@@ -3,6 +3,7 @@ package router
 import (
 	"encoding/json"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/rod41732/cu-smart-farm-backend/storage"
@@ -11,6 +12,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
 	"github.com/rod41732/cu-smart-farm-backend/common"
+	"github.com/rod41732/cu-smart-farm-backend/model/device"
 	mMessage "github.com/rod41732/cu-smart-farm-backend/model/message"
 	"github.com/rod41732/cu-smart-farm-backend/model/user"
 	"gopkg.in/mgo.v2/bson"
@@ -61,6 +63,20 @@ type userData struct {
 	Devices  []string `json:"devices"`
 }
 
+func getDeviceAndParamFromMessage(payload map[string]interface{}) (device *device.Device, param map[string]interface{}, errmsg string) {
+	var message mMessage.Message
+	errmsg = ""
+	if message.FromMap(payload) != nil {
+		errmsg = "Bad Request"
+	}
+	param = message.Param
+	device, err := storage.GetDevice(message.DeviceID)
+	if common.PrintError(err) {
+		errmsg = "Device not found"
+	}
+	return
+}
+
 func wsRouter(w http.ResponseWriter, r *http.Request, dbUser *userData) { // pass as pointer to prevent copying array
 	common.Println("Web socket Connected")
 	common.Println("Hi,", dbUser.Username)
@@ -99,15 +115,29 @@ func wsRouter(w http.ResponseWriter, r *http.Request, dbUser *userData) { // pas
 			} else {
 				client.RegenerateToken()
 				hasGenToken = true
+
+				// Device Middleware
+				var dev *device.Device
+				var param map[string]interface{}
+				if regexp.MustCompile("Device").MatchString(payload.EndPoint) {
+					dev, param, errmsg = getDeviceAndParamFromMessage(payload.Payload)
+					if errmsg != "" {
+						resp, _ := json.Marshal(bson.M{"success": false, "errmsg": errmsg, "token": client.CurrentToken()})
+						conn.WriteMessage(t, resp)
+						continue
+					}
+				}
+
 				switch payload.EndPoint {
 				case "addDevice":
-					success, errmsg = client.AddDevice(payload.Payload)
+					success, errmsg = client.AddDevice(param, dev)
 				case "removeDevice":
-					success, errmsg = client.RemoveDevice(payload.Payload)
+					success, errmsg = client.RemoveDevice(dev)
 				case "pollDevice":
-					success, errmsg = client.PollDevice(payload.Payload)
+					dev.Poll()
+					success, errmsg = true, "OK"
 				case "setDevice":
-					success, errmsg = client.SetDevice(payload.Payload)
+					success, errmsg = client.SetDevice(param, dev)
 				default:
 					success, errmsg = false, "unknown command"
 				}

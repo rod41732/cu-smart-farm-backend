@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/rod41732/cu-smart-farm-backend/model/device"
+	"github.com/rod41732/cu-smart-farm-backend/model/user"
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"gopkg.in/mgo.v2/bson"
@@ -23,10 +24,9 @@ func SetUserStateInfo(username string, user model.User) {
 func GetUserStateInfo(username string) model.User {
 	_, ok := mappedUserObject[username]
 	fmt.Printf("[Storage]get user: %s is ok=%v\n", username, ok)
-	// temporaray removed coz import cycle
-	// if !ok {
-	// 	mappedUserObject[username] = ni
-	// }
+	if !ok {
+		mappedUserObject[username] = &user.NullUser{}
+	}
 
 	return mappedUserObject[username]
 }

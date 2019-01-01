@@ -6,7 +6,7 @@ import (
 
 // User : interface type of 'RealUser' and 'NullUser'
 type User interface {
-	ReportStatus(payload interface{})
+	ReportStatus(payload DeviceMessage, deviceID string)
 }
 
 // RelayState represents state of a relay (On/Off) and it's detail

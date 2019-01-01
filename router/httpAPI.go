@@ -7,7 +7,8 @@ import (
 	"github.com/rod41732/cu-smart-farm-backend/common"
 )
 
-func SetUpHttpAPI(r *gin.Engine) {
+// SetUpHTTPAPI : http api router
+func SetUpHTTPAPI(r *gin.Engine) {
 
 	common.ShouldPrintDebug = true
 	httpAPI := r.Group("api/v1")

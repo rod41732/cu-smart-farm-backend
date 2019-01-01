@@ -2,23 +2,26 @@ version: '3'
 services:
   backend:
     image: intaniger/smartfarm_backend
-    volumes:
-     - ./:/go/src/app
+    # volumes:
+    #  - ./:/go/src/app
     environment:
       - GIN_MODE=debug
-    command: ["go","run","main.go"]
+    # command: ["go","run","main.go"]
     ports:
      - "3000:3000"
     links:
      - mongodb
-     - influxdb
-  influxdb:
-    image: "influxdb:1.4-alpine"
-    ports:
-     - "8086:8086"
+     - iot_service_pack
   mongodb:
     image: mongo
     volumes:
      - "./mongodb:/data/db"
     ports:
      - "27017:27017"
+  iot_service_pack:
+    image: "intaniger/iot_server:1.1"
+    ports:
+     - "1880:1880"
+     - "1883:1883"
+     - "8083:8083"
+     - "8086:8086"
