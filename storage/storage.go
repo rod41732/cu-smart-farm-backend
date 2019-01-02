@@ -35,6 +35,7 @@ var mappedDeviceObject = make(map[string]*device.Device)
 func GetDevice(deviceID string) (dev *device.Device, err error) {
 	_, ok := mappedDeviceObject[deviceID]
 	if !ok { // then make the new device
+		common.Println("make new device")
 		mdb, err := common.Mongo()
 		if common.PrintError(err) {
 			fmt.Println("  At GetDevice()")

@@ -48,12 +48,13 @@ func addDevice(c *gin.Context) {
 		})
 	} else {
 		dev, err := storage.GetDevice(payload.DeviceID)
+		common.PrintError(err)
 		var ok bool
 		var errmsg string
 		if err != nil {
-			ok, errmsg = userObject.AddDevice(payload.Param, dev)
+			ok, errmsg = false, "GetDevice not found"
 		} else {
-			ok, errmsg = false, "Device not found"
+			ok, errmsg = userObject.AddDevice(payload.Param, dev)
 		}
 		var status int
 		if !ok { // TODO: spaghetti
@@ -97,7 +98,7 @@ func removeDevice(c *gin.Context) {
 		var ok bool
 		var errmsg string
 		if err != nil {
-			ok, errmsg = false, "Device not found"
+			ok, errmsg = false, "GetDevice not found"
 		} else {
 			ok, errmsg = userObject.RemoveDevice(dev)
 		}
@@ -133,7 +134,7 @@ func setDevice(c *gin.Context) {
 	var payload message.Message
 	err := json.Unmarshal([]byte(c.PostForm("payload")), &payload)
 
-	if err != nil {
+	if err == nil {
 		common.Println(err)
 		c.JSON(400, gin.H{
 			"success": false,
