@@ -3,6 +3,8 @@ package user
 import (
 	"encoding/json"
 
+	"github.com/rod41732/cu-smart-farm-backend/model/message"
+
 	"github.com/gin-gonic/gin"
 	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
 	"github.com/rod41732/cu-smart-farm-backend/common"
@@ -35,7 +37,7 @@ func addDevice(c *gin.Context) {
 		return
 	}
 
-	var payload gin.H
+	var payload message.Message
 	err := json.Unmarshal([]byte(c.PostForm("payload")), &payload)
 
 	if err != nil {
@@ -45,7 +47,14 @@ func addDevice(c *gin.Context) {
 			"message": "Bad Request",
 		})
 	} else {
-		ok, errmsg := userObject.AddDevice(payload)
+		dev, err := storage.GetDevice(payload.DeviceID)
+		var ok bool
+		var errmsg string
+		if err != nil {
+			ok, errmsg = userObject.AddDevice(payload.Param, dev)
+		} else {
+			ok, errmsg = false, "Device not found"
+		}
 		var status int
 		if !ok { // TODO: spaghetti
 			status = 500
@@ -75,7 +84,7 @@ func removeDevice(c *gin.Context) {
 		error500(c)
 		return
 	}
-	var payload gin.H
+	var payload message.Message
 	err := json.Unmarshal([]byte(c.PostForm("payload")), &payload)
 
 	if err != nil {
@@ -84,7 +93,14 @@ func removeDevice(c *gin.Context) {
 			"message": "Bad Request",
 		})
 	} else {
-		ok, errmsg := userObject.RemoveDevice(payload)
+		dev, err := storage.GetDevice(payload.DeviceID)
+		var ok bool
+		var errmsg string
+		if err != nil {
+			ok, errmsg = false, "Device not found"
+		} else {
+			ok, errmsg = userObject.RemoveDevice(dev)
+		}
 		var status int
 		if !ok { // TODO: spaghetti
 			status = 500
@@ -114,7 +130,7 @@ func setDevice(c *gin.Context) {
 		error500(c)
 		return
 	}
-	var payload gin.H
+	var payload message.Message
 	err := json.Unmarshal([]byte(c.PostForm("payload")), &payload)
 
 	if err != nil {
@@ -124,7 +140,14 @@ func setDevice(c *gin.Context) {
 			"message": "Bad Request",
 		})
 	} else {
-		ok, errmsg := userObject.SetDevice(payload)
+		dev, err := storage.GetDevice(payload.DeviceID)
+		var ok bool
+		var errmsg string
+		if err != nil {
+			ok, errmsg = false, "Device not found"
+		} else {
+			ok, errmsg = userObject.SetDevice(payload.Param, dev)
+		}
 		var status int
 		if !ok { // TODO: spaghetti
 			status = 500

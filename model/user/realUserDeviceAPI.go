@@ -12,9 +12,9 @@ import (
 )
 
 // AddDevice adds device into user's device list
-func (user *RealUser) AddDevice(payload map[string]interface{}, device *device.Device) (bool, string) {
+func (user *RealUser) AddDevice(secret map[string]interface{}, device *device.Device) (bool, string) {
 	var message mMessage.AddDeviceMessage
-	if message.FromMap(payload) != nil {
+	if message.FromMap(secret) != nil {
 		return false, "Bad Request"
 	}
 
@@ -80,10 +80,10 @@ func (user *RealUser) RemoveDevice(device *device.Device) (bool, string) {
 	return false, "!! device modify error"
 }
 
-// SetDevice : set relay state of device (specified via payload)
-func (user *RealUser) SetDevice(payload map[string]interface{}, device *device.Device) (bool, string) {
+// SetDevice : set relay state of device (specified via `state`)
+func (user *RealUser) SetDevice(state map[string]interface{}, device *device.Device) (bool, string) {
 	var msg mMessage.DeviceCommandMessage
-	if msg.FromMap(payload) != nil {
+	if msg.FromMap(state) != nil {
 		return false, "Bad request"
 	}
 	if !user.ownsDevice(device.ID) {

@@ -22,9 +22,14 @@ const charset = "abcdefghijklmnopqrstuvwxyz" +
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 //Init  initializes user
-func (user *RealUser) Init(devices []string, conn *websocket.Conn) {
+func (user *RealUser) Init(devices []string) {
 	user.RegenerateToken()
 	user.devices = devices
+	user.conn = nil
+}
+
+//SetConn is setter for Conn
+func (user *RealUser) SetConn(conn *websocket.Conn) {
 	user.conn = conn
 }
 

@@ -35,32 +35,8 @@ func WebSocket(c *gin.Context) {
 	// headerUser := tmp.(middleware.User)
 	headerUser := middleware.User{Username: "rod41732"}
 	username := headerUser.Username
-
-	// db part
-	mdb, err := common.Mongo()
-	var dbUser userData
-	defer mdb.Close()
-	if common.PrintError(err) {
-		c.JSON(500, gin.H{
-			"msg": "Connection to database failed",
-		})
-		return
-	}
-	common.Printf("finding %s\n", username)
-	mdb.DB("CUSmartFarm").C("users").Find(bson.M{
-		"username": username,
-	}).One(&dbUser)
-
-	common.Printf("user = %#v\n", dbUser)
-	// for _, deviceID := range userInfo.ownedDevices {
-	// 	mqtt.SubscribeDevice(deviceID)
-	// }
-	wsRouter(c.Writer, c.Request, &dbUser)
-}
-
-type userData struct {
-	Username string   `json:"username"`
-	Devices  []string `json:"devices"`
+	userObject := storage.GetUserStateInfo(username).(*user.RealUser)
+	wsRouter(c.Writer, c.Request, userObject)
 }
 
 func getDeviceAndParamFromMessage(payload map[string]interface{}) (device *device.Device, param map[string]interface{}, errmsg string) {
@@ -89,15 +65,12 @@ func responseStateBody(EndPoint string, success bool, errmsg string, nextToken s
 	return result
 }
 
-func wsRouter(w http.ResponseWriter, r *http.Request, dbUser *userData) { // pass as pointer to prevent copying array
+func wsRouter(w http.ResponseWriter, r *http.Request, client *user.RealUser) { // pass as pointer to prevent copying array
 	common.Println("Web socket Connected")
-	common.Println("Hi,", dbUser.Username)
+	common.Println("Hi", client.Username)
 	conn, err := wsUpgrader.Upgrade(w, r, nil)
 
-	username := dbUser.Username
-	client := user.RealUser{Username: username}
-	client.Init(dbUser.Devices, conn)
-	storage.SetUserStateInfo(username, &client)
+	client.SetConn(conn)
 
 	resp, _ := json.Marshal(bson.M{"token": client.CurrentToken()}) // give client first token
 	conn.WriteMessage(1, resp)
@@ -168,6 +141,6 @@ func wsRouter(w http.ResponseWriter, r *http.Request, dbUser *userData) { // pas
 		conn.WriteMessage(t, responseStateBody(payload.EndPoint, success, errmsg, nextToken))
 		time.Sleep(time.Millisecond * 10)
 	}
-	storage.SetUserStateInfo(username, &user.NullUser{})
+	client.SetConn(nil)
 	common.Println("Web socket Disconnected")
 }

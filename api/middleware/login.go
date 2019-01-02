@@ -4,9 +4,12 @@ import (
 	"log"
 	"time"
 
+	"github.com/rod41732/cu-smart-farm-backend/storage"
+
 	"github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/rod41732/cu-smart-farm-backend/common"
+	"github.com/rod41732/cu-smart-farm-backend/model/user"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -23,6 +26,11 @@ type Login struct {
 // we use user struct just to distinguish it from string when passing data
 type User struct {
 	Username string
+}
+
+type userData struct {
+	Username string   `json:"username"`
+	Devices  []string `json:"devices"`
 }
 
 func Initialize() {
@@ -49,17 +57,29 @@ func Initialize() {
 				return nil, jwt.ErrFailedAuthentication
 			}
 
-			var user map[string]interface{}
 			col := mdb.DB("CUSmartFarm").C("users")
 
-			err = col.Find(bson.M{
+			query := col.Find(bson.M{
 				"username": username,
 				"password": password,
-			}).One(&user)
+			})
 
-			if err != nil || user == nil {
+			if n, err := query.Count(); n == 0 || err != nil {
 				return nil, jwt.ErrFailedAuthentication
 			}
+			if storage.GetUserStateInfo(username) == nil {
+				var data userData
+				query.One(&data)
+				common.Printf("created new user %s\n", username)
+				userObj := user.RealUser{Username: username}
+				userObj.Init(data.Devices)
+				storage.SetUserStateInfo(username, &userObj)
+			}
+			// if storage.GetUserStateInfo(username) == nil {
+			// 	common.Printf(" created user %s\n", username)
+			// 	var userObj user.RealUser
+
+			// }
 
 			return &User{
 				Username: username,

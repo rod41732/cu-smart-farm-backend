@@ -16,7 +16,7 @@ func SetUpHTTPAPI(r *gin.Engine) {
 		httpAPI.POST("/login", middleware.UserAuth.LoginHandler)
 		httpAPI.POST("/register", user.Register)
 		user.UserAPI(httpAPI)
-		deviceAPI := httpAPI.Group("device")
+		// deviceAPI := httpAPI.Group("device")
 		{
 			// deviceAPI.GET()
 		}

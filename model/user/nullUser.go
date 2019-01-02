@@ -1,10 +1,6 @@
 package user
 
-import (
-	"github.com/rod41732/cu-smart-farm-backend/common"
-	"github.com/rod41732/cu-smart-farm-backend/model"
-)
-
+/*
 // NullUser is "placeholder" when client is disconnected
 type NullUser struct {
 }
@@ -15,3 +11,4 @@ func (user *NullUser) ReportStatus(payload model.DeviceMessagePayload, deviceID 
 	common.WriteInfluxDB("cu_smartfarm_sensor_log", map[string]string{"device": deviceID}, payload.ToMap())
 	// return
 }
+*/
