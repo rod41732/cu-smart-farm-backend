@@ -152,6 +152,6 @@ func getDevicesList(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"success": true,
 		"message": "OK",
-		"data":    userObject.Device  s(),
+		"data":    userObject.Devices(),
 	})
 }

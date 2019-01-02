@@ -28,6 +28,7 @@ type User struct {
 	Username string
 }
 
+// for marshalled db
 type userData struct {
 	Username string   `json:"username"`
 	Devices  []string `json:"devices"`
@@ -103,6 +104,12 @@ func Initialize() {
 		IdentityHandler: func(c *gin.Context) interface{} {
 			claims := jwt.ExtractClaims(c)
 			common.Println("claim is", claims)
+			// token := jwt.GetToken(c)
+			// mdb, err := common.Mongo()
+			// if err != nil {
+			// 	return nil
+			// }
+
 			return &User{
 				Username: claims["username"].(string),
 			}

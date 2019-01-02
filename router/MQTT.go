@@ -22,11 +22,6 @@ func InitMQTT() {
 }
 
 func handleMessage(msg *message.PublishMessage) error {
-	topic := string(msg.Topic())
-	if strings.HasSuffix(topic, "svr_out") { // skip out message
-		return nil
-	}
-
 	inMessage := []byte(string(msg.Payload()))
 	deviceID := idFromTopic(msg.Topic())
 	common.Println("[MQTT] <<< ", string(inMessage))

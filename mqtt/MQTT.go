@@ -73,7 +73,7 @@ func subAll() {
 	common.Println("[MQTT] ---- subscribing to all topic")
 	subMsg := message.NewSubscribeMessage()
 	subMsg.AddTopic([]byte("CUSmartFarm"), 2)
-	subMsg.AddTopic([]byte("CUSmartFarm/+"), 2)
+	subMsg.AddTopic([]byte("CUSmartFarm/+/svr_recv"), 2)
 	common.PrintError(mqttClient.Subscribe(subMsg, handleSubscriptionComplete, messageHandler))
 }
 
