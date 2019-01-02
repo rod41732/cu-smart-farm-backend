@@ -44,7 +44,7 @@ func handleMessage(msg *message.PublishMessage) error {
 		case "greeting":
 			device.BroadCast()
 		case "data":
-			user.ReportStatus(message, device.ID)
+			user.ReportStatus(message.Payload, device.ID)
 		}
 	} else {
 		common.Println("[MQTT] !!! Not a data message")

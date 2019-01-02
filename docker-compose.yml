@@ -2,11 +2,11 @@ version: '3'
 services:
   backend:
     image: intaniger/smartfarm_backend
-    # volumes:
-    #  - ./:/go/src/app
+    volumes:
+     - ./:/go/src/github.com/rod41732/cu-smart-farm-backend
     environment:
       - GIN_MODE=debug
-    # command: ["go","run","main.go"]
+    command: ["go","run","main.go"]
     ports:
      - "3000:3000"
     links:

@@ -29,12 +29,10 @@ func (user *RealUser) Init(devices []string, conn *websocket.Conn) {
 }
 
 // ReportStatus sends MQTT data to user via WebSocket then insert into InfluxDB
-func (user *RealUser) ReportStatus(payload model.DeviceMessage, deviceID string) {
+func (user *RealUser) ReportStatus(payload model.DeviceMessagePayload, deviceID string) {
 	resp, _ := json.Marshal(payload)
 	user.conn.WriteMessage(1, resp) // 1 is text message
-	out := payload.ToMap()
-	delete(out, "t")
-	common.WriteInfluxDB("cu_smartfarm_sensor_log", map[string]string{"device": deviceID}, out)
+	common.WriteInfluxDB("cu_smartfarm_sensor_log", map[string]string{"device": deviceID}, payload.ToMap())
 }
 
 // RegenerateToken : Regenerate user websocket authorization token

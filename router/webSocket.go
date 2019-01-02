@@ -77,6 +77,18 @@ func getDeviceAndParamFromMessage(payload map[string]interface{}) (device *devic
 	return
 }
 
+func responseStateBody(EndPoint string, success bool, errmsg string, nextToken string) []byte {
+	result, err := json.Marshal(
+		gin.H{
+			"t":      "status",
+			"e":      EndPoint,
+			"status": gin.H{"success": success, "errmsg": errmsg},
+			"token":  nextToken,
+		})
+	common.PrintError(err)
+	return result
+}
+
 func wsRouter(w http.ResponseWriter, r *http.Request, dbUser *userData) { // pass as pointer to prevent copying array
 	common.Println("Web socket Connected")
 	common.Println("Hi,", dbUser.Username)
@@ -106,13 +118,15 @@ func wsRouter(w http.ResponseWriter, r *http.Request, dbUser *userData) { // pas
 		success := false
 		hasGenToken := false
 		errmsg := ""
-		if err != nil {
-			common.PrintError(err)
+		if common.PrintError(err) {
+			common.Println("[!] [WS] -- Bad Payload")
 			success, errmsg = false, "Bad Payload"
 		} else {
 			if !client.CheckToken(payload.Token) && false { // disable check
+				common.Println("[!] [WS] -- Invalid token")
 				success, errmsg = false, "Invalid token"
 			} else {
+				common.Printf("[!] [WS] -- Endpoint : %s", payload.EndPoint)
 				client.RegenerateToken()
 				hasGenToken = true
 
@@ -122,8 +136,7 @@ func wsRouter(w http.ResponseWriter, r *http.Request, dbUser *userData) { // pas
 				if regexp.MustCompile("Device").MatchString(payload.EndPoint) {
 					dev, param, errmsg = getDeviceAndParamFromMessage(payload.Payload)
 					if errmsg != "" {
-						resp, _ := json.Marshal(bson.M{"success": false, "errmsg": errmsg, "token": client.CurrentToken()})
-						conn.WriteMessage(t, resp)
+						conn.WriteMessage(t, responseStateBody(payload.EndPoint, success, errmsg, client.CurrentToken()))
 						continue
 					}
 				}
@@ -138,6 +151,9 @@ func wsRouter(w http.ResponseWriter, r *http.Request, dbUser *userData) { // pas
 					success, errmsg = true, "OK"
 				case "setDevice":
 					success, errmsg = client.SetDevice(param, dev)
+				case "getDevList":
+					client.GetDevList()
+					success, errmsg = true, "OK"
 				default:
 					success, errmsg = false, "unknown command"
 				}
@@ -149,8 +165,7 @@ func wsRouter(w http.ResponseWriter, r *http.Request, dbUser *userData) { // pas
 		} else {
 			nextToken = ""
 		}
-		resp, err := json.Marshal(bson.M{"success": success, "errmsg": errmsg, "token": nextToken})
-		conn.WriteMessage(t, resp)
+		conn.WriteMessage(t, responseStateBody(payload.EndPoint, success, errmsg, nextToken))
 		time.Sleep(time.Millisecond * 10)
 	}
 	storage.SetUserStateInfo(username, &user.NullUser{})
