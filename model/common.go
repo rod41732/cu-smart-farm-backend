@@ -4,11 +4,6 @@ import (
 	"encoding/json"
 )
 
-// User : interface type of 'RealUser' and 'NullUser'
-type User interface {
-	ReportStatus(payload DeviceMessagePayload, deviceID string)
-}
-
 // DeviceMessagePayload : mqtt message payload (for report device stat) from device
 type DeviceMessagePayload struct {
 	Soil     float32 `json:"Soil"`

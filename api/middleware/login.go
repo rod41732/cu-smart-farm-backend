@@ -102,6 +102,7 @@ func Initialize() {
 		// which can retrieve on endPoint
 		IdentityHandler: func(c *gin.Context) interface{} {
 			claims := jwt.ExtractClaims(c)
+			common.Println("claim is", claims)
 			return &User{
 				Username: claims["username"].(string),
 			}
@@ -119,6 +120,7 @@ func Initialize() {
 				"code":    code,
 				"message": message,
 			})
+			c.Abort()
 		},
 		TokenLookup:    "header: Authorization, query: token, cookie: token",
 		TokenHeadName:  "Bearer",

@@ -8,7 +8,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
 	"github.com/rod41732/cu-smart-farm-backend/common"
-	User "github.com/rod41732/cu-smart-farm-backend/model/user"
 	"github.com/rod41732/cu-smart-farm-backend/storage"
 )
 
@@ -16,23 +15,15 @@ import (
 func error500(c *gin.Context) {
 	c.JSON(500, gin.H{
 		"success": false,
-		"message": "some errorr ",
+		"message": "Something went wrong",
 	})
 }
 
 func addDevice(c *gin.Context) {
-	usr, ok := c.Get("user")
-	if !ok {
-		error500(c)
-		return
-	}
-	user, ok := usr.(*middleware.User)
-	if !ok {
-		error500(c)
-		return
-	}
-	userObject, ok := storage.GetUserStateInfo(user.Username).(*User.RealUser)
-	if !ok {
+	usr, _ := c.Get("user")
+	user, _ := usr.(*middleware.User)
+	userObject := storage.GetUserStateInfo(user.Username)
+	if userObject == nil {
 		error500(c)
 		return
 	}
@@ -44,7 +35,7 @@ func addDevice(c *gin.Context) {
 		common.Println(err)
 		c.JSON(400, gin.H{
 			"success": false,
-			"message": "Bad Request",
+			"message": "Bad Payload format",
 		})
 	} else {
 		dev, err := storage.GetDevice(payload.DeviceID)
@@ -52,7 +43,7 @@ func addDevice(c *gin.Context) {
 		var ok bool
 		var errmsg string
 		if err != nil {
-			ok, errmsg = false, "GetDevice not found"
+			ok, errmsg = false, "Invalid device"
 		} else {
 			ok, errmsg = userObject.AddDevice(payload.Param, dev)
 		}
@@ -70,21 +61,14 @@ func addDevice(c *gin.Context) {
 }
 
 func removeDevice(c *gin.Context) {
-	usr, ok := c.Get("user")
-	if !ok {
+	usr, _ := c.Get("user")
+	user, _ := usr.(*middleware.User)
+	userObject := storage.GetUserStateInfo(user.Username)
+	if userObject == nil {
 		error500(c)
 		return
 	}
-	user, ok := usr.(*middleware.User)
-	if !ok {
-		error500(c)
-		return
-	}
-	userObject, ok := storage.GetUserStateInfo(user.Username).(*User.RealUser)
-	if !ok {
-		error500(c)
-		return
-	}
+
 	var payload message.Message
 	err := json.Unmarshal([]byte(c.PostForm("payload")), &payload)
 
@@ -97,6 +81,7 @@ func removeDevice(c *gin.Context) {
 		dev, err := storage.GetDevice(payload.DeviceID)
 		var ok bool
 		var errmsg string
+		// var errmsg string
 		if err != nil {
 			ok, errmsg = false, "GetDevice not found"
 		} else {
@@ -116,21 +101,14 @@ func removeDevice(c *gin.Context) {
 }
 
 func setDevice(c *gin.Context) {
-	usr, ok := c.Get("user")
-	if !ok {
+	usr, _ := c.Get("user")
+	user, _ := usr.(*middleware.User)
+	userObject := storage.GetUserStateInfo(user.Username)
+	if userObject == nil {
 		error500(c)
 		return
 	}
-	user, ok := usr.(*middleware.User)
-	if !ok {
-		error500(c)
-		return
-	}
-	userObject, ok := storage.GetUserStateInfo(user.Username).(*User.RealUser)
-	if !ok {
-		error500(c)
-		return
-	}
+
 	var payload message.Message
 	err := json.Unmarshal([]byte(c.PostForm("payload")), &payload)
 
@@ -163,24 +141,17 @@ func setDevice(c *gin.Context) {
 }
 
 func getDevicesList(c *gin.Context) {
-	usr, ok := c.Get("user")
-	if !ok {
+	usr, _ := c.Get("user")
+	user, _ := usr.(*middleware.User)
+	userObject := storage.GetUserStateInfo(user.Username)
+	if userObject == nil {
 		error500(c)
 		return
 	}
-	user, ok := usr.(*middleware.User)
-	if !ok {
-		error500(c)
-		return
-	}
-	userObject, ok := storage.GetUserStateInfo(user.Username).(*User.RealUser)
-	if !ok {
-		error500(c)
-		return
-	}
+
 	c.JSON(200, gin.H{
 		"success": true,
 		"message": "OK",
-		"data":    userObject.Devices(),
+		"data":    userObject.Device  s(),
 	})
 }

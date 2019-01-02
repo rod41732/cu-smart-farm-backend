@@ -8,19 +8,19 @@ import (
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"gopkg.in/mgo.v2/bson"
 
-	"github.com/rod41732/cu-smart-farm-backend/model"
+	"github.com/rod41732/cu-smart-farm-backend/model/user"
 )
 
-var mappedUserObject = make(map[string]model.User)
+var mappedUserObject = make(map[string]*user.RealUser)
 
-// SetUserStateInfo : Map username into model.User
-func SetUserStateInfo(username string, user model.User) {
+// SetUserStateInfo : Map username into *user.RealUser
+func SetUserStateInfo(username string, user *user.RealUser) {
 	fmt.Printf("added user: %s\n", username)
 	mappedUserObject[username] = user
 }
 
-// GetUserStateInfo get model.User corresponding to username
-func GetUserStateInfo(username string) model.User {
+// GetUserStateInfo get *user.RealUser corresponding to username
+func GetUserStateInfo(username string) *user.RealUser {
 	_, ok := mappedUserObject[username]
 	fmt.Printf("[Storage]get user: %s is ok=%v\n", username, ok)
 	// if !ok {

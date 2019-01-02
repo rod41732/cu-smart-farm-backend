@@ -35,7 +35,7 @@ func WebSocket(c *gin.Context) {
 	// headerUser := tmp.(middleware.User)
 	headerUser := middleware.User{Username: "rod41732"}
 	username := headerUser.Username
-	userObject := storage.GetUserStateInfo(username).(*user.RealUser)
+	userObject := storage.GetUserStateInfo(username)
 	wsRouter(c.Writer, c.Request, userObject)
 }
 

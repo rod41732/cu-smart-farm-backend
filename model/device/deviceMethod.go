@@ -13,14 +13,14 @@ import (
 
 // Must check before call
 
-// SetOwner sets device owner
+// SetOwner sets device owner, called when add device
 func (device *Device) SetOwner(newOwner string, secret string) bool {
 	if common.SHA256(secret) != device.Secret {
 		return false
 	}
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
-		fmt.Println("  At device.setOwner() - db connect")
+		fmt.Println("  At device.setOwner() => common.Mongo()")
 		return false
 	}
 	db := mdb.DB("CUSmartFarm")
@@ -32,7 +32,7 @@ func (device *Device) SetOwner(newOwner string, secret string) bool {
 		Update: bson.M{"$set": bson.M{"owner": newOwner}},
 	}, &temp)
 	if common.PrintError(err) {
-		fmt.Println("  At device.setOwner) - updating")
+		fmt.Println("  At device.setOwner() - updating")
 		return false
 	}
 	device.Owner = newOwner
