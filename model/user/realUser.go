@@ -63,3 +63,7 @@ func randomString(length int) string {
 func (user *RealUser) ownsDevice(deviceID string) bool {
 	return common.StringInSlice(deviceID, user.devices)
 }
+
+func (user *RealUser) Devices() []string {
+	return user.devices
+}

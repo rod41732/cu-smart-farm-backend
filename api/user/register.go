@@ -5,6 +5,7 @@ import (
 	"github.com/rod41732/cu-smart-farm-backend/common"
 )
 
+// Register : API for user register
 func Register(c *gin.Context) {
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
