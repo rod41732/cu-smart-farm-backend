@@ -7,8 +7,8 @@ import (
 	"github.com/rod41732/cu-smart-farm-backend/common"
 )
 
-// SetUpHttpAPI set up http api for gin.Engine
-func SetUpHttpAPI(r *gin.Engine) {
+// SetUpHTTPAPI : http api router
+func SetUpHTTPAPI(r *gin.Engine) {
 
 	common.ShouldPrintDebug = true
 	httpAPI := r.Group("api/v1")
@@ -16,5 +16,9 @@ func SetUpHttpAPI(r *gin.Engine) {
 		httpAPI.POST("/login", middleware.UserAuth.LoginHandler)
 		httpAPI.POST("/register", user.Register)
 		user.UserAPI(httpAPI)
+		deviceAPI := httpAPI.Group("device")
+		{
+			// deviceAPI.GET()
+		}
 	}
 }

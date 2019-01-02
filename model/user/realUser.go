@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/rod41732/cu-smart-farm-backend/common"
+	"github.com/rod41732/cu-smart-farm-backend/model"
 )
 
 // RealUser represent client connected via WebSocket
@@ -27,10 +28,11 @@ func (user *RealUser) Init(devices []string, conn *websocket.Conn) {
 	user.conn = conn
 }
 
-// ReportStatus sends MQTT data to user via WebSocket
-func (user *RealUser) ReportStatus(payload interface{}) {
+// ReportStatus sends MQTT data to user via WebSocket then insert into InfluxDB
+func (user *RealUser) ReportStatus(payload model.DeviceMessagePayload, deviceID string) {
 	resp, _ := json.Marshal(payload)
 	user.conn.WriteMessage(1, resp) // 1 is text message
+	common.WriteInfluxDB("cu_smartfarm_sensor_log", map[string]string{"device": deviceID}, payload.ToMap())
 }
 
 // RegenerateToken : Regenerate user websocket authorization token

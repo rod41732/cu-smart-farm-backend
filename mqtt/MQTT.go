@@ -50,7 +50,7 @@ func SetHandler(handler service.OnPublishFunc) {
 // SendMessageToDevice : Shorthand for creating message and publish
 func SendMessageToDevice(deviceID string, payload []byte) {
 	common.Printf("[MQTT] >>> send message: %s to %s\n", string(payload), deviceID)
-	publishToMQTT([]byte("CUSmartFarm/"+deviceID+"_svr_out"), payload)
+	publishToMQTT([]byte("CUSmartFarm/"+deviceID+"/svr_out"), payload)
 	// publishToMQTT([]byte("CUSmartFarm"), payload)
 }
 
@@ -65,7 +65,7 @@ func publishToMQTT(topic, payload []byte) {
 // SubscribeDevice : Subscribe device when user logged in and connected to websocket
 func SubscribeDevice(deviceID string) {
 	subMsg := message.NewSubscribeMessage()
-	subMsg.AddTopic([]byte("CUSmartFarm/"+deviceID+"_svr_recv"), 2)
+	subMsg.AddTopic([]byte("CUSmartFarm/"+deviceID+"/svr_recv"), 2)
 	common.PrintError(mqttClient.Subscribe(subMsg, handleSubscriptionComplete, messageHandler))
 }
 

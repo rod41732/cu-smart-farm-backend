@@ -13,17 +13,7 @@ import (
 )
 
 func idFromTopic(topic []byte) string {
-	return strings.TrimSuffix(strings.TrimPrefix(string(topic), "CUSmartFarm/"), "_svr_recv")
-}
-
-// greetDevice : send last device state to device
-func greetDevice(deviceID string) error {
-	dev, err := storage.GetDevice(deviceID)
-	if err != nil {
-		return err
-	}
-	dev.BroadCast()
-	return nil
+	return strings.TrimSuffix(strings.TrimPrefix(string(topic), "CUSmartFarm/"), "/svr_recv")
 }
 
 // InitMQTT sets handler of mqtt router
@@ -46,32 +36,23 @@ func handleMessage(msg *message.PublishMessage) error {
 	common.Printf("[MQTT] <<< parsed Data=%#v\n", message)
 
 	common.PrintError(err)
-	if err == nil && message.Type == "greeting" {
-		return greetDevice(deviceID)
-	} else if err != nil || message.Type != "data" {
+	if err == nil {
+		device, err := storage.GetDevice(deviceID)
+		if common.PrintError(err) && err.Error() != "not found" {
+			fmt.Println("  At handleMessage : handleMessage -> GetDevice")
+			return err
+		}
+		common.Printf("[MQTT] --- deviceID=[%s]\n", deviceID)
+		user := storage.GetUserStateInfo(device.Owner)
+		common.Printf("[MQTT] --- owner=%s\n", device.Owner)
+		switch message.Type {
+		case "greeting":
+			device.BroadCast()
+		case "data":
+			user.ReportStatus(message.Payload, device.ID)
+		}
+	} else {
 		common.Println("[MQTT] !!! Not a data message")
-		return nil
 	}
-
-	// send data to user
-	device, err := storage.GetDevice(deviceID)
-	if common.PrintError(err) {
-		fmt.Println("  At handleMessage : greetDevice")
-		return err
-	}
-	common.Printf("[MQTT] --- deviceID=[%s]\n", deviceID)
-	user := storage.GetUserStateInfo(device.Owner)
-	common.Printf("[MQTT] --- owner=%s\n", device.Owner)
-	if user != nil {
-		user.ReportStatus(message)
-	}
-	if err != nil && err.Error() != "not found" { // ignore device not found
-		common.PrintError(err)
-		return err
-	}
-	out := message.ToMap()
-	delete(out, "t")
-	common.WriteInfluxDB("air_sensor", map[string]string{"device": deviceID}, out)
-
 	return nil
 }

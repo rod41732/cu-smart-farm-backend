@@ -18,7 +18,7 @@ func main() {
 
 	r := gin.Default()
 
-	router.SetUpHttpAPI(r)
+	router.SetUpHTTPAPI(r)
 	r.GET("/ws", router.WebSocket)
 	r.Run(":3000")
 
