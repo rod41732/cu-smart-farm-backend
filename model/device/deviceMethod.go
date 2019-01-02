@@ -92,6 +92,25 @@ func (device *Device) SetRelay(relayID string, state RelayState) bool {
 	return true
 }
 
+// SetName sets name (display name) of device
+func (device *Device) SetName(name string) bool {
+	mdb, err := common.Mongo()
+	if common.PrintError(err) {
+		fmt.Println("   At device.SetName() => DB Connect")
+		return false
+	}
+	var tmp map[string]interface{}
+	_, err = mdb.DB("CUSmartFarm").C("devices").Find(bson.M{
+		"id": device.ID,
+	}).Apply(mgo.Change{Update: bson.M{"$set": bson.M{"name": name}}}, &tmp)
+	if common.PrintError(err) {
+		fmt.Println("  At device.SetName() => DB Operation")
+		return false
+	}
+	device.Name = name
+	return true
+}
+
 // BroadCast : send current state to device via MQTT
 func (device *Device) BroadCast() {
 	mqttMsg, err := json.Marshal(bson.M{

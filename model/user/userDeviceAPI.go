@@ -60,9 +60,6 @@ func (user *RealUser) RemoveDevice(device *device.Device) (bool, string) {
 		return false, "Something went wrong"
 	}
 
-	if device.Owner != user.Username {
-		return false, "Not your device"
-	}
 	if device.RemoveOwner() {
 		var temp map[string]interface{}
 		_, err = mdb.DB("CUSmartFarm").C("users").Find(bson.M{
@@ -80,6 +77,33 @@ func (user *RealUser) RemoveDevice(device *device.Device) (bool, string) {
 	return false, "!! device modify error"
 }
 
+// RenameDevice renames device
+func (user *RealUser) RenameDevice(payload map[string]interface{}, device *device.Device) (bool, string) {
+	// owner check
+	if !user.ownsDevice(device.ID) {
+		return false, "Not your device"
+	}
+
+	var message mMessage.RenameDeviceMessage
+	err := message.FromMap(payload)
+	if err != nil {
+		return false, "Bad Payload"
+	}
+
+	// DB Operations
+	mdb, err := common.Mongo()
+	defer mdb.Close()
+	if common.PrintError(err) {
+		return false, "Something went wrong"
+	}
+
+	if device.SetName(message.Name) {
+		return true, "OK"
+	}
+
+	return false, "!! device modify error"
+}
+
 // SetDevice : set relay state of device (specified via `state`)
 func (user *RealUser) SetDevice(state map[string]interface{}, device *device.Device) (bool, string) {
 	var msg mMessage.DeviceCommandMessage
@@ -93,4 +117,22 @@ func (user *RealUser) SetDevice(state map[string]interface{}, device *device.Dev
 		return true, "OK"
 	}
 	return false, "Something went wrong"
+}
+
+// GetDeviceName returns devices name, if user owns the device, otherwise return empty string
+func (user *RealUser) GetDeviceName(device *device.Device) (bool, string, string) {
+	// owner check
+	if !user.ownsDevice(device.ID) {
+		return false, "Not your device", ""
+	}
+	return true, "OK", device.Name
+}
+
+// GetDeviceState returns devices state, if user owns the device, otherwise return nil
+func (user *RealUser) GetDeviceState(device *device.Device) (bool, string, map[string]device.RelayState) {
+	// owner check
+	if !user.ownsDevice(device.ID) {
+		return false, "Not your device", nil
+	}
+	return true, "OK", device.RelayStates
 }
