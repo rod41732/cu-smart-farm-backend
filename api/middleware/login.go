@@ -50,6 +50,7 @@ func Initialize() {
 			if common.PrintError(err) {
 				return nil, jwt.ErrFailedAuthentication
 			}
+			defer mdb.Close()
 
 			query := mdb.DB("CUSmartFarm").C("users").Find(bson.M{
 				"username": username,
@@ -80,9 +81,10 @@ func Initialize() {
 			claims := jwt.ExtractClaims(c)
 			// token := jwt.GetToken(c)
 			mdb, err := common.Mongo()
-			if err != nil {
+			if common.PrintError(err) {
 				return nil
 			}
+			defer mdb.Close()
 
 			// Need to check with current token (Limit 1 device login)
 			var user map[string]interface{}

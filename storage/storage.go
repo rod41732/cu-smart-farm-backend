@@ -31,6 +31,7 @@ func ensureUser(username string) {
 	if common.PrintError(err) {
 		return
 	}
+	defer mdb.Close()
 	mdb.DB("CUSmartFarm").C("users").Find(bson.M{
 		"username": username,
 	}).One(&tmp)
@@ -58,6 +59,7 @@ func ensureDevice(deviceID string) {
 		fmt.Println("  At ensureDevice()")
 		return
 	}
+	defer mdb.Close()
 	var tmp map[string]interface{}
 	err = mdb.DB("CUSmartFarm").C("devices").Find(bson.M{
 		"id": deviceID,

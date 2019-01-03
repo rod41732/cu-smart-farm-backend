@@ -25,6 +25,7 @@ func (user *RealUser) AddDevice(secret map[string]interface{}, device *device.De
 	if common.PrintError(err) {
 		return false, "!! DB Connect error"
 	}
+	defer mdb.Close()
 
 	common.Printf("[User] add device -> device=%#v\n", device)
 	if device.Owner != "" {
@@ -95,10 +96,10 @@ func (user *RealUser) RenameDevice(payload map[string]interface{}, device *devic
 
 	// DB Operations
 	mdb, err := common.Mongo()
-	defer mdb.Close()
 	if common.PrintError(err) {
 		return false, "Something went wrong"
 	}
+	defer mdb.Close()
 
 	if device.SetName(message.Name) {
 		return true, "OK"

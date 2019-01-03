@@ -20,9 +20,10 @@ func (device *Device) SetOwner(newOwner string, secret string) bool {
 	}
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
-		fmt.Println("  At device.setOwner() => common.Mongo()")
+		fmt.Println("  At device.setOwner() => connect to DB")
 		return false
 	}
+	defer mdb.Close()
 	db := mdb.DB("CUSmartFarm")
 
 	var temp map[string]interface{}
@@ -46,6 +47,7 @@ func (device *Device) RemoveOwner() bool {
 		fmt.Println("  At device.setOwner() - db connect")
 		return false
 	}
+	defer mdb.Close()
 	db := mdb.DB("CUSmartFarm")
 
 	var temp map[string]interface{}
@@ -73,6 +75,7 @@ func (device *Device) SetRelay(relayID string, state RelayState) bool {
 		fmt.Println("  At device.setRelay() - db connect")
 		return false
 	}
+	defer mdb.Close()
 
 	var temp map[string]interface{}
 	_, err = mdb.DB("CUSmartFarm").C("devices").Find(bson.M{
@@ -99,6 +102,8 @@ func (device *Device) SetName(name string) bool {
 		fmt.Println("   At device.SetName() => DB Connect")
 		return false
 	}
+	defer mdb.Close()
+
 	var tmp map[string]interface{}
 	_, err = mdb.DB("CUSmartFarm").C("devices").Find(bson.M{
 		"id": device.ID,
