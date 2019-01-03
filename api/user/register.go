@@ -1,9 +1,32 @@
 package user
 
 import (
+	"regexp"
+
 	"github.com/gin-gonic/gin"
+	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/rod41732/cu-smart-farm-backend/common"
 )
+
+var PROVINCES = []string{
+	"กระบี่", "กรุงเทพมหานคร", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น", "จันทบุรี", "ฉะเชิงเทรา", "ชลบุรี", "ชัยนาท", "ชัยภูมิ", "ชุมพร", "ตรัง",
+	"ตราด", "ตาก", "นครนายก", "นครปฐม", "นครพนม", "นครราชสีมา", "นครศรีธรรมราช", "นครสวรรค์", "นนทบุรี", "นราธิวาส", "น่าน", "บึงกาฬ", "บุรีรัมย์",
+	"ปทุมธานี", "ประจวบคีรีขันธ์", "ปราจีนบุรี", "ปัตตานี", "พะเยา", "พังงา", "พัทลุง", "พิจิตร", "พิษณุโลก", "ภูเก็ต", "มหาสารคาม", "มุกดาหาร", "ยะลา",
+	"ยโสธร", "ระนอง", "ระยอง", "ราชบุรี", "ร้อยเอ็ด", "ลพบุรี", "ลำปาง", "ลำพูน", "ศรีสะเกษ", "สกลนคร", "สงขลา", "สตูล", "สมุทรปราการ", "สมุทรสงคราม",
+	"สมุทรสาคร", "สระบุรี", "สระแก้ว", "สิงห์บุรี", "สุพรรณบุรี", "สุราษฎร์ธานี", "สุรินทร์", "สุโขทัย", "หนองคาย", "หนองบัวลำภู", "อยุธยา", "อำนาจเจริญ",
+	"อุดรธานี", "อุตรดิตถ์", "อุทัยธานี", "อุบลราชธานี", "อ่างทอง", "เชียงราย", "เชียงใหม่", "เพชรบุรี", "เพชรบูรณ์", "เลย", "แพร่", "แม่ฮ่องสอน"}
+
+func validateNationalID(ID []byte) bool {
+	if len(ID) != 13 {
+		return false
+	}
+	sum := 0
+	last := int(ID[12] - '0')
+	for idx, char := range ID[0:12] {
+		sum += (13 - idx) * (int(char - '0'))
+	}
+	return (11-(sum%11))%10 == last
+}
 
 // Register : API for user register
 func Register(c *gin.Context) {
@@ -15,23 +38,51 @@ func Register(c *gin.Context) {
 	defer mdb.Close()
 
 	username := c.PostForm("username")
-	password := common.SHA256(c.PostForm("password"))
+	password := c.PostForm("password")
 	province := c.PostForm("province")
 	address := c.PostForm("address")
 	nationalID := c.PostForm("nationalID")
 	email := c.PostForm("email")
+	cnt, err := mdb.DB("CUSmartFarm").C("users").Find(bson.M{
+		"username": username,
+	}).Count()
+	if cnt != 0 {
+		c.JSON(401, "username already exists")
+		return
+	}
+	var ok = true
+	var errmsg = "OK"
+	// Validations
+	if match, _ := regexp.MatchString("[a-zA-Z0-9_]{6,}", username); ok && !match {
+		ok, errmsg = false, "Username error"
+	}
+	if ok && len(password) < 8 {
+		ok, errmsg = false, "Password error"
+	}
+	if ok && !common.StringInSlice(province, PROVINCES) {
+		ok, errmsg = false, "Province error"
+	}
+	if match, _ := regexp.MatchString("[a-zA-Z0-9_]{3,}@[a-zA-Z0-9_]{3,}.[a-zA-Z0-9_]{3,}", email); ok && !match {
+		ok, errmsg = false, "Email error"
+	}
+	if ok && !validateNationalID([]byte(nationalID)) {
+		ok, errmsg = false, "ID Error"
+	}
 
-	col := mdb.DB("CUSmartFarm").C("users")
-	col.Insert(gin.H{
-		"username":   username,
-		"password":   password,
-		"province":   province,
-		"address":    address,
-		"nationalID": nationalID,
-		"email":      email,
-	})
+	if ok {
+		col := mdb.DB("CUSmartFarm").C("users")
+		col.Insert(gin.H{
+			"username":   username,
+			"password":   common.SHA256(password),
+			"province":   province,
+			"address":    address,
+			"nationalID": nationalID,
+			"email":      email,
+		})
+	}
 	c.JSON(200, gin.H{
-		"status": "OK",
+		"message": errmsg,
+		"success": ok,
 	})
 
 }
