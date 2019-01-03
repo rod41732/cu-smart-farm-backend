@@ -2,14 +2,52 @@ package user
 
 import (
 	"encoding/json"
+	"errors"
+
+	"github.com/rod41732/cu-smart-farm-backend/model/device"
 
 	"github.com/rod41732/cu-smart-farm-backend/model/message"
+	"github.com/rod41732/cu-smart-farm-backend/model/user"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
-	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/storage"
 )
+
+// return 200 if OK else 500
+func status(ok bool) int {
+	if ok {
+		return 200
+	}
+	return 500
+}
+
+func extractUser(c *gin.Context) (userObject *user.RealUser, err error) {
+	usr, ok := c.Get("user")
+	if !ok {
+		err = errors.New("Not logged in")
+		return
+	}
+	user, ok := usr.(*middleware.User)
+	if !ok {
+		err = errors.New("Something went wrong, please login again")
+		return
+	}
+	userObject = storage.GetUserStateInfo(user.Username)
+	return
+}
+
+func extractDeviceIDandParam(c *gin.Context) (dev *device.Device, param map[string]interface{}, err error) {
+	var payload message.Message
+	err = json.Unmarshal([]byte(c.PostForm("payload")), &payload)
+	if err != nil {
+		err = errors.New("Bad payload")
+		return
+	}
+	param = payload.Param
+	dev, err = storage.GetDevice(payload.DeviceID)
+	return
+}
 
 // shortcut to send 500 error
 func error500(c *gin.Context) {
@@ -20,209 +58,119 @@ func error500(c *gin.Context) {
 }
 
 func addDevice(c *gin.Context) {
-	usr, _ := c.Get("user")
-	user, _ := usr.(*middleware.User)
-	userObject := storage.GetUserStateInfo(user.Username)
-	if userObject == nil {
-		error500(c)
-		return
+	ok, errmsg := true, "OK"
+	user, err := extractUser(c)
+	if err != nil {
+		ok, errmsg = false, err.Error()
+	} else {
+		dev, param, err := extractDeviceIDandParam(c)
+		if err != nil {
+			ok, errmsg = false, err.Error()
+		} else {
+			ok, errmsg = user.AddDevice(param, dev)
+		}
 	}
 
-	var payload message.Message
-	err := json.Unmarshal([]byte(c.PostForm("payload")), &payload)
-
-	if err != nil {
-		common.Println(err)
-		c.JSON(400, gin.H{
-			"success": false,
-			"message": "Bad Payload format",
-		})
-	}
-	dev, err := storage.GetDevice(payload.DeviceID)
-	common.PrintError(err)
-	var ok bool
-	var errmsg string
-	if err != nil {
-		ok, errmsg = false, "Invalid device"
-	} else {
-		ok, errmsg = userObject.AddDevice(payload.Param, dev)
-	}
-	var status int
-	if !ok { // TODO: spaghetti
-		status = 500
-	} else {
-		status = 200
-	}
-	c.JSON(status, gin.H{
+	c.JSON(status(ok), gin.H{
 		"success": ok,
 		"message": errmsg,
 	})
 }
 
 func removeDevice(c *gin.Context) {
-	usr, _ := c.Get("user")
-	user, _ := usr.(*middleware.User)
-	userObject := storage.GetUserStateInfo(user.Username)
-	if userObject == nil {
-		error500(c)
-		return
+	ok, errmsg := true, "OK"
+	user, err := extractUser(c)
+	if err != nil {
+		ok, errmsg = false, err.Error()
+	} else {
+		dev, _, err := extractDeviceIDandParam(c)
+		if err != nil {
+			ok, errmsg = false, err.Error()
+		} else {
+			ok, errmsg = user.RemoveDevice(dev)
+		}
 	}
 
-	var payload message.Message
-	err := json.Unmarshal([]byte(c.PostForm("payload")), &payload)
-
-	if err != nil {
-		c.JSON(400, gin.H{
-			"success": false,
-			"message": "Bad Request",
-		})
-	}
-	dev, err := storage.GetDevice(payload.DeviceID)
-	var ok bool
-	var errmsg string
-	// var errmsg string
-	if err != nil {
-		ok, errmsg = false, "GetDevice not found"
-	} else {
-		ok, errmsg = userObject.RemoveDevice(dev)
-	}
-	var status int
-	if !ok { // TODO: spaghetti
-		status = 500
-	} else {
-		status = 200
-	}
-	c.JSON(status, gin.H{
+	c.JSON(status(ok), gin.H{
 		"success": ok,
 		"message": errmsg,
 	})
-
 }
 
 func setDevice(c *gin.Context) {
-	usr, _ := c.Get("user")
-	user, _ := usr.(*middleware.User)
-	userObject := storage.GetUserStateInfo(user.Username)
-	if userObject == nil {
-		error500(c)
-		return
+	ok, errmsg := true, "OK"
+	user, err := extractUser(c)
+	if err != nil {
+		ok, errmsg = false, err.Error()
+	} else {
+		dev, param, err := extractDeviceIDandParam(c)
+		if err != nil {
+			ok, errmsg = false, err.Error()
+		} else {
+			ok, errmsg = user.SetDevice(param, dev)
+		}
 	}
 
-	var payload message.Message
-	err := json.Unmarshal([]byte(c.PostForm("payload")), &payload)
-
-	if err != nil {
-		common.Println(err)
-		c.JSON(400, gin.H{
-			"success": false,
-			"message": "Bad Request",
-		})
-	}
-	dev, err := storage.GetDevice(payload.DeviceID)
-	var ok bool
-	var errmsg string
-	if err != nil {
-		ok, errmsg = false, "Device not found"
-	} else {
-		ok, errmsg = userObject.SetDevice(payload.Param, dev)
-	}
-	var status int
-	if !ok { // TODO: spaghetti
-		status = 500
-	} else {
-		status = 200
-	}
-	c.JSON(status, gin.H{
+	c.JSON(status(ok), gin.H{
 		"success": ok,
 		"message": errmsg,
 	})
 }
 
 func getDevicesList(c *gin.Context) {
-	usr, _ := c.Get("user")
-	user, _ := usr.(*middleware.User)
-	userObject := storage.GetUserStateInfo(user.Username)
-	if userObject == nil {
-		error500(c)
-		return
+	ok, errmsg := true, "OK"
+	var devices []string
+	user, err := extractUser(c)
+	if err != nil {
+		ok, errmsg = false, err.Error()
+	} else {
+		devices = user.Devices()
 	}
 
-	c.JSON(200, gin.H{
-		"success": true,
-		"message": "OK",
-		"data":    userObject.Devices(),
+	c.JSON(status(ok), gin.H{
+		"success": ok,
+		"message": errmsg,
+		"data":    devices,
 	})
 }
 
 // TODO: change error repsonse
 func renameDevice(c *gin.Context) {
-	usr, _ := c.Get("user")
-	user, _ := usr.(*middleware.User)
-	userObject := storage.GetUserStateInfo(user.Username)
-	if userObject == nil {
-		error500(c)
-		return
-	}
-
-	var payload message.Message
-	err := json.Unmarshal([]byte(c.PostForm("payload")), &payload)
-	if common.PrintError(err) {
-		error500(c)
-		return
-	}
-
-	dev, err := storage.GetDevice(payload.DeviceID)
-	var ok bool
-	var errmsg string
+	ok, errmsg := true, "OK"
+	user, err := extractUser(c)
 	if err != nil {
-		ok, errmsg = false, "GetDevice Not Found"
+		ok, errmsg = false, err.Error()
 	} else {
-		ok, errmsg = userObject.RenameDevice(payload.Param, dev)
+		dev, param, err := extractDeviceIDandParam(c)
+		if err != nil {
+			ok, errmsg = false, err.Error()
+		} else {
+			ok, errmsg = user.RenameDevice(param, dev)
+		}
 	}
-	var status int
-	if !ok { // TODO: spaghetti
-		status = 500
-	} else {
-		status = 200
-	}
-	c.JSON(status, gin.H{
+
+	c.JSON(status(ok), gin.H{
 		"success": ok,
 		"message": errmsg,
 	})
 }
 
 func getDeviceInfo(c *gin.Context) {
-	usr, _ := c.Get("user")
-	user, _ := usr.(*middleware.User)
-	userObject := storage.GetUserStateInfo(user.Username)
-	if userObject == nil {
-		error500(c)
-		return
-	}
-
-	var payload message.Message
-	err := json.Unmarshal([]byte(c.PostForm("payload")), &payload)
-	if common.PrintError(err) {
-		error500(c)
-		return
-	}
-
-	dev, err := storage.GetDevice(payload.DeviceID)
-	var ok bool
-	var errmsg string
+	ok, errmsg := true, "OK"
 	var info interface{}
+	user, err := extractUser(c)
 	if err != nil {
-		ok, errmsg, info = false, "GetDevice Not Found", nil
+		ok, errmsg = false, err.Error()
 	} else {
-		ok, errmsg, info = userObject.GetDeviceInfo(dev)
+		dev, _, err := extractDeviceIDandParam(c)
+		if err != nil {
+			ok, errmsg = false, err.Error()
+		} else {
+			ok, errmsg, info = user.GetDeviceInfo(dev)
+		}
 	}
-	var status int
-	if !ok { // TODO: spaghetti
-		status = 500
-	} else {
-		status = 200
-	}
-	c.JSON(status, gin.H{
+
+	c.JSON(status(ok), gin.H{
 		"success": ok,
 		"message": errmsg,
 		"data":    info,
@@ -230,39 +178,23 @@ func getDeviceInfo(c *gin.Context) {
 }
 
 func getDeviceLog(c *gin.Context) {
-	usr, _ := c.Get("user")
-	user, _ := usr.(*middleware.User)
-	userObject := storage.GetUserStateInfo(user.Username)
-	if userObject == nil {
-		error500(c)
-		return
-	}
-
-	var payload message.Message
-	err := json.Unmarshal([]byte(c.PostForm("payload")), &payload)
-	if common.PrintError(err) {
-		error500(c)
-		return
-	}
-
-	dev, err := storage.GetDevice(payload.DeviceID)
-	var ok bool
-	var errmsg string
-	var logs interface{} // if we use []client.Result then we need to import => not use
+	ok, errmsg := true, "OK"
+	var log interface{}
+	user, err := extractUser(c)
 	if err != nil {
-		ok, errmsg, logs = false, "GetDevice Not Found", nil
+		ok, errmsg = false, err.Error()
 	} else {
-		ok, errmsg, logs = userObject.QueryDeviceLog(payload.Param, dev)
+		dev, param, err := extractDeviceIDandParam(c)
+		if err != nil {
+			ok, errmsg = false, err.Error()
+		} else {
+			ok, errmsg, log = user.QueryDeviceLog(param, dev)
+		}
 	}
-	var status int
-	if !ok { // TODO: spaghetti
-		status = 500
-	} else {
-		status = 200
-	}
-	c.JSON(status, gin.H{
+
+	c.JSON(status(ok), gin.H{
 		"success": ok,
 		"message": errmsg,
-		"data":    logs,
+		"data":    log,
 	})
 }

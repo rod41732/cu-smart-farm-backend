@@ -3,12 +3,13 @@ package user
 import (
 	"regexp"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/gin-gonic/gin"
-	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/rod41732/cu-smart-farm-backend/common"
 )
 
-var PROVINCES = []string{
+var provincesList = []string{
 	"กระบี่", "กรุงเทพมหานคร", "กาญจนบุรี", "กาฬสินธุ์", "กำแพงเพชร", "ขอนแก่น", "จันทบุรี", "ฉะเชิงเทรา", "ชลบุรี", "ชัยนาท", "ชัยภูมิ", "ชุมพร", "ตรัง",
 	"ตราด", "ตาก", "นครนายก", "นครปฐม", "นครพนม", "นครราชสีมา", "นครศรีธรรมราช", "นครสวรรค์", "นนทบุรี", "นราธิวาส", "น่าน", "บึงกาฬ", "บุรีรัมย์",
 	"ปทุมธานี", "ประจวบคีรีขันธ์", "ปราจีนบุรี", "ปัตตานี", "พะเยา", "พังงา", "พัทลุง", "พิจิตร", "พิษณุโลก", "ภูเก็ต", "มหาสารคาม", "มุกดาหาร", "ยะลา",
@@ -52,14 +53,14 @@ func Register(c *gin.Context) {
 	}
 	var ok = true
 	var errmsg = "OK"
-	// Validations
+	// Validations, response first error
 	if match, _ := regexp.MatchString("[a-zA-Z0-9_]{6,}", username); ok && !match {
 		ok, errmsg = false, "Username error"
 	}
 	if ok && len(password) < 8 {
 		ok, errmsg = false, "Password error"
 	}
-	if ok && !common.StringInSlice(province, PROVINCES) {
+	if ok && !common.StringInSlice(province, provincesList) {
 		ok, errmsg = false, "Province error"
 	}
 	if match, _ := regexp.MatchString("[a-zA-Z0-9_]{3,}@[a-zA-Z0-9_]{3,}.[a-zA-Z0-9_]{3,}", email); ok && !match {
