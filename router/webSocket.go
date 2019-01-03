@@ -115,18 +115,18 @@ func wsRouter(w http.ResponseWriter, r *http.Request, client *user.RealUser) { /
 				}
 
 				switch payload.EndPoint {
-				case "addDevice":
-					success, errmsg = client.AddDevice(param, dev)
-				case "removeDevice":
-					success, errmsg = client.RemoveDevice(dev)
+				// case "addDevice":
+				// 	success, errmsg = client.AddDevice(param, dev)
+				// case "removeDevice":
+				// 	success, errmsg = client.RemoveDevice(dev)
 				case "pollDevice":
 					dev.Poll()
 					success, errmsg = true, "OK"
 				case "setDevice":
 					success, errmsg = client.SetDevice(param, dev)
-				case "getDevList":
-					client.GetDevList()
-					success, errmsg = true, "OK"
+				// case "getDevList":
+				// 	client.GetDevList()
+				// 	success, errmsg = true, "OK"
 				default:
 					success, errmsg = false, "unknown command"
 				}
