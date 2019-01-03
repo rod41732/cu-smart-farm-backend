@@ -191,7 +191,7 @@ func renameDevice(c *gin.Context) {
 	})
 }
 
-func getDeviceName(c *gin.Context) {
+func getDeviceInfo(c *gin.Context) {
 	usr, _ := c.Get("user")
 	user, _ := usr.(*middleware.User)
 	userObject := storage.GetUserStateInfo(user.Username)
@@ -210,11 +210,11 @@ func getDeviceName(c *gin.Context) {
 	dev, err := storage.GetDevice(payload.DeviceID)
 	var ok bool
 	var errmsg string
-	var name string
+	var info interface{}
 	if err != nil {
-		ok, errmsg, name = false, "GetDevice Not Found", ""
+		ok, errmsg, info = false, "GetDevice Not Found", nil
 	} else {
-		ok, errmsg, name = userObject.GetDeviceName(dev)
+		ok, errmsg, info = userObject.GetDeviceInfo(dev)
 	}
 	var status int
 	if !ok { // TODO: spaghetti
@@ -225,11 +225,11 @@ func getDeviceName(c *gin.Context) {
 	c.JSON(status, gin.H{
 		"success": ok,
 		"message": errmsg,
-		"data":    name,
+		"data":    info,
 	})
 }
 
-func getDeviceState(c *gin.Context) {
+func getDeviceLog(c *gin.Context) {
 	usr, _ := c.Get("user")
 	user, _ := usr.(*middleware.User)
 	userObject := storage.GetUserStateInfo(user.Username)
@@ -248,11 +248,11 @@ func getDeviceState(c *gin.Context) {
 	dev, err := storage.GetDevice(payload.DeviceID)
 	var ok bool
 	var errmsg string
-	var state interface{} // if we use map[string]RelayState then we need to import => not use
+	var logs interface{} // if we use []client.Result then we need to import => not use
 	if err != nil {
-		ok, errmsg, state = false, "GetDevice Not Found", nil
+		ok, errmsg, logs = false, "GetDevice Not Found", nil
 	} else {
-		ok, errmsg, state = userObject.GetDeviceState(dev)
+		ok, errmsg, logs = userObject.QueryDeviceLog(payload.Param, dev)
 	}
 	var status int
 	if !ok { // TODO: spaghetti
@@ -263,6 +263,6 @@ func getDeviceState(c *gin.Context) {
 	c.JSON(status, gin.H{
 		"success": ok,
 		"message": errmsg,
-		"data":    state,
+		"data":    logs,
 	})
 }

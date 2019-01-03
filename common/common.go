@@ -106,7 +106,7 @@ func QueryInfluxDB(query string) []client.Result {
 		}
 		return resp.Results
 	}
-	return []client.Result{}
+	return make([]client.Result, 0)
 }
 
 var deferredPoints, err = client.NewBatchPoints(client.BatchPointsConfig{

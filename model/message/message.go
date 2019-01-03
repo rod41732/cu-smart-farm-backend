@@ -2,6 +2,7 @@ package message
 
 import (
 	"encoding/json"
+	"time"
 
 	"github.com/rod41732/cu-smart-farm-backend/model/device"
 )
@@ -33,6 +34,13 @@ type DeviceCommandMessage struct {
 // RenameDeviceMessage is payload format for rename device API
 type RenameDeviceMessage struct {
 	Name string `json:"name" binding:"required"`
+}
+
+// TimeQuery is payload for querying sersnor logs
+type TimeQuery struct {
+	From  time.Time `json:"from"`
+	To    time.Time `json:"to"`
+	Limit int       `json:"limit"`
 }
 
 // FromMap is "constructor" for converting map[string]interface{} to AddDeviceMessage  return error if can't convert
@@ -76,6 +84,19 @@ func (message *Message) FromMap(val map[string]interface{}) error {
 
 //FromMap is "constructor" for converting map[string]interface{} to RenameDeviceMessage return error if can't convert
 func (message *RenameDeviceMessage) FromMap(val map[string]interface{}) error {
+	str, err := json.Marshal(val)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(str, message)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+//FromMap is "constructor" for converting map[string]interface{} to TimeQuery return error if can't convert
+func (message *TimeQuery) FromMap(val map[string]interface{}) error {
 	str, err := json.Marshal(val)
 	if err != nil {
 		return err

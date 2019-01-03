@@ -1,7 +1,10 @@
 package user
 
 import (
+	"encoding/json"
 	"fmt"
+
+	"github.com/influxdata/influxdb/client/v2"
 
 	"github.com/rod41732/cu-smart-farm-backend/model/device"
 
@@ -119,20 +122,33 @@ func (user *RealUser) SetDevice(state map[string]interface{}, device *device.Dev
 	return false, "Something went wrong"
 }
 
-// GetDeviceName returns devices name, if user owns the device, otherwise return empty string
-func (user *RealUser) GetDeviceName(device *device.Device) (bool, string, string) {
-	// owner check
-	if !user.ownsDevice(device.ID) {
-		return false, "Not your device", ""
-	}
-	return true, "OK", device.Name
-}
-
-// GetDeviceState returns devices state, if user owns the device, otherwise return nil
-func (user *RealUser) GetDeviceState(device *device.Device) (bool, string, map[string]device.RelayState) {
+// GetDeviceInfo returns devices state, if user owns the device, otherwise return nil
+func (user *RealUser) GetDeviceInfo(device *device.Device) (bool, string, map[string]interface{}) {
 	// owner check
 	if !user.ownsDevice(device.ID) {
 		return false, "Not your device", nil
 	}
-	return true, "OK", device.RelayStates
+
+	var result map[string]interface{}
+	str, _ := json.Marshal(device)
+	json.Unmarshal(str, &result)
+
+	return true, "OK", result
+}
+
+// QueryDeviceLog return device's log, if user owns the device, otherwise return empty array
+func (user *RealUser) QueryDeviceLog(timeParams map[string]interface{}, device *device.Device) (bool, string, []client.Result) {
+	if !user.ownsDevice(device.ID) {
+		return false, "Not your device", make([]client.Result, 0)
+	}
+	var msg mMessage.TimeQuery
+	if common.PrintError(msg.FromMap(timeParams)) {
+		return false, "Bad request can't parse", make([]client.Result, 0)
+	}
+	if msg.Limit <= 0 {
+		msg.Limit = 1
+	} else if msg.Limit > 100 {
+		msg.Limit = 100
+	}
+	return true, "OK", common.QueryInfluxDB(fmt.Sprintf(`SELECT *::field FROM air_sensor WHERE "device"='%s' and "time" > %v and "time" < %v ORDER BY time DESC LIMIT %d`, device.ID, msg.From.UnixNano(), msg.To.UnixNano(), msg.Limit))
 }
