@@ -9,11 +9,10 @@ import (
 	"github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/rod41732/cu-smart-farm-backend/common"
-	"github.com/rod41732/cu-smart-farm-backend/model/user"
 	"gopkg.in/mgo.v2/bson"
 )
 
-/// UserAuth is middleware for authenticating user
+//UserAuth is middleware for authenticating user
 var UserAuth *jwt.GinJWTMiddleware
 
 var identityKey = "user"
@@ -21,11 +20,6 @@ var identityKey = "user"
 type Login struct {
 	Username string `form:"username" json:"username" binding:"required"`
 	Password string `form:"password" json:"password" binding:"required"`
-}
-
-// we use user struct just to distinguish it from string when passing data
-type User struct {
-	Username string
 }
 
 // for marshalled db
@@ -43,7 +37,7 @@ func Initialize() {
 		MaxRefresh:  time.Hour * 99999,
 		IdentityKey: identityKey,
 		// ------------------------ creation of JWT token --------------------
-		// handle auth via request and return some info when success
+		// handle auth via request and return user when success
 		Authenticator: func(c *gin.Context) (interface{}, error) {
 			var loginVals Login
 			if err := c.ShouldBind(&loginVals); err != nil {
@@ -52,46 +46,27 @@ func Initialize() {
 			username := loginVals.Username
 			password := common.SHA256(loginVals.Password)
 
-			// auth using mongo
 			mdb, err := common.Mongo()
 			if common.PrintError(err) {
 				return nil, jwt.ErrFailedAuthentication
 			}
 
-			col := mdb.DB("CUSmartFarm").C("users")
-
-			query := col.Find(bson.M{
+			query := mdb.DB("CUSmartFarm").C("users").Find(bson.M{
 				"username": username,
 				"password": password,
 			})
-
-			if n, err := query.Count(); n == 0 || err != nil {
+			if cnt, err := query.Count(); cnt == 0 || err != nil {
 				return nil, jwt.ErrFailedAuthentication
 			}
-			if storage.GetUserStateInfo(username) == nil {
-				var data userData
-				query.One(&data)
-				common.Printf("created new user %s\n", username)
-				userObj := user.RealUser{Username: username}
-				userObj.Init(data.Devices)
-				storage.SetUserStateInfo(username, &userObj)
-			}
-			// if storage.GetUserStateInfo(username) == nil {
-			// 	common.Printf(" created user %s\n", username)
-			// 	var userObj user.RealUser
 
-			// }
-
-			return &User{
-				Username: username,
-			}, nil
+			_ = storage.GetUserStateInfo(username) // create user
+			return username, nil
 		},
-		// if success (can convert data to *User) => put data in to claims
-		// which can be retreived by extract claims
+		// this create JWT, and can be retrieved with extract claims
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
-			if v, ok := data.(*User); ok {
+			if v, ok := data.(string); ok {
 				return jwt.MapClaims{
-					"username": v.Username,
+					"username": v,
 				}
 			}
 			return jwt.MapClaims{}
@@ -101,25 +76,29 @@ func Initialize() {
 		// extracts claims which is set from PayloadFunc
 		// and will set into c context via c.Set(identityKey)
 		// which can retrieve on endPoint
-		IdentityHandler: func(c *gin.Context) interface{} {
+		IdentityHandler: func(c *gin.Context) interface{} { // return user object if success
 			claims := jwt.ExtractClaims(c)
-			common.Println("claim is", claims)
 			// token := jwt.GetToken(c)
-			// mdb, err := common.Mongo()
-			// if err != nil {
-			// 	return nil
-			// }
-
-			return &User{
-				Username: claims["username"].(string),
+			mdb, err := common.Mongo()
+			if err != nil {
+				return nil
 			}
+
+			// Need to check with current token (Limit 1 device login)
+			var user map[string]interface{}
+			err = mdb.DB("CUSmartFarm").C("users").Find(bson.M{
+				"username": claims["username"].(string),
+				// "token":    token, // disable token check
+			}).One(&user)
+			if err != nil {
+				return nil
+			}
+			return claims["username"].(string)
 		},
 		// handle whether we should allow
 		Authorizator: func(data interface{}, c *gin.Context) bool {
-			if _, ok := data.(*User); ok {
-				return true
-			}
-			return false
+			_, ok := data.(string)
+			return ok
 		},
 		// is called when unauthorized
 		Unauthorized: func(c *gin.Context, code int, message string) {

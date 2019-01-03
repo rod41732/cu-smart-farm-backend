@@ -10,7 +10,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/model/device"
 	mMessage "github.com/rod41732/cu-smart-farm-backend/model/message"
@@ -31,10 +30,9 @@ func wsCheckOrigin(r *http.Request) bool {
 // WebSocket : WS request handler
 func WebSocket(c *gin.Context) {
 	// get user part
-	// tmp, _ := c.Get("username")
-	// headerUser := tmp.(middleware.User)
-	headerUser := middleware.User{Username: "rod41732"}
-	username := headerUser.Username
+	// headerUser, _ := c.Get("username")
+	var headerUser interface{} = "rod41732"
+	username := headerUser.(string)
 	userObject := storage.GetUserStateInfo(username)
 	wsRouter(c.Writer, c.Request, userObject)
 }

@@ -10,7 +10,6 @@ import (
 	"github.com/rod41732/cu-smart-farm-backend/model/user"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
 	"github.com/rod41732/cu-smart-farm-backend/storage"
 )
 
@@ -28,12 +27,12 @@ func extractUser(c *gin.Context) (userObject *user.RealUser, err error) {
 		err = errors.New("Not logged in")
 		return
 	}
-	user, ok := usr.(*middleware.User)
+	username, ok := usr.(string)
 	if !ok {
 		err = errors.New("Something went wrong, please login again")
 		return
 	}
-	userObject = storage.GetUserStateInfo(user.Username)
+	userObject = storage.GetUserStateInfo(username)
 	return
 }
 
