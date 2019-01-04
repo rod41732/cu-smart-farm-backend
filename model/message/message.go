@@ -23,6 +23,7 @@ type Message struct {
 // AddDeviceMessage is payload format for addDevice API
 type AddDeviceMessage struct {
 	DeviceSecret string `json:"deviceSecret" binding:"required"`
+	DeviceName   string `json:"deviceName" binding:"required"`
 }
 
 // DeviceCommandMessage is payload format for setDevice API
