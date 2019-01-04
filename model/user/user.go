@@ -75,6 +75,7 @@ func (user *RealUser) ownsDevice(deviceID string) bool {
 	return common.StringInSlice(deviceID, user.devices)
 }
 
+// Devices : return user's device list
 func (user *RealUser) Devices() []string {
 	return user.devices
 }
