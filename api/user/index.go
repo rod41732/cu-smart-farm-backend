@@ -14,8 +14,12 @@ func UserAPI(r *gin.RouterGroup) {
 		group.POST("/removeDevice", removeDevice)
 		group.POST("/setDevice", setDevice)
 		group.POST("/renameDevice", renameDevice)
-		group.GET("/myDevices", getDevicesList)
 		group.POST("/getDeviceInfo", getDeviceInfo)
 		group.POST("/getDeviceLog", getDeviceLog)
+		group.POST("/editProfile", editProfile)
+		group.POST("/changePassword", changePassword)
+
+		group.GET("/myDevices", getDevicesList)
+		group.GET("/getProfile", getProfile)
 	}
 }
