@@ -12,19 +12,23 @@ import (
 
 // RealUser represent client connected via WebSocket
 type RealUser struct {
-	Username     string
 	currentToken string
-	devices      []string
 	conn         *websocket.Conn
+
+	Devices    []string `json:"devices"`
+	Username   string   `json:"username"`
+	Province   string   `json:"province"`
+	Email      string   `json:"email"`
+	NationalID string   `json:"nationalID"`
+	Address    string   `json:"address"`
 }
 
 const charset = "abcdefghijklmnopqrstuvwxyz" +
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-//Init  initializes user
-func (user *RealUser) Init(devices []string) {
+//Init  initializes user token and connection
+func (user *RealUser) Init() {
 	user.RegenerateToken()
-	user.devices = devices
 	user.conn = nil
 }
 
@@ -72,10 +76,5 @@ func randomString(length int) string {
 }
 
 func (user *RealUser) ownsDevice(deviceID string) bool {
-	return common.StringInSlice(deviceID, user.devices)
-}
-
-// Devices : return user's device list
-func (user *RealUser) Devices() []string {
-	return user.devices
+	return common.StringInSlice(deviceID, user.Devices)
 }

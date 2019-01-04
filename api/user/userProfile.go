@@ -23,7 +23,6 @@ func editProfile(c *gin.Context) {
 			ok, errmsg = user.EditProfile(payload)
 		}
 	}
-
 	c.JSON(status(ok), bson.M{
 		"success": ok,
 		"message": errmsg,
@@ -53,18 +52,12 @@ func changePassword(c *gin.Context) {
 
 func getProfile(c *gin.Context) {
 	ok, errmsg := true, "OK"
-	var result map[string]interface{}
+	var result interface{}
 	user, err := extractUser(c)
 	if err != nil {
 		ok, errmsg = false, err.Error()
 	} else {
-		var payload map[string]interface{}
-		err := json.Unmarshal([]byte(c.PostForm("payload")), &payload)
-		if err != nil {
-			ok, errmsg = false, "Bad Payload"
-		} else {
-			ok, errmsg, result = user.GetProfile()
-		}
+		result = user // let it unmarshal user
 	}
 
 	c.JSON(status(ok), bson.M{

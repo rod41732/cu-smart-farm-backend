@@ -18,7 +18,7 @@ func (user *RealUser) GetDevList() {
 	resp, err := json.Marshal(gin.H{
 		"t":       "response",
 		"e":       "getDevList",
-		"payload": user.devices,
+		"payload": user.Devices,
 	})
 	common.PrintError(err)
 	user.conn.WriteMessage(1, resp)
@@ -49,8 +49,9 @@ func (user *RealUser) EditProfile(payload map[string]interface{}) (bool, string)
 		fmt.Println("  At user.EditProfile - modify user")
 		return false, "Something went wrong"
 	}
-	// TODO: edit user data
-
+	user.Province = message.Province
+	user.Address = message.Address
+	user.Email = message.Email
 	return true, "OK"
 }
 
@@ -82,23 +83,4 @@ func (user *RealUser) ChangePassword(payload map[string]interface{}) (bool, stri
 		return false, "Something went wrong"
 	}
 	return true, "OK"
-}
-
-// GetProfile return user's profile
-func (user *RealUser) GetProfile() (bool, string, map[string]interface{}) {
-	mdb, err := common.Mongo()
-	if common.PrintError(err) {
-		fmt.Println("  At user.GetProfile - connect db")
-		return false, "Something went wrong", nil
-	}
-	defer mdb.Close()
-	var result map[string]interface{}
-	err = mdb.DB("CUSmartFarm").C("users").Find(bson.M{
-		"username": user.Username,
-	}).One(&result)
-	if common.PrintError(err) {
-		fmt.Println("  At user.GetProfile - Getting user")
-		return false, "Something went wrong", nil
-	}
-	return true, "OK", result
 }

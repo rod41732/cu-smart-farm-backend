@@ -44,7 +44,7 @@ func (user *RealUser) AddDevice(secret map[string]interface{}, device *device.De
 			fmt.Println("  At modifying user")
 			return false, "!! user modify error"
 		}
-		user.devices = append(user.devices, device.ID)
+		user.Devices = append(user.Devices, device.ID)
 		return true, "OK"
 	}
 	return false, "!! Device modiy error"
@@ -75,7 +75,7 @@ func (user *RealUser) RemoveDevice(device *device.Device) (bool, string) {
 			fmt.Println("  At modifying user")
 			return false, "!! user modify error"
 		}
-		common.RemoveStringFromSlice(device.ID, user.devices)
+		common.RemoveStringFromSlice(device.ID, user.Devices)
 		return true, "OK"
 	}
 	return false, "!! device modify error"

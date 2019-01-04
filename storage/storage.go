@@ -27,7 +27,7 @@ func SetUserStateInfo(username string, user *user.RealUser) {
 }
 
 func ensureUser(username string) {
-	var tmp userData
+	var tmp user.RealUser
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
 		return
@@ -36,9 +36,8 @@ func ensureUser(username string) {
 	mdb.DB("CUSmartFarm").C("users").Find(bson.M{
 		"username": username,
 	}).One(&tmp)
-	newUser := user.RealUser{Username: username}
-	newUser.Init(tmp.Devices)
-	mappedUserObject[username] = &newUser
+	tmp.Init()
+	mappedUserObject[username] = &tmp
 }
 
 // GetUserStateInfo get *user.RealUser corresponding to username

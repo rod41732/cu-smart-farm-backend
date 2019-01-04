@@ -129,7 +129,7 @@ func getDevicesList(c *gin.Context) {
 	if err != nil {
 		ok, errmsg = false, err.Error()
 	} else {
-		devices = user.Devices()
+		devices = user.Devices
 		devShortInfo = make([]deviceShortInfo, len(devices))
 		for i, device := range devices {
 			devInfo, _ := storage.GetDevice(device)
