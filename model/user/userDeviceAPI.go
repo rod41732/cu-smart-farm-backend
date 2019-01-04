@@ -44,7 +44,7 @@ func (user *RealUser) AddDevice(param map[string]interface{}, device *device.Dev
 			fmt.Println("  At modifying user")
 			return false, "!! user modify error"
 		}
-		user.devices = append(user.devices, device.ID)
+		user.Devices = append(user.Devices, device.ID)
 		device.SetName(message.DeviceName)
 		return true, "OK"
 	}
