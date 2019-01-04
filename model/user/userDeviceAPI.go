@@ -15,9 +15,9 @@ import (
 )
 
 // AddDevice adds device into user's device list
-func (user *RealUser) AddDevice(secret map[string]interface{}, device *device.Device) (bool, string) {
+func (user *RealUser) AddDevice(param map[string]interface{}, device *device.Device) (bool, string) {
 	var message mMessage.AddDeviceMessage
-	if message.FromMap(secret) != nil {
+	if message.FromMap(param) != nil {
 		return false, "Bad Request"
 	}
 
@@ -45,6 +45,7 @@ func (user *RealUser) AddDevice(secret map[string]interface{}, device *device.De
 			return false, "!! user modify error"
 		}
 		user.devices = append(user.devices, device.ID)
+		device.SetName(message.DeviceName)
 		return true, "OK"
 	}
 	return false, "!! Device modiy error"
