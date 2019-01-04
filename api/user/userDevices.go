@@ -117,19 +117,31 @@ func setDevice(c *gin.Context) {
 }
 
 func getDevicesList(c *gin.Context) {
-	ok, errmsg := true, "OK"
+	type deviceShortInfo struct {
+		Name string `json:"name"`
+		ID   string `json:"deviceID"`
+	}
 	var devices []string
+	var devShortInfo []deviceShortInfo
+
+	ok, errmsg := true, "OK"
 	user, err := extractUser(c)
 	if err != nil {
 		ok, errmsg = false, err.Error()
 	} else {
 		devices = user.Devices()
+		devShortInfo = make([]deviceShortInfo, len(devices))
+		for i, device := range devices {
+			devInfo, _ := storage.GetDevice(device)
+			devShortInfo[i].ID = devInfo.ID
+			devShortInfo[i].Name = devInfo.Name
+		}
 	}
 
 	c.JSON(status(ok), gin.H{
 		"success": ok,
 		"message": errmsg,
-		"data":    devices,
+		"data":    devShortInfo,
 	})
 }
 
