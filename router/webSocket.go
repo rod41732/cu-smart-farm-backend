@@ -32,7 +32,7 @@ func wsCheckOrigin(r *http.Request) bool {
 func WebSocket(c *gin.Context) {
 	// get user part
 	// headerUser, _ := c.Get("username")
-	var headerUser interface{} = "rod41732"
+	var headerUser interface{} = "rod41732" // TODO re-enable user check ing WS
 	username := headerUser.(string)
 	userObject := storage.GetUserStateInfo(username)
 	wsRouter(c.Writer, c.Request, userObject)
@@ -94,7 +94,7 @@ func wsRouter(w http.ResponseWriter, r *http.Request, client *user.RealUser) { /
 		if err != nil {
 			success, errmsg = false, "Bad Payload"
 		} else {
-			if !client.CheckToken(payload.Token) && false { // disable check
+			if !client.CheckToken(payload.Token) && false { // disable check : TODO re-enable check
 				common.Println("[!] [WS] -- Invalid token")
 				success, errmsg = false, "Invalid token"
 			} else {
