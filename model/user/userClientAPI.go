@@ -21,6 +21,7 @@ func (user *RealUser) GetDevList() {
 		"payload": user.Devices,
 	})
 	common.PrintError(err)
+	fmt.Println("  At User::GetDevList -- json.Marshal")
 	user.conn.WriteMessage(1, resp)
 }
 
@@ -28,13 +29,13 @@ func (user *RealUser) GetDevList() {
 func (user *RealUser) EditProfile(payload map[string]interface{}) (bool, string) {
 	var message message.EditProfileMessage
 	if message.FromMap(payload) != nil {
-		return false, "Bad Request"
+		return false, "Bad Payload"
 	}
 
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
-		fmt.Println("  At user.EditProfile - connect db")
-		return false, "Something went wrong"
+		fmt.Println("  At User::EditProfile -- Connecting to DB")
+		return false, "Can't connect to DB"
 	}
 	defer mdb.Close()
 	var tmp map[string]interface{}
@@ -46,8 +47,8 @@ func (user *RealUser) EditProfile(payload map[string]interface{}) (bool, string)
 		},
 	}, &tmp)
 	if common.PrintError(err) {
-		fmt.Println("  At user.EditProfile - modify user")
-		return false, "Something went wrong"
+		fmt.Println("  At User::EditProfile -- Updating Info")
+		return false, "User modify error"
 	}
 	user.Province = message.Province
 	user.Address = message.Address
@@ -59,12 +60,12 @@ func (user *RealUser) EditProfile(payload map[string]interface{}) (bool, string)
 func (user *RealUser) ChangePassword(payload map[string]interface{}) (bool, string) {
 	var message message.ChangePasswordMessage
 	if message.FromMap(payload) != nil {
-		return false, "Bad Request"
+		return false, "Bad Payload"
 	}
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
-		fmt.Println("  At user.ChangePassword - connect db")
-		return false, "Something went wrong"
+		fmt.Println("  At User::ChangePassword -- Connecting to DB")
+		return false, "Can't connect to DB"
 	}
 	defer mdb.Close()
 	var tmp map[string]interface{}
@@ -79,8 +80,8 @@ func (user *RealUser) ChangePassword(payload map[string]interface{}) (bool, stri
 		},
 	}, &tmp)
 	if common.PrintError(err) {
-		fmt.Println("  At user.ChangePassword - modify user")
-		return false, "Something went wrong"
+		fmt.Println("  At User::ChangePassword -- Updating Password")
+		return false, "User modify error"
 	}
 	return true, "OK"
 }
