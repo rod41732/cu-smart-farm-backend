@@ -18,6 +18,7 @@ func handleSubscriptionComplete(msg, ack message.Message, err error) error {
 	common.Println(msg)
 	common.Println(ack)
 	common.PrintError(err)
+	fmt.Println("  At MQTT/handleSubscriptionComplete")
 	return nil
 }
 
@@ -38,7 +39,7 @@ func connectToMQTTServer() error {
 	msg.SetWillTopic([]byte("CUSmartFarm"))
 	msg.SetWillMessage([]byte("backend: connecting.."))
 	common.PrintError(mqttClient.Connect(config.MQTT["address"], msg))
-	// msg.SetCleanSession(true)
+	fmt.Println("  At MQTT/connectToMQTTServer")
 	return nil
 }
 
@@ -62,27 +63,20 @@ func publishToMQTT(topic, payload []byte) {
 	mqttClient.Publish(msg, nil)
 }
 
-// SubscribeDevice : Subscribe device when user logged in and connected to websocket
-func SubscribeDevice(deviceID string) {
-	subMsg := message.NewSubscribeMessage()
-	subMsg.AddTopic([]byte("CUSmartFarm/"+deviceID+"/svr_recv"), 2)
-	common.PrintError(mqttClient.Subscribe(subMsg, handleSubscriptionComplete, messageHandler))
-}
-
 func subAll() {
 	common.Println("[MQTT] ---- subscribing to all topic")
 	subMsg := message.NewSubscribeMessage()
 	subMsg.AddTopic([]byte("CUSmartFarm"), 2)
 	subMsg.AddTopic([]byte("CUSmartFarm/+/svr_recv"), 2)
 	common.PrintError(mqttClient.Subscribe(subMsg, handleSubscriptionComplete, messageHandler))
+	fmt.Println("  At MQTT/subAll")
 }
 
 // MQTT : intialize MQTT Client
 func MQTT() error {
 	for {
 		if common.PrintError(connectToMQTTServer()) {
-			fmt.Println("  At Connecting to MQTT")
-			continue
+			fmt.Println("  At MQTT/MQTT -- Connecting to server")
 		}
 		subAll()
 		common.ShouldPrintDebug = true

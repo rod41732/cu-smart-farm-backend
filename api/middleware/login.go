@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -48,6 +49,7 @@ func Initialize() {
 
 			mdb, err := common.Mongo()
 			if common.PrintError(err) {
+				fmt.Println("  At Middleware::Authenticator -- Connecting to DB")
 				return nil, jwt.ErrFailedAuthentication
 			}
 			defer mdb.Close()
@@ -82,6 +84,7 @@ func Initialize() {
 			// token := jwt.GetToken(c)
 			mdb, err := common.Mongo()
 			if common.PrintError(err) {
+				fmt.Println("  At Middleware::IdentityHandler -- Connecting to DB")
 				return nil
 			}
 			defer mdb.Close()

@@ -1,6 +1,7 @@
 package user
 
 import (
+	"fmt"
 	"regexp"
 
 	"gopkg.in/mgo.v2/bson"
@@ -33,6 +34,7 @@ func validateNationalID(ID []byte) bool {
 func Register(c *gin.Context) {
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
+		fmt.Println("  At API/Register - Connecting to DB")
 		c.JSON(500, "error")
 		return
 	}

@@ -30,6 +30,7 @@ func ensureUser(username string) {
 	var tmp user.RealUser
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
+		fmt.Println("  At Storage::ensureUser -- Connecting to DB")
 		return
 	}
 	defer mdb.Close()
@@ -56,7 +57,7 @@ func ensureDevice(deviceID string) {
 	common.Println("[Storage] make new device for", deviceID)
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
-		fmt.Println("  At ensureDevice()")
+		fmt.Println("  At User::ensureDevice -- Connecting to DB")
 		return
 	}
 	defer mdb.Close()

@@ -30,10 +30,9 @@ func handleMessage(msg *message.PublishMessage) error {
 	err := json.Unmarshal(inMessage, &message)
 	common.Printf("[MQTT] <<< parsed Data=%#v\n", message)
 
-	common.PrintError(err)
 	if err == nil {
 		device, err := storage.GetDevice(deviceID)
-		if common.PrintError(err) && err.Error() != "not found" {
+		if err != nil {
 			fmt.Println("  At handleMessage : handleMessage -> GetDevice")
 			return err
 		}

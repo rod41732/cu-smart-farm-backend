@@ -23,14 +23,15 @@ func (user *RealUser) AddDevice(secret map[string]interface{}, device *device.De
 
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
-		return false, "!! DB Connect error"
+		fmt.Println("  At User::AddDevice -- Connecting to DB")
+		return false, "Can't connect to DB"
 	}
 	defer mdb.Close()
 
 	common.Printf("[User] add device -> device=%#v\n", device)
 	if device.Owner != "" {
 		common.Println("device is own")
-		return false, "Device already owned "
+		return false, "Device already owned"
 	}
 	// Check Device
 	if device.SetOwner(user.Username, message.DeviceSecret) {
@@ -41,13 +42,13 @@ func (user *RealUser) AddDevice(secret map[string]interface{}, device *device.De
 			Update: bson.M{"$push": bson.M{"devices": device.ID}},
 		}, &temp)
 		if common.PrintError(err) {
-			fmt.Println("  At modifying user")
-			return false, "!! user modify error"
+			fmt.Println("  At User::AddDevice -- Updating Device list")
+			return false, "User modify Error"
 		}
 		user.Devices = append(user.Devices, device.ID)
 		return true, "OK"
 	}
-	return false, "!! Device modiy error"
+	return false, "Device modify error"
 }
 
 // RemoveDevice removes device from user's device list
@@ -61,7 +62,8 @@ func (user *RealUser) RemoveDevice(device *device.Device) (bool, string) {
 	mdb, err := common.Mongo()
 	defer mdb.Close()
 	if common.PrintError(err) {
-		return false, "Something went wrong"
+		fmt.Println("  At User::RemoveDevice -- Connecting to DB")
+		return false, "Can't connect to DB"
 	}
 
 	if device.RemoveOwner() {
@@ -72,13 +74,13 @@ func (user *RealUser) RemoveDevice(device *device.Device) (bool, string) {
 			Update: bson.M{"$pull": bson.M{"devices": device.ID}},
 		}, &temp)
 		if common.PrintError(err) {
-			fmt.Println("  At modifying user")
-			return false, "!! user modify error"
+			fmt.Println("  At User::RemoveDevice -- Updating Device list")
+			return false, "User modify Error"
 		}
 		common.RemoveStringFromSlice(device.ID, user.Devices)
 		return true, "OK"
 	}
-	return false, "!! device modify error"
+	return false, "Device modify error"
 }
 
 // RenameDevice renames device
@@ -94,25 +96,18 @@ func (user *RealUser) RenameDevice(payload map[string]interface{}, device *devic
 		return false, "Bad Payload"
 	}
 
-	// DB Operations
-	mdb, err := common.Mongo()
-	if common.PrintError(err) {
-		return false, "Something went wrong"
-	}
-	defer mdb.Close()
-
 	if device.SetName(message.Name) {
 		return true, "OK"
 	}
 
-	return false, "!! device modify error"
+	return false, "Device modify error"
 }
 
 // SetDevice : set relay state of device (specified via `state`)
 func (user *RealUser) SetDevice(state map[string]interface{}, device *device.Device) (bool, string) {
 	var msg mMessage.DeviceCommandMessage
 	if msg.FromMap(state) != nil {
-		return false, "Bad request"
+		return false, "Bad Payload"
 	}
 	if !user.ownsDevice(device.ID) {
 		return false, "Not your device"
@@ -120,7 +115,7 @@ func (user *RealUser) SetDevice(state map[string]interface{}, device *device.Dev
 	if device.SetRelay(msg.RelayID, msg.State) {
 		return true, "OK"
 	}
-	return false, "Something went wrong"
+	return false, "Can't connect to DB"
 }
 
 // GetDeviceInfo returns devices state, if user owns the device, otherwise return nil
@@ -140,11 +135,11 @@ func (user *RealUser) GetDeviceInfo(device *device.Device) (bool, string, map[st
 // QueryDeviceLog return device's log, if user owns the device, otherwise return empty array
 func (user *RealUser) QueryDeviceLog(timeParams map[string]interface{}, device *device.Device) (bool, string, []client.Result) {
 	if !user.ownsDevice(device.ID) {
-		return false, "Not your device", make([]client.Result, 0)
+		return false, "Not your device", nil
 	}
 	var msg mMessage.TimeQuery
-	if common.PrintError(msg.FromMap(timeParams)) {
-		return false, "Bad request can't parse", make([]client.Result, 0)
+	if msg.FromMap(timeParams) != nil {
+		return false, "Bad Payload", nil
 	}
 	if msg.Limit <= 0 {
 		msg.Limit = 1

@@ -20,7 +20,7 @@ func (device *Device) SetOwner(newOwner string, secret string) bool {
 	}
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
-		fmt.Println("  At device.setOwner() => connect to DB")
+		fmt.Println("  At Device::SetOwner -- Connecting to DB")
 		return false
 	}
 	defer mdb.Close()
@@ -33,7 +33,7 @@ func (device *Device) SetOwner(newOwner string, secret string) bool {
 		Update: bson.M{"$set": bson.M{"owner": newOwner}},
 	}, &temp)
 	if common.PrintError(err) {
-		fmt.Println("  At device.setOwner() - updating")
+		fmt.Println("  At Device::SetOwner -- Updating Owner")
 		return false
 	}
 	device.Owner = newOwner
@@ -44,7 +44,7 @@ func (device *Device) SetOwner(newOwner string, secret string) bool {
 func (device *Device) RemoveOwner() bool {
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
-		fmt.Println("  At device.setOwner() - db connect")
+		fmt.Println("  At Device::RemoveOwner -- Connecting to DB")
 		return false
 	}
 	defer mdb.Close()
@@ -57,7 +57,7 @@ func (device *Device) RemoveOwner() bool {
 		Update: bson.M{"$set": bson.M{"owner": nil}}, // it's set to null in DB
 	}, &temp)
 	if common.PrintError(err) {
-		fmt.Println("  At device.setOwner) - updating")
+		fmt.Println("  At Device::SetOwner -- Updating Owner")
 		return false
 	}
 	device.Owner = ""
@@ -72,7 +72,7 @@ func (device *Device) SetRelay(relayID string, state RelayState) bool {
 
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
-		fmt.Println("  At device.setRelay() - db connect")
+		fmt.Println("  At Device::SetRelay -- Connecting to DB")
 		return false
 	}
 	defer mdb.Close()
@@ -87,7 +87,7 @@ func (device *Device) SetRelay(relayID string, state RelayState) bool {
 	}, &temp)
 
 	if common.PrintError(err) {
-		fmt.Println("  At device.setOwner) - updating")
+		fmt.Println("  At Device::SetRelay -- Update relay data")
 		return false
 	}
 	device.RelayStates[relayID] = state
@@ -99,7 +99,7 @@ func (device *Device) SetRelay(relayID string, state RelayState) bool {
 func (device *Device) SetName(name string) bool {
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
-		fmt.Println("   At device.SetName() => DB Connect")
+		fmt.Println("  At Device::SetName -- Connecting to DB")
 		return false
 	}
 	defer mdb.Close()
@@ -109,7 +109,7 @@ func (device *Device) SetName(name string) bool {
 		"id": device.ID,
 	}).Apply(mgo.Change{Update: bson.M{"$set": bson.M{"name": name}}}, &tmp)
 	if common.PrintError(err) {
-		fmt.Println("  At device.SetName() => DB Operation")
+		fmt.Println("  At Device::SetName -- Update name")
 		return false
 	}
 	device.Name = name
@@ -124,7 +124,7 @@ func (device *Device) BroadCast() {
 	})
 	common.Printf("[BroadCast] deviceMap is %#v\n", toDeviceStateMap(device.RelayStates))
 	if common.PrintError(err) {
-		fmt.Println("  at device.Broadcast()")
+		fmt.Println("  At Device::BroadCast")
 		return
 	}
 	device.sendMsg(mqttMsg)

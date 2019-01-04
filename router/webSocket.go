@@ -2,6 +2,7 @@ package router
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"regexp"
 	"time"
@@ -45,7 +46,7 @@ func getDeviceAndParamFromMessage(payload map[string]interface{}) (device *devic
 	}
 	param = message.Param
 	device, err := storage.GetDevice(message.DeviceID)
-	if common.PrintError(err) {
+	if err != nil {
 		errmsg = "Device not found"
 	}
 	return
@@ -74,12 +75,13 @@ func wsRouter(w http.ResponseWriter, r *http.Request, client *user.RealUser) { /
 	conn.WriteMessage(1, resp)
 
 	if common.PrintError(err) {
+		fmt.Println("  At WebSocket/wsRouter - Upgrading connection")
 		return
 	}
 	for { // loop for command
 		t, msg, err := conn.ReadMessage()
-		if err != nil {
-			common.PrintError(err)
+		if common.PrintError(err) {
+			fmt.Println("  At WebSocket/wsRouter - Reading Message")
 			break
 		}
 
@@ -89,8 +91,7 @@ func wsRouter(w http.ResponseWriter, r *http.Request, client *user.RealUser) { /
 		success := false
 		hasGenToken := false
 		errmsg := ""
-		if common.PrintError(err) {
-			common.Println("[!] [WS] -- Bad Payload")
+		if err != nil {
 			success, errmsg = false, "Bad Payload"
 		} else {
 			if !client.CheckToken(payload.Token) && false { // disable check
