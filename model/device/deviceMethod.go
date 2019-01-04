@@ -15,7 +15,7 @@ import (
 
 // SetOwner sets device owner, called when add device
 func (device *Device) SetOwner(newOwner string, secret string) bool {
-	if secret != device.Secret {
+	if common.SHA256(secret) != device.Secret {
 		return false
 	}
 	mdb, err := common.Mongo()

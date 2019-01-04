@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/rod41732/cu-smart-farm-backend/model/device"
@@ -26,7 +27,7 @@ func SetUserStateInfo(username string, user *user.RealUser) {
 }
 
 func ensureUser(username string) {
-	var tmp userData
+	var tmp user.RealUser
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
 		return
@@ -35,9 +36,8 @@ func ensureUser(username string) {
 	mdb.DB("CUSmartFarm").C("users").Find(bson.M{
 		"username": username,
 	}).One(&tmp)
-	newUser := user.RealUser{Username: username}
-	newUser.Init(tmp.Devices)
-	mappedUserObject[username] = &newUser
+	tmp.Init()
+	mappedUserObject[username] = &tmp
 }
 
 // GetUserStateInfo get *user.RealUser corresponding to username
@@ -78,5 +78,10 @@ func GetDevice(deviceID string) (dev *device.Device, err error) {
 	if !ok { // then make the new device
 		ensureDevice(deviceID)
 	}
-	return mappedDeviceObject[deviceID], nil
+	res := mappedDeviceObject[deviceID]
+	if res == nil {
+		return res, errors.New("Device Not found")
+	} else {
+		return res, nil
+	}
 }

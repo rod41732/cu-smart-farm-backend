@@ -76,7 +76,7 @@ func (user *RealUser) RemoveDevice(device *device.Device) (bool, string) {
 			fmt.Println("  At modifying user")
 			return false, "!! user modify error"
 		}
-		common.RemoveStringFromSlice(device.ID, user.devices)
+		common.RemoveStringFromSlice(device.ID, user.Devices)
 		return true, "OK"
 	}
 	return false, "!! device modify error"
