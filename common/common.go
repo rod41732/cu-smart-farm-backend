@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/influxdata/influxdb/client/v2"
-	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/config"
 	mgo "gopkg.in/mgo.v2"
 )
@@ -107,7 +106,7 @@ func QueryInfluxDB(query string) []client.Result {
 		})
 		PrintError(err)
 		if err == nil {
-			common.Printf("Query Success: %#v \n", resp)
+			Printf("Query Success: %#v \n", resp)
 		}
 		return resp.Results
 	}
