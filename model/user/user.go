@@ -2,8 +2,6 @@ package user
 
 import (
 	"encoding/json"
-	"math/rand"
-	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/rod41732/cu-smart-farm-backend/common"
@@ -22,9 +20,6 @@ type RealUser struct {
 	NationalID string   `json:"nationalID"`
 	Address    string   `json:"address"`
 }
-
-const charset = "abcdefghijklmnopqrstuvwxyz" +
-	"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 //Init  initializes user token and connection
 func (user *RealUser) Init() {
@@ -50,7 +45,7 @@ func (user *RealUser) ReportStatus(payload model.DeviceMessagePayload, deviceID 
 
 // RegenerateToken : Regenerate user websocket authorization token
 func (user *RealUser) RegenerateToken() string {
-	user.currentToken = randomString(20)
+	user.currentToken = common.RandomString(20)
 	return user.currentToken
 }
 
@@ -62,17 +57,6 @@ func (user *RealUser) CheckToken(token string) bool {
 // CurrentToken return user's current token
 func (user *RealUser) CurrentToken() string {
 	return user.currentToken
-}
-
-// randomString : helper function for random string with custom length and charset
-func randomString(length int) string {
-	var seededRand = rand.New(
-		rand.NewSource(time.Now().UnixNano()))
-	b := make([]byte, length)
-	for i := range b {
-		b[i] = charset[seededRand.Intn(len(charset))]
-	}
-	return string(b)
 }
 
 func (user *RealUser) ownsDevice(deviceID string) bool {

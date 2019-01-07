@@ -6,12 +6,16 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"time"
 
 	"github.com/influxdata/influxdb/client/v2"
 	"github.com/rod41732/cu-smart-farm-backend/config"
 	mgo "gopkg.in/mgo.v2"
 )
+
+const charset = "abcdefghijklmnopqrstuvwxyz" +
+	"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
 // WsCommand : Message format for websocket message
 type WsCommand struct {
@@ -189,4 +193,15 @@ func RemoveStringFromSlice(str string, slice *[]string) {
 			break
 		}
 	}
+}
+
+// RandomString : helper function for random string with custom length and charset
+func RandomString(length int) string {
+	var seededRand = rand.New(
+		rand.NewSource(time.Now().UnixNano()))
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
+	}
+	return string(b)
 }
