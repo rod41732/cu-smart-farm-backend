@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"regexp"
 	"time"
 
+	"github.com/influxdata/influxdb/client/v2"
 	"github.com/rod41732/cu-smart-farm-backend/storage"
 
 	"github.com/gin-gonic/gin"
@@ -52,26 +52,27 @@ func getDeviceAndParamFromMessage(payload map[string]interface{}) (device *devic
 	return
 }
 
-func responseStateBody(EndPoint string, success bool, errmsg string, nextToken string) []byte {
+func responseStateBody(EndPoint string, success bool, errmsg string, nextToken string, data interface{}) []byte {
 	result, err := json.Marshal(
 		gin.H{
 			"t":      "status",
 			"e":      EndPoint,
 			"status": gin.H{"success": success, "errmsg": errmsg},
 			"token":  nextToken,
+			"data":   data,
 		})
 	common.PrintError(err)
 	return result
 }
 
-func wsRouter(w http.ResponseWriter, r *http.Request, client *user.RealUser) { // pass as pointer to prevent copying array
+func wsRouter(w http.ResponseWriter, r *http.Request, clnt *user.RealUser) { // pass as pointer to prevent copying array
 	common.Println("Web socket Connected")
-	common.Println("Hi", client.Username)
+	common.Println("Hi", clnt.Username)
 	conn, err := wsUpgrader.Upgrade(w, r, nil)
 
-	client.SetConn(conn)
+	clnt.SetConn(conn)
 
-	resp, _ := json.Marshal(bson.M{"token": client.CurrentToken()}) // give client first token
+	resp, _ := json.Marshal(bson.M{"token": clnt.CurrentToken()}) // give client first token
 	conn.WriteMessage(1, resp)
 
 	if common.PrintError(err) {
@@ -91,40 +92,44 @@ func wsRouter(w http.ResponseWriter, r *http.Request, client *user.RealUser) { /
 		success := false
 		hasGenToken := false
 		errmsg := ""
+		var data interface{}
 		if err != nil {
-			success, errmsg = false, "Bad Payload"
+			success, errmsg = false, "Bad Payload !!"
 		} else {
-			if !client.CheckToken(payload.Token) && false { // disable check : TODO re-enable check
+			if !clnt.CheckToken(payload.Token) && false { // disable check : TODO re-enable check
 				common.Println("[!] [WS] -- Invalid token")
 				success, errmsg = false, "Invalid token"
 			} else {
 				common.Printf("[!] [WS] -- Endpoint : %s", payload.EndPoint)
-				client.RegenerateToken()
+				clnt.RegenerateToken()
 				hasGenToken = true
 
 				// Device Middleware
 				var dev *device.Device
 				var param map[string]interface{}
-				if regexp.MustCompile("Device").MatchString(payload.EndPoint) {
-					dev, param, errmsg = getDeviceAndParamFromMessage(payload.Payload)
-					if errmsg != "" {
-						conn.WriteMessage(t, responseStateBody(payload.EndPoint, success, errmsg, client.CurrentToken()))
-						continue
-					}
+				dev, param, errmsg = getDeviceAndParamFromMessage(payload.Payload)
+				if errmsg != "" {
+					conn.WriteMessage(t, responseStateBody(payload.EndPoint, success, errmsg, clnt.CurrentToken(), nil))
+					continue
 				}
-
 				switch payload.EndPoint {
 				// case "addDevice":
-				// 	success, errmsg = client.AddDevice(param, dev)
+				// 	success, errmsg = clnt.AddDevice(param, dev)
 				// case "removeDevice":
-				// 	success, errmsg = client.RemoveDevice(dev)
+				// 	success, errmsg = clnt.RemoveDevice(dev)
 				case "pollDevice":
 					dev.Poll()
 					success, errmsg = true, "OK"
 				case "setDevice":
-					success, errmsg = client.SetDevice(param, dev)
-				// case "getDevList":
-				// 	client.GetDevList()
+					success, errmsg = clnt.SetDevice(param, dev)
+				case "getLatestState":
+					var results []client.Result
+					success, errmsg, results = clnt.QueryDeviceLog(bson.M{"limit": 1}, dev)
+					if len(results) > 0 && len(results[0].Series) > 0 && len(results[0].Series[0].Values) > 0 {
+						data = zip(results[0].Series[0].Columns, results[0].Series[0].Values[0])
+					}
+					// case "getDevList":
+				// 	clnt.GetDevList()
 				// 	success, errmsg = true, "OK"
 				default:
 					success, errmsg = false, "unknown command"
@@ -133,13 +138,21 @@ func wsRouter(w http.ResponseWriter, r *http.Request, client *user.RealUser) { /
 		}
 		var nextToken string
 		if hasGenToken {
-			nextToken = client.CurrentToken()
+			nextToken = clnt.CurrentToken()
 		} else {
 			nextToken = ""
 		}
-		conn.WriteMessage(t, responseStateBody(payload.EndPoint, success, errmsg, nextToken))
+		conn.WriteMessage(t, responseStateBody(payload.EndPoint, success, errmsg, nextToken, data))
 		time.Sleep(time.Millisecond * 10)
 	}
-	client.SetConn(nil)
+	clnt.SetConn(nil)
 	common.Println("Web socket Disconnected")
+}
+
+func zip(keys []string, vals []interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+	for i, k := range keys {
+		result[k] = vals[i]
+	}
+	return result
 }
