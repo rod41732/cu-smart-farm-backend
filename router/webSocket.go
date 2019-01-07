@@ -25,7 +25,7 @@ var wsUpgrader = websocket.Upgrader{
 }
 
 func wsCheckOrigin(r *http.Request) bool {
-	return true // todo origin check
+	return true // TODO origin check
 }
 
 // WebSocket : WS request handler
