@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/influxdata/influxdb/client/v2"
+
 	"github.com/rod41732/cu-smart-farm-backend/model/device"
 	"gopkg.in/mgo.v2/bson"
 
@@ -200,6 +202,7 @@ func getDeviceInfo(c *gin.Context) {
 func getDeviceLog(c *gin.Context) {
 	ok, errmsg := true, "OK"
 	var log interface{}
+	var results []client.Result
 	user, err := extractUser(c)
 	if err != nil {
 		ok, errmsg = false, err.Error()
@@ -208,7 +211,10 @@ func getDeviceLog(c *gin.Context) {
 		if err != nil {
 			ok, errmsg = false, err.Error()
 		} else {
-			ok, errmsg, log = user.QueryDeviceLog(param, dev)
+			ok, errmsg, results = user.QueryDeviceLog(param, dev)
+			if len(results) > 0 && len(results[0].Series) > 0 {
+				log = results[0].Series[0]
+			}
 		}
 	}
 
