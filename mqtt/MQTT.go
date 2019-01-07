@@ -38,8 +38,12 @@ func connectToMQTTServer() error {
 	msg.SetKeepAlive(45)
 	msg.SetWillTopic([]byte("CUSmartFarm"))
 	msg.SetWillMessage([]byte("backend: connecting.."))
-	common.PrintError(mqttClient.Connect(config.MQTT["address"], msg))
-	fmt.Println("  At MQTT/connectToMQTTServer")
+	err := mqttClient.Connect(config.MQTT["address"], msg)
+	if common.PrintError(err) {
+		fmt.Println("  At MQTT/connectToMQTTServer")
+		mqttClient = nil
+		return err
+	}
 	return nil
 }
 
@@ -77,11 +81,11 @@ func MQTT() error {
 	for {
 		if common.PrintError(connectToMQTTServer()) {
 			fmt.Println("  At MQTT/MQTT -- Connecting to server")
+			fmt.Println("[MQTT] Failed to connect to server")
+		} else {
+			subAll()
+			fmt.Println("Connected.")
 		}
-		subAll()
-		common.ShouldPrintDebug = true
-		common.BatchWriteSize = 1
-		fmt.Println("Connected.")
 		time.Sleep(45 * time.Second)
 		fmt.Println("Reconnecting")
 	}
