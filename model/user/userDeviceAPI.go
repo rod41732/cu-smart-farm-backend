@@ -116,7 +116,7 @@ func (user *RealUser) SetDevice(state map[string]interface{}, device *device.Dev
 	if device.SetRelay(msg.RelayID, msg.State) {
 		return true, "OK"
 	}
-	return false, "Can't connect to DB"
+	return false, "Device modify error"
 }
 
 // GetDeviceInfo returns devices state, if user owns the device, otherwise return nil

@@ -106,7 +106,7 @@ func QueryInfluxDB(query string) []client.Result {
 		})
 		PrintError(err)
 		if err == nil {
-			Printf("Query Success: %#v \n", resp)
+			Printf("[Influx] Query Success. Result = %#v \n", resp)
 		}
 		return resp.Results
 	}
@@ -131,13 +131,13 @@ func WriteInfluxDB(measurement string, tags map[string]string, fields map[string
 			return err
 		}
 		deferredPoints.AddPoint(point)
-		if ln := len(deferredPoints.Points()); ln < 3 {
-			Printf("write deferred %d/3 points\n", ln)
+		if ln := len(deferredPoints.Points()); ln < BatchWriteSize {
+			Printf("[Influx] write deferred %d/%d points\n", ln, BatchWriteSize)
 		}
-		if len(deferredPoints.Points()) >= 3 {
+		if len(deferredPoints.Points()) >= BatchWriteSize {
 			err = clnt.Write(deferredPoints)
 			if !PrintError(err) {
-				Println("DB Write Succeeded", err)
+				Println("[Influx] DB Write Succeeded", err)
 			}
 			// create new batch to remove all points
 			deferredPoints, err = client.NewBatchPoints(client.BatchPointsConfig{

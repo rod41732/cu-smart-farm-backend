@@ -20,8 +20,9 @@ func (user *RealUser) GetDevList() {
 		"e":       "getDevList",
 		"payload": user.Devices,
 	})
-	common.PrintError(err)
-	fmt.Println("  At User::GetDevList -- json.Marshal")
+	if common.PrintError(err) {
+		fmt.Println("  At User::GetDevList -- json.Marshal")
+	}
 	user.conn.WriteMessage(1, resp)
 }
 

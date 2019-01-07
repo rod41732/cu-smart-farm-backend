@@ -27,6 +27,7 @@ func SetUserStateInfo(username string, user *user.RealUser) {
 }
 
 func ensureUser(username string) {
+	common.Printf("[Storage] create new user %s\n", username)
 	var tmp user.RealUser
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
@@ -44,7 +45,6 @@ func ensureUser(username string) {
 // GetUserStateInfo get *user.RealUser corresponding to username
 func GetUserStateInfo(username string) *user.RealUser {
 	_, ok := mappedUserObject[username]
-	fmt.Printf("[Storage]get user: %s is ok=%v\n", username, ok)
 	if !ok {
 		ensureUser(username)
 	}

@@ -17,8 +17,9 @@ func handleSubscriptionComplete(msg, ack message.Message, err error) error {
 	// fmt.Printf("Subscribed: %s\nAck: %s\n", msg.Decode([]byte("utf-8")), ack.Decode([]byte("utf-8")))
 	common.Println(msg)
 	common.Println(ack)
-	common.PrintError(err)
-	fmt.Println("  At MQTT/handleSubscriptionComplete")
+	if common.PrintError(err) {
+		fmt.Println("  At MQTT/handleSubscriptionComplete")
+	}
 	return nil
 }
 
@@ -67,13 +68,13 @@ func publishToMQTT(topic, payload []byte) {
 	mqttClient.Publish(msg, nil)
 }
 
-func subAll() {
+func subAll() error {
 	common.Println("[MQTT] ---- subscribing to all topic")
 	subMsg := message.NewSubscribeMessage()
 	subMsg.AddTopic([]byte("CUSmartFarm"), 2)
 	subMsg.AddTopic([]byte("CUSmartFarm/+/svr_recv"), 2)
-	common.PrintError(mqttClient.Subscribe(subMsg, handleSubscriptionComplete, messageHandler))
-	fmt.Println("  At MQTT/subAll")
+	err := mqttClient.Subscribe(subMsg, handleSubscriptionComplete, messageHandler)
+	return err
 }
 
 // MQTT : intialize MQTT Client
@@ -83,10 +84,14 @@ func MQTT() error {
 			fmt.Println("  At MQTT/MQTT -- Connecting to server")
 			fmt.Println("[MQTT] Failed to connect to server")
 		} else {
-			subAll()
-			fmt.Println("Connected.")
+			if err := subAll(); common.PrintError(err) {
+				fmt.Println("  At MQTT/subAll()")
+				common.Println("[MQTT] ---- Connection Failed.")
+			} else {
+				common.Println("[MQTT] ---- (Re)Connected.")
+			}
 		}
 		time.Sleep(45 * time.Second)
-		fmt.Println("Reconnecting")
+		fmt.Println("[MQTT] ---- Reconnecting.")
 	}
 }
