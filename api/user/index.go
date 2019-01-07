@@ -21,5 +21,6 @@ func UserAPI(r *gin.RouterGroup) {
 
 		group.GET("/myDevices", getDevicesList)
 		group.GET("/getProfile", getProfile)
+		group.GET("/checkStatus", checkStatus)
 	}
 }

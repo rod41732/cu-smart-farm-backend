@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/rod41732/cu-smart-farm-backend/model/device"
+	"gopkg.in/mgo.v2/bson"
 
 	"github.com/rod41732/cu-smart-farm-backend/model/message"
 	"github.com/rod41732/cu-smart-farm-backend/model/user"
@@ -34,6 +35,14 @@ func extractUser(c *gin.Context) (userObject *user.RealUser, err error) {
 	}
 	userObject = storage.GetUserStateInfo(username)
 	return
+}
+
+// return current username
+func checkStatus(c *gin.Context) {
+	username, _ := c.Get("user")
+	c.JSON(200, bson.M{
+		"username": username,
+	})
 }
 
 func extractDeviceIDandParam(c *gin.Context) (dev *device.Device, param map[string]interface{}, err error) {
