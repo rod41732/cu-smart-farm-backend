@@ -10,6 +10,7 @@ import (
 	"github.com/appleboy/gin-jwt"
 	"github.com/gin-gonic/gin"
 	"github.com/rod41732/cu-smart-farm-backend/common"
+	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -68,8 +69,29 @@ func Initialize() {
 		// this create JWT, and can be retrieved with extract claims
 		PayloadFunc: func(data interface{}) jwt.MapClaims {
 			if v, ok := data.(string); ok {
-				return jwt.MapClaims{
+				mdb, err := common.Mongo()
+				if common.PrintError(err) {
+					fmt.Println("  At Middleware::PayloadFunc -- Connecting to DB")
+					return jwt.MapClaims{}
+				}
+				defer mdb.Close()
+
+				query := mdb.DB("CUSmartFarm").C("users").Find(bson.M{
 					"username": v,
+				})
+				sessionID := common.RandomString(20)
+				var tmp map[string]interface{}
+				_, err = query.Apply(mgo.Change{
+					Update: bson.M{"$set": bson.M{"sessionID": sessionID}},
+				}, &tmp)
+				if common.PrintError(err) {
+					fmt.Println("  At Middleware::Payload Func -- user modify")
+					return jwt.MapClaims{}
+				}
+
+				return jwt.MapClaims{
+					"username":  v,
+					"sessionID": sessionID,
 				}
 			}
 			return jwt.MapClaims{}
@@ -81,7 +103,6 @@ func Initialize() {
 		// which can retrieve on endPoint
 		IdentityHandler: func(c *gin.Context) interface{} { // return user object if success
 			claims := jwt.ExtractClaims(c)
-			// token := jwt.GetToken(c)
 			mdb, err := common.Mongo()
 			if common.PrintError(err) {
 				fmt.Println("  At Middleware::IdentityHandler -- Connecting to DB")
@@ -89,11 +110,10 @@ func Initialize() {
 			}
 			defer mdb.Close()
 
-			// Need to check with current token (Limit 1 device login)
 			var user map[string]interface{}
 			err = mdb.DB("CUSmartFarm").C("users").Find(bson.M{
-				"username": claims["username"].(string),
-				// "token":    token, // disable token check
+				"username":  claims["username"].(string),
+				"sessionID": claims["sessionID"].(string),
 			}).One(&user)
 			if err != nil {
 				return nil
