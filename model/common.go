@@ -9,11 +9,11 @@ type DeviceMessagePayload struct {
 	Soil     float32 `json:"Soil"`
 	Humidity float32 `json:"Humidity"`
 	Temp     float32 `json:"Temp"`
-	Relay1   bool    `json:"Relay1"`
-	Relay2   bool    `json:"Relay2"`
-	Relay3   bool    `json:"Relay3"`
-	Relay4   bool    `json:"Relay4"`
-	Relay5   bool    `json:"Relay5"`
+	Relay1   string  `json:"Relay1"`
+	Relay2   string  `json:"Relay2"`
+	Relay3   string  `json:"Relay3"`
+	Relay4   string  `json:"Relay4"`
+	Relay5   string  `json:"Relay5"`
 }
 
 // DeviceMessage : mqtt message from device
