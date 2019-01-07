@@ -143,9 +143,13 @@ func (user *RealUser) QueryDeviceLog(timeParams map[string]interface{}, device *
 		return false, "Bad Payload", nil
 	}
 	if msg.Limit <= 0 {
-		msg.Limit = 1
+		msg.Limit = 10
 	} else if msg.Limit > 100 {
 		msg.Limit = 100
 	}
+	if msg.From.IsZero() || msg.To.IsZero() { // when user just want ot get latest
+		return true, "OK", common.QueryInfluxDB(fmt.Sprintf(`SELECT *::field FROM air_sensor WHERE "device"='%s' ORDER BY time DESC LIMIT %d`, device.ID, msg.Limit))
+	}
 	return true, "OK", common.QueryInfluxDB(fmt.Sprintf(`SELECT *::field FROM air_sensor WHERE "device"='%s' and "time" > %v and "time" < %v ORDER BY time DESC LIMIT %d`, device.ID, msg.From.UnixNano(), msg.To.UnixNano(), msg.Limit))
+
 }
