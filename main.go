@@ -22,7 +22,9 @@ func main() {
 	r := gin.Default()
 
 	router.SetUpHTTPAPI(r)
-	r.GET("/ws", router.WebSocket)
+	ws := r.Group("/subscribe")
+	ws.Use(middleware.UserAuth.MiddlewareFunc())
+	ws.GET("/ws", router.WebSocket)
 	r.Run(":3000")
 
 }

@@ -31,8 +31,8 @@ func wsCheckOrigin(r *http.Request) bool {
 // WebSocket : WS request handler
 func WebSocket(c *gin.Context) {
 	// get user part
-	// headerUser, _ := c.Get("username")
-	var headerUser interface{} = "rod41732" // TODO re-enable user check ing WS
+	headerUser, _ := c.Get("user")
+	// var headerUser interface{} = "rod41732" // TODO re-enable user check ing WS
 	username := headerUser.(string)
 	userObject := storage.GetUserStateInfo(username)
 	wsRouter(c.Writer, c.Request, userObject)
