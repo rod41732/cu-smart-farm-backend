@@ -102,7 +102,7 @@ func QueryInfluxDB(query string) []client.Result {
 	if err == nil {
 		resp, err := clnt.Query(client.Query{
 			Command:  query,
-			Database: "CUSmartFarm",
+			Database: "SkyhawkPhase1",
 		})
 		PrintError(err)
 		if err == nil {
@@ -114,7 +114,7 @@ func QueryInfluxDB(query string) []client.Result {
 }
 
 var deferredPoints, err = client.NewBatchPoints(client.BatchPointsConfig{
-	Database:  "CUSmartFarm",
+	Database:  "SkyhawkPhase1",
 	Precision: "ms",
 })
 
@@ -126,7 +126,7 @@ func WriteInfluxDB(measurement string, tags map[string]string, fields map[string
 	PrintError(err)
 	if err == nil {
 
-		point, err := client.NewPoint("air_sensor", tags, fields, time.Now())
+		point, err := client.NewPoint("deviceData", tags, fields, time.Now())
 		if PrintError(err) {
 			return err
 		}
@@ -141,7 +141,7 @@ func WriteInfluxDB(measurement string, tags map[string]string, fields map[string
 			}
 			// create new batch to remove all points
 			deferredPoints, err = client.NewBatchPoints(client.BatchPointsConfig{
-				Database:  "CUSmartFarm",
+				Database:  "SkyhawkPhase1",
 				Precision: "ms",
 			})
 			if PrintError(err) {
