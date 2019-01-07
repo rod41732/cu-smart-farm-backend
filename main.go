@@ -10,6 +10,9 @@ import (
 
 func main() {
 
+	common.ShouldPrintDebug = true
+	common.BatchWriteSize = 1
+
 	common.InitializeKeyPair()
 	middleware.Initialize()
 
