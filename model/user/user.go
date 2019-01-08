@@ -25,6 +25,9 @@ type RealUser struct {
 func (user *RealUser) Init() {
 	user.RegenerateToken()
 	user.conn = nil
+	if user.Devices == nil {
+		user.Devices = make([]string, 0)
+	}
 }
 
 //SetConn is setter for Conn

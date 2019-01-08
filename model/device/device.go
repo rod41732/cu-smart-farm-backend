@@ -14,5 +14,12 @@ type Device struct {
 // FromMap initialize data using map[string]interface{}
 func (device *Device) FromMap(data map[string]interface{}) error {
 	str, _ := json.Marshal(data)
-	return json.Unmarshal(str, &device)
+	err := json.Unmarshal(str, &device)
+	if err != nil {
+		return err
+	}
+	if device.RelayStates == nil {
+		device.RelayStates = make(map[string]RelayState)
+	}
+	return nil
 }
