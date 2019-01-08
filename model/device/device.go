@@ -4,11 +4,11 @@ import "encoding/json"
 
 // Device : device connected ti
 type Device struct {
-	ID          string                `json:"id" binding:"required"`
-	Name        string                `json:"name" binding:"required"`
-	Secret      string                `json:"secret" binding:"required"`
-	Owner       string                `json:"owner" binding:"required"`
-	RelayStates map[string]RelayState `json:"state" binding:"required"`
+	ID          string                `json:"id"`
+	Name        string                `json:"name"`
+	Secret      string                `json:"secret"`
+	Owner       string                `json:"owner"`
+	RelayStates map[string]RelayState `json:"state"`
 }
 
 // FromMap initialize data using map[string]interface{}

@@ -9,32 +9,32 @@ import (
 
 // APICall represent payload for API Calls via WS
 type APICall struct {
-	EndPoint string                 `json:"endPoint" binding:"required"` // addDevice, removeDevice, setDevice, pollDevice, listDevice...
-	Token    string                 `json:"token" binding:"required"`
-	Payload  map[string]interface{} `json:"payload" binding:"required"` // json data depend on command
+	EndPoint string                 `json:"endPoint"` // addDevice, removeDevice, setDevice, pollDevice, listDevice...
+	Token    string                 `json:"token"`
+	Payload  map[string]interface{} `json:"payload"` // json data depend on command
 }
 
 // Message is regular message format for any device API
 type Message struct {
-	DeviceID string                 `json:"deviceID" binding:"required"`
+	DeviceID string                 `json:"deviceID"`
 	Param    map[string]interface{} `json:"param"` // json data depend on command
 }
 
 // AddDeviceMessage is payload format for addDevice API
 type AddDeviceMessage struct {
-	DeviceSecret string `json:"deviceSecret" binding:"required"`
-	DeviceName   string `json:"deviceName" binding:"required"`
+	DeviceSecret string `json:"deviceSecret"`
+	DeviceName   string `json:"deviceName"`
 }
 
 // DeviceCommandMessage is payload format for setDevice API
 type DeviceCommandMessage struct {
-	RelayID string            `json:"relayID" binding:"required"`
-	State   device.RelayState `json:"state" binding:"required"`
+	RelayID string            `json:"relayID"`
+	State   device.RelayState `json:"state"`
 }
 
 // RenameDeviceMessage is payload format for rename device API
 type RenameDeviceMessage struct {
-	Name string `json:"name" binding:"required"`
+	Name string `json:"name"`
 }
 
 // TimeQuery is payload for querying sersnor logs
