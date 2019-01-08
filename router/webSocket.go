@@ -55,7 +55,7 @@ func getDeviceAndParamFromMessage(payload map[string]interface{}) (device *devic
 func responseStateBody(EndPoint string, success bool, errmsg string, nextToken string, data interface{}) []byte {
 	result, err := json.Marshal(
 		gin.H{
-			"t":      "status",
+			"t":      "response",
 			"e":      EndPoint,
 			"status": gin.H{"success": success, "errmsg": errmsg},
 			"token":  nextToken,

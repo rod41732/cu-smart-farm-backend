@@ -34,7 +34,11 @@ func (user *RealUser) SetConn(conn *websocket.Conn) {
 
 // ReportStatus sends MQTT data to user via WebSocket then insert into InfluxDB
 func (user *RealUser) ReportStatus(payload model.DeviceMessagePayload, deviceID string) {
-	resp, _ := json.Marshal(payload)
+	resp, _ := json.Marshal(map[string]interface{}{
+		"t":       "report",
+		"d":       deviceID,
+		"payload": payload,
+	})
 	if user.conn != nil {
 		user.conn.WriteMessage(1, resp) // 1 is text message
 	} else {
