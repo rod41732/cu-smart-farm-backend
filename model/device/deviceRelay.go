@@ -9,22 +9,22 @@ import (
 
 // RelayState : state of relay (ON/OFF/AUTO + extra detail of mode)
 type RelayState struct { // use when set relay mode
-	Mode   string      `json:"mode" binding:"required"` // ON OFF AUTO SCHED ...
-	Detail interface{} `json:"detail"`                  // detail depending on mode
+	Mode   string      `json:"mode"`   // ON OFF AUTO SCHED ...
+	Detail interface{} `json:"detail"` // detail depending on mode
 }
 
 // scheduleEntry represents user's schedule in TIMER mode
 type scheduleEntry struct {
-	StartHour  int   `json:"startHour" binding:"required"`
-	StartMin   int   `json:"startMin" binding:"required"`
-	EndHour    int   `json:"endHour" binding:"required"`
-	EndMin     int   `json:"endMin" binding:"required"`
-	DayOfWeeks []int `json:"dows" binding:"required"` // array of numbers in 0-6 represnting day of week this this schedule is active
+	StartHour  int   `json:"startHour"`
+	StartMin   int   `json:"startMin"`
+	EndHour    int   `json:"endHour"`
+	EndMin     int   `json:"endMin"`
+	DayOfWeeks []int `json:"dows"` // array of numbers in 0-6 represnting day of week this this schedule is active
 }
 
 // ScheduleDetail wraps schedule array
 type ScheduleDetail struct {
-	Schedules []scheduleEntry `json:"schedules" binding:"required"`
+	Schedules []scheduleEntry `json:"schedules"`
 }
 
 // shortcut to create time for today with just HH:MM

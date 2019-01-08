@@ -31,8 +31,8 @@ func wsCheckOrigin(r *http.Request) bool {
 // WebSocket : WS request handler
 func WebSocket(c *gin.Context) {
 	// get user part
-	headerUser, _ := c.Get("user")
-	// var headerUser interface{} = "rod41732" // TODO re-enable user check ing WS
+	// headerUser, _ := c.Get("user")
+	var headerUser interface{} = "rod41732" // TODO re-enable user check ing WS
 	username := headerUser.(string)
 	userObject := storage.GetUserStateInfo(username)
 	wsRouter(c.Writer, c.Request, userObject)
@@ -45,6 +45,10 @@ func getDeviceAndParamFromMessage(payload map[string]interface{}) (device *devic
 		errmsg = "Bad Request"
 	}
 	param = message.Param
+	if param == nil {
+		errmsg = "Bad Request"
+		return
+	}
 	device, err := storage.GetDevice(message.DeviceID)
 	if err != nil {
 		errmsg = "Device not found"

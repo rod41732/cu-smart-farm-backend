@@ -18,7 +18,7 @@ type DeviceMessagePayload struct {
 
 // DeviceMessage : mqtt message from device
 type DeviceMessage struct {
-	Type    string               `json:"t" binding:"required"`
+	Type    string               `json:"t"`
 	Payload DeviceMessagePayload `json:"data"`
 }
 
