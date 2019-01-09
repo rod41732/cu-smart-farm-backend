@@ -81,6 +81,7 @@ func Register(c *gin.Context) {
 			"address":    address,
 			"nationalID": nationalID,
 			"email":      email,
+			"devices":    []string{},
 		})
 	}
 	c.JSON(200, gin.H{

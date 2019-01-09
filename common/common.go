@@ -40,7 +40,10 @@ var (
 var BatchWriteSize = 3
 
 // ShouldPrintDebug this flag control whether we should print debug
-var ShouldPrintDebug = true
+var ShouldPrintDebug = false
+
+// Secure this flag control whether we check token of request
+var Secure = true
 
 // InitializeKeyPair initializes public/private key pair
 func InitializeKeyPair() {

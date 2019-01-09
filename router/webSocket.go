@@ -31,8 +31,12 @@ func wsCheckOrigin(r *http.Request) bool {
 // WebSocket : WS request handler
 func WebSocket(c *gin.Context) {
 	// get user part
-	// headerUser, _ := c.Get("user")
-	var headerUser interface{} = "rod41732" // TODO re-enable user check ing WS
+	var headerUser interface{}
+	if common.Secure {
+		headerUser, _ = c.Get("user")
+	} else {
+		headerUser = "rod41732"
+	}
 	username := headerUser.(string)
 	userObject := storage.GetUserStateInfo(username)
 	wsRouter(c.Writer, c.Request, userObject)
@@ -100,7 +104,7 @@ func wsRouter(w http.ResponseWriter, r *http.Request, clnt *user.RealUser) { // 
 		if err != nil {
 			success, errmsg = false, "Bad Payload !!"
 		} else {
-			if !clnt.CheckToken(payload.Token) && false { // disable check : TODO re-enable check
+			if !clnt.CheckToken(payload.Token) && common.Secure {
 				common.Println("[!] [WS] -- Invalid token")
 				success, errmsg = false, "Invalid token"
 			} else {

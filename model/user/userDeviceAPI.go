@@ -107,8 +107,9 @@ func (user *RealUser) RenameDevice(payload map[string]interface{}, device *devic
 // SetDevice : set relay state of device (specified via `state`)
 func (user *RealUser) SetDevice(state map[string]interface{}, device *device.Device) (bool, string) {
 	var msg mMessage.DeviceCommandMessage
-	if msg.FromMap(state) != nil {
-		return false, "Bad Payload"
+	if err := msg.FromMap(state); err != nil {
+		// common.PrintError(msg.FromMap(state))
+		return false, "Bad payload " + err.Error()
 	}
 	if !user.ownsDevice(device.ID) {
 		return false, "Not your device"
