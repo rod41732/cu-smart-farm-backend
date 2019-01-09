@@ -82,7 +82,8 @@ func (device *Device) SetRelay(relayID string, state RelayState) bool {
 		"id": device.ID,
 	}).Apply(mgo.Change{
 		Update: bson.M{"$set": bson.M{
-			"state." + relayID: state,
+			"state." + relayID:                        state,
+			"pastState." + relayID + "." + state.Mode: state.Detail,
 		}},
 	}, &temp)
 
@@ -91,6 +92,7 @@ func (device *Device) SetRelay(relayID string, state RelayState) bool {
 		return false
 	}
 	device.RelayStates[relayID] = state
+	device.PastStates[relayID][state.Mode] = state.Detail
 	device.BroadCast()
 	return true
 }
