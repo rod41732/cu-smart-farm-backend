@@ -80,7 +80,12 @@ func (message *DeviceCommandMessage) FromMap(val map[string]interface{}) error {
 		case "AUTO":
 			str, _ := json.Marshal(message.State.Detail)
 			var thresArray []float32
-			return json.Unmarshal(str, &thresArray)
+			err := json.Unmarshal(str, &thresArray)
+			if len(thresArray) == 0 {
+				return errors.New("Empty Threshold")
+			} else {
+				return err
+			}
 		case "TIMER":
 			var sched device.ScheduleDetail
 			str, err := json.Marshal(message.State.Detail)
@@ -107,6 +112,9 @@ func (message *DeviceCommandMessage) FromMap(val map[string]interface{}) error {
 						if !(0 <= m && m < 60) {
 							return errors.New("Invalid Detail - Min")
 						}
+					}
+					if 60*entry.StartHour+entry.StartMin >= 60*entry.EndHour+entry.EndMin {
+						return errors.New("Invalid Detail - Bad range")
 					}
 				}
 			}
