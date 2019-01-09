@@ -13,7 +13,11 @@
     },
     "3": { // auto (sensor)
       "mode": "auto",
-      "detail": [30, 32] // threshold, relay use 2 sensors as threshold, up to device to interpret
+      "detail": {
+	"sensor":"soil/humidity/temp",
+	"trigger": 30,
+	"symbol": "<"
+	}
     }
   }
   },
