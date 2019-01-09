@@ -41,7 +41,7 @@
     "owner": "john_smith", // username of owner
     "state": {
       // same as Server to Device Message
-      // except TIMER mode
+      // except scheduled mode
       "2": {
         "mode": "time",
         "detail": {

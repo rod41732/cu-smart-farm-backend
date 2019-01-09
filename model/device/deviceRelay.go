@@ -8,13 +8,13 @@ import (
 	"github.com/rod41732/cu-smart-farm-backend/common"
 )
 
-// RelayState : state of relay (ON/OFF/AUTO + extra detail of mode)
+// RelayState : state of relay (ON/OFF/auto + extra detail of mode)
 type RelayState struct { // use when set relay mode
-	Mode   string      `json:"mode"`   // ON OFF AUTO SCHED ...
+	Mode   string      `json:"mode"`   // ON OFF auto SCHED ...
 	Detail interface{} `json:"detail"` // detail depending on mode
 }
 
-// scheduleEntry represents user's schedule in TIMER mode
+// scheduleEntry represents user's schedule in scheduled mode
 type scheduleEntry struct {
 	StartHour  int   `json:"startHour"`
 	StartMin   int   `json:"startMin"`
@@ -69,10 +69,10 @@ func createTime(hour, min int) int64 {
 	return time.Date(now.Year(), now.Month(), now.Day(), hour, min, 0, 0, now.Location()).UnixNano()
 }
 
-// ToDeviceState convert time schedule to [][2]int if it's mode is TIMER
+// ToDeviceState convert time schedule to [][2]int if it's mode is scheduled
 func (state *RelayState) ToDeviceState() RelayState {
 	cpy := *state // copy it
-	if state.Mode == "TIMER" {
+	if state.Mode == "scheduled" {
 		dow := time.Now().Weekday()
 
 		var schedules ScheduleDetail

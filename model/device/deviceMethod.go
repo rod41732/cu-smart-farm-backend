@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/rod41732/cu-smart-farm-backend/mqtt"
-
 	"github.com/rod41732/cu-smart-farm-backend/common"
+	"github.com/rod41732/cu-smart-farm-backend/mqtt"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )

@@ -73,18 +73,18 @@ func (message *DeviceCommandMessage) FromMap(val map[string]interface{}) error {
 		return errors.New("Invalid Relay ID")
 	} else {
 		switch message.State.Mode {
-		case "MANUAL":
+		case "manual":
 			if detail, ok := message.State.Detail.(string); !ok || (detail != "ON" && detail != "OFF") {
-				return errors.New("Invalid Detail for MANUAL")
+				return errors.New("Invalid Detail for manual")
 			}
-		case "AUTO":
+		case "auto":
 			str, _ := json.Marshal(message.State.Detail)
 			var thresArray device.Condition
 			err := json.Unmarshal(str, &thresArray)
 			if err != nil || !thresArray.Validate() {
-				return errors.New("Invalid detail for AUTO")
+				return errors.New("Invalid detail for auto")
 			}
-		case "TIMER":
+		case "scheduled":
 			var sched device.ScheduleDetail
 			str, err := json.Marshal(message.State.Detail)
 			if err != nil {
