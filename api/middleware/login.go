@@ -139,7 +139,7 @@ func Initialize() {
 		SendCookie:     true,
 		SecureCookie:   false, //non HTTPS dev environments
 		CookieHTTPOnly: true,  // JS can't modify
-		CookieDomain:   "127.0.0.1",
+		CookieDomain:   "164.115.27.177",
 		CookieName:     "token", // default jwt
 	})
 

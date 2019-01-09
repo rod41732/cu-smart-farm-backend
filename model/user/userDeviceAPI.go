@@ -140,7 +140,7 @@ func (user *RealUser) QueryDeviceLog(timeParams map[string]interface{}, device *
 		return false, "Not your device", nil
 	}
 	var msg mMessage.TimeQuery
-	if err :=  msg.FromMap(timeParams); err := nil {
+	if err :=  msg.FromMap(timeParams); err != nil {
 		return false, "Bad Payload " + err.Error(), nil
 	}
 	if msg.Limit <= 0 {
