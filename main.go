@@ -12,6 +12,7 @@ func main() {
 
 	common.ShouldPrintDebug = true
 	common.BatchWriteSize = 1
+	common.Secure = false
 
 	common.InitializeKeyPair()
 	middleware.Initialize()
@@ -23,7 +24,9 @@ func main() {
 
 	router.SetUpHTTPAPI(r)
 	ws := r.Group("/subscribe")
-	ws.Use(middleware.UserAuth.MiddlewareFunc())
+	if common.Secure {
+		ws.Use(middleware.UserAuth.MiddlewareFunc())
+	}
 	ws.GET("/ws", router.WebSocket)
 	r.Run(":3000")
 
