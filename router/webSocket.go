@@ -6,15 +6,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/influxdata/influxdb/client/v2"
-	"github.com/rod41732/cu-smart-farm-backend/storage"
-
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/influxdata/influxdb/client/v2"
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/model/device"
 	mMessage "github.com/rod41732/cu-smart-farm-backend/model/message"
 	"github.com/rod41732/cu-smart-farm-backend/model/user"
+	"github.com/rod41732/cu-smart-farm-backend/storage"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -49,10 +48,10 @@ func getDeviceAndParamFromMessage(payload map[string]interface{}) (device *devic
 		errmsg = "Bad Request"
 	}
 	param = message.Param
-	if param == nil {
-		errmsg = "Bad Request"
-		return
-	}
+	// if param == nil {
+	// 	errmsg = "Bad Request"
+	// 	return
+	// }
 	device, err := storage.GetDevice(message.DeviceID)
 	if err != nil {
 		errmsg = "Device not found"
