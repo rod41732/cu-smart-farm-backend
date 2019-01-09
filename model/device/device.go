@@ -1,6 +1,10 @@
 package device
 
-import "encoding/json"
+import (
+	"encoding/json"
+
+	"github.com/rod41732/cu-smart-farm-backend/common"
+)
 
 // Device : device connected ti
 type Device struct {
@@ -25,7 +29,7 @@ func (device *Device) FromMap(data map[string]interface{}) error {
 	if device.PastStates == nil {
 		device.PastStates = make(map[string]map[string]interface{})
 	}
-	for _, key := range []string{"Relay1", "Relay2", "Relay3", "Relay4", "Relay5"} {
+	for _, key := range common.PossibleRelays {
 		if device.PastStates[key] == nil {
 			device.PastStates[key] = make(map[string]interface{})
 		}

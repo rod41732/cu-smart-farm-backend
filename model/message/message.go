@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/model/device"
 )
 
@@ -69,7 +70,7 @@ func (message *DeviceCommandMessage) FromMap(val map[string]interface{}) error {
 		return err
 	}
 
-	if !("Relay1" <= message.RelayID && message.RelayID <= "Relay5" && len(message.RelayID) == 6) {
+	if !common.StringInSlice(message.RelayID, common.PossibleRelays) {
 		return errors.New("Invalid Relay ID")
 	} else {
 		switch message.State.Mode {

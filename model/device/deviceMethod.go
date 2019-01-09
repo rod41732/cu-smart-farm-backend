@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
+	"github.com/rod41732/cu-smart-farm-backend/model"
 	"github.com/rod41732/cu-smart-farm-backend/mqtt"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -137,6 +138,45 @@ func (device *Device) Poll() {
 		"cmd": "fetch",
 	})
 	device.sendMsg(mqttMsg)
+}
+
+// UpdateState update device state (from auto logic) according to data
+func (dev *Device) UpdateState(data model.DeviceMessagePayload) {
+	resultState := make(map[string]RelayState)
+	for _, key := range common.PossibleRelays {
+		if state := dev.RelayStates[key]; state.Mode == "auto" {
+			var cond Condition
+			str, _ := json.Marshal(state.Detail)
+			err := json.Unmarshal(str, &cond)
+			if err != nil {
+				var val float32
+				switch cond.Sensor {
+				case "soil":
+					val = data.Soil
+				case "temp":
+					val = data.Temp
+				case "humidity":
+					val = data.Humidity
+				default:
+					continue
+				}
+				newState := ""
+				if (cond.Symbol == "<") == (val < cond.Trigger) {
+					newState = "on"
+				} else {
+					newState = "off"
+				}
+				resultState[key] = RelayState{Mode: "manual", Detail: newState}
+			}
+		}
+	}
+	str, _ := json.Marshal(bson.M{
+		"cmd":   "set",
+		"state": resultState,
+	})
+	common.Printf("[Device] ID: %s Data = %#v State = %#v", dev.ID, data, dev.RelayStates)
+	common.Printf("[Device] ID: %s >> sending ...", dev.ID)
+	mqtt.SendMessageToDevice(dev.ID, str)
 }
 
 // send message to device
