@@ -2,6 +2,7 @@ package message
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/rod41732/cu-smart-farm-backend/model/device"
@@ -67,6 +68,53 @@ func (message *DeviceCommandMessage) FromMap(val map[string]interface{}) error {
 	if err != nil {
 		return err
 	}
+
+	if !("1" <= message.RelayID && message.RelayID <= "4") {
+		return errors.New("Invalid Relay ID")
+	} else {
+		switch message.State.Mode {
+		case "MANUAL":
+			if detail, ok := message.State.Detail.(string); !ok || (detail != "ON" && detail != "OFF") {
+				return errors.New("Invalid Detail for MANUAL")
+			}
+		case "AUTO":
+			str, _ := json.Marshal(message.State.Detail)
+			var thresArray []float32
+			return json.Unmarshal(str, &thresArray)
+		case "TIMER":
+			var sched device.ScheduleDetail
+			str, err := json.Marshal(message.State.Detail)
+			if err != nil {
+				return err
+			}
+			err = json.Unmarshal(str, &sched)
+			if err != nil {
+				return errors.New("Invalid Detail - Struct")
+			} else {
+				// Check schedule
+				for _, entry := range sched.Schedules {
+					for _, dow := range entry.DayOfWeeks {
+						if !(0 <= dow && dow < 7) {
+							return errors.New("Invalid Detail - DOW")
+						}
+					}
+					for _, h := range []int{entry.EndHour, entry.StartHour} {
+						if !(0 <= h && h < 24) {
+							return errors.New("Invalid Detail - Hour")
+						}
+					}
+					for _, m := range []int{entry.EndMin, entry.StartMin} {
+						if !(0 <= m && m < 60) {
+							return errors.New("Invalid Detail - Min")
+						}
+					}
+				}
+			}
+		default:
+			return errors.New("Invalid mode")
+		}
+	}
+
 	return nil
 }
 
