@@ -69,7 +69,7 @@ func (message *DeviceCommandMessage) FromMap(val map[string]interface{}) error {
 		return err
 	}
 
-	if !("Relay1" <= message.RelayID && message.RelayID <= "Relay5") {
+	if !("Relay1" <= message.RelayID && message.RelayID <= "Relay5" && len(message.RelayID) == 5) {
 		return errors.New("Invalid Relay ID")
 	} else {
 		switch message.State.Mode {
