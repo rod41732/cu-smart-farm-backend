@@ -69,12 +69,12 @@ func (message *DeviceCommandMessage) FromMap(val map[string]interface{}) error {
 		return err
 	}
 
-	if !("1" <= message.RelayID && message.RelayID <= "4") {
+	if !("Relay1" <= message.RelayID && message.RelayID <= "Relay5") {
 		return errors.New("Invalid Relay ID")
 	} else {
 		switch message.State.Mode {
 		case "manual":
-			if detail, ok := message.State.Detail.(string); !ok || (detail != "ON" && detail != "OFF") {
+			if detail, ok := message.State.Detail.(string); !ok || (detail != "on" && detail != "off") {
 				return errors.New("Invalid Detail for manual")
 			}
 		case "auto":

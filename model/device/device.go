@@ -25,7 +25,7 @@ func (device *Device) FromMap(data map[string]interface{}) error {
 	if device.PastStates == nil {
 		device.PastStates = make(map[string]map[string]interface{})
 	}
-	for _, key := range []string{"1", "2", "3", "4"} {
+	for _, key := range []string{"Relay1", "Relay2", "Relay3", "Relay4", "Relay5"} {
 		if device.PastStates[key] == nil {
 			device.PastStates[key] = make(map[string]interface{})
 		}
