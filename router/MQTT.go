@@ -43,6 +43,7 @@ func handleMessage(msg *message.PublishMessage) error {
 		case "greeting":
 			device.BroadCast()
 		case "data":
+			device.UpdateState(message.Payload)
 			user.ReportStatus(message.Payload, device.ID)
 		}
 	} else {
