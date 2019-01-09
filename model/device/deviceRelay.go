@@ -2,6 +2,7 @@ package device
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
@@ -20,6 +21,41 @@ type scheduleEntry struct {
 	EndHour    int   `json:"endHour"`
 	EndMin     int   `json:"endMin"`
 	DayOfWeeks []int `json:"dows"` // array of numbers in 0-6 represnting day of week this this schedule is active
+}
+
+// Condition is structure for condition in `auto` mode
+type Condition struct {
+	Sensor  string  `json:"sensor"`
+	Trigger float32 `json:"trigger"`
+	Symbol  string  `json:"symbol"`
+}
+
+// Validate validate value of Condition
+func (condition *Condition) Validate() bool {
+	if !(common.StringInSlice(condition.Sensor, []string{"soil", "temp", "humidity"})) {
+		return false
+	}
+	if !(common.StringInSlice(condition.Symbol, []string{"<", ">"})) {
+		return false
+	}
+	return true
+}
+
+//FromMap is "constructor" for converting map[string]interface{} to Condition return error if can't convert
+func (condition *Condition) FromMap(val map[string]interface{}) error {
+	str, err := json.Marshal(val)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(str, condition)
+	if err != nil {
+		return err
+	}
+	if condition.Validate() {
+		return nil
+	} else {
+		return errors.New("Validation Error")
+	}
 }
 
 // ScheduleDetail wraps schedule array

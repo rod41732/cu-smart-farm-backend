@@ -79,12 +79,10 @@ func (message *DeviceCommandMessage) FromMap(val map[string]interface{}) error {
 			}
 		case "AUTO":
 			str, _ := json.Marshal(message.State.Detail)
-			var thresArray []float32
+			var thresArray device.Condition
 			err := json.Unmarshal(str, &thresArray)
-			if len(thresArray) == 0 {
-				return errors.New("Empty Threshold")
-			} else {
-				return err
+			if err != nil || !thresArray.Validate() {
+				return errors.New("Invalid detail for AUTO")
 			}
 		case "TIMER":
 			var sched device.ScheduleDetail
