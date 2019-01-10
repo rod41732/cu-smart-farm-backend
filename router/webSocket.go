@@ -31,11 +31,11 @@ func wsCheckOrigin(r *http.Request) bool {
 func WebSocket(c *gin.Context) {
 	// get user part
 	var headerUser interface{}
-//	if common.Secure {
-		headerUser, _ = c.Get("user")
-//	} else {
-//		headerUser = "rod41732"
-//	}
+	//	if common.Secure {
+	headerUser, _ = c.Get("user")
+	//	} else {
+	//		headerUser = "rod41732"
+	//	}
 	username := headerUser.(string)
 	userObject := storage.GetUserStateInfo(username)
 	wsRouter(c.Writer, c.Request, userObject)

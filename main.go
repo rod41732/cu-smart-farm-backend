@@ -12,7 +12,7 @@ func main() {
 
 	common.ShouldPrintDebug = true
 	common.BatchWriteSize = 1
-//	common.Secure = false
+	//	common.Secure = false
 
 	common.InitializeKeyPair()
 	middleware.Initialize()
