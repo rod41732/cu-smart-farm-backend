@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/rod41732/cu-smart-farm-backend/common"
+
 	"github.com/influxdata/influxdb/client/v2"
 
 	"github.com/rod41732/cu-smart-farm-backend/model/device"
@@ -212,7 +214,7 @@ func getDeviceLog(c *gin.Context) {
 			ok, errmsg = false, err.Error()
 		} else {
 			ok, errmsg, results = user.QueryDeviceLog(param, dev)
-			if len(results) > 0 && len(results[0].Series) > 0 {
+			if common.HaveSeries(results) {
 				log = results[0].Series[0]
 			}
 		}

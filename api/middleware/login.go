@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/rod41732/cu-smart-farm-backend/config"
 	"github.com/rod41732/cu-smart-farm-backend/storage"
 
 	"github.com/appleboy/gin-jwt"
@@ -139,7 +140,7 @@ func Initialize() {
 		SendCookie:     true,
 		SecureCookie:   false, //non HTTPS dev environments
 		CookieHTTPOnly: true,  // JS can't modify
-		CookieDomain:   "164.115.27.177",
+		CookieDomain:   config.CookieDomain,
 		CookieName:     "token", // default jwt
 	})
 

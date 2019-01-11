@@ -36,9 +36,9 @@ func handleMessage(msg *message.PublishMessage) error {
 			fmt.Println("  At handleMessage : handleMessage -> GetDevice")
 			return err
 		}
-		common.Printf("[MQTT] --- deviceID=[%s]\n", deviceID)
+		// common.Printf("[MQTT] --- deviceID=[%s]\n", deviceID)
 		user := storage.GetUserStateInfo(device.Owner)
-		common.Printf("[MQTT] --- owner=%s\n", device.Owner)
+		// common.Printf("[MQTT] --- owner=%s\n", device.Owner)
 		switch message.Type {
 		case "greeting":
 			device.BroadCast()

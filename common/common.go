@@ -208,3 +208,8 @@ func RandomString(length int) string {
 	}
 	return string(b)
 }
+
+// HaveSeries return true when []result have at least on series
+func HaveSeries(results []client.Result) bool {
+	return len(results) > 0 && len(results[0].Series) > 0
+}

@@ -132,7 +132,7 @@ func wsRouter(w http.ResponseWriter, r *http.Request, clnt *user.RealUser) { // 
 				case "getLatestState":
 					var results []client.Result
 					success, errmsg, results = clnt.QueryDeviceLog(bson.M{"limit": 1}, dev)
-					if len(results) > 0 && len(results[0].Series) > 0 && len(results[0].Series[0].Values) > 0 {
+					if common.HaveSeries(results) && len(results[0].Series[0].Values) > 0 {
 						data = zip(results[0].Series[0].Columns, results[0].Series[0].Values[0])
 					}
 					// case "getDevList":

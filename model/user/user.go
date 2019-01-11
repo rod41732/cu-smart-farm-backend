@@ -45,7 +45,7 @@ func (user *RealUser) ReportStatus(payload model.DeviceMessagePayload, deviceID 
 	if user.conn != nil {
 		user.conn.WriteMessage(1, resp) // 1 is text message
 	} else {
-		common.Println("[User] null user => ", resp)
+		common.Println("[User] offline user => ...", resp[:5])
 	}
 	common.WriteInfluxDB("cu_smartfarm_sensor_log", map[string]string{"device": deviceID}, payload.ToMap())
 }
