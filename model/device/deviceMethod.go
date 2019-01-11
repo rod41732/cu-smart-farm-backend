@@ -3,7 +3,6 @@ package device
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/model"
@@ -143,9 +142,10 @@ func (device *Device) Poll() {
 
 // UpdateState update device state (from auto logic) according to data
 func (dev *Device) UpdateState(data model.DeviceMessagePayload) {
-	if (rand.Float64() > 0.2) {
-		return
-	}
+	// if (rand.Float64() > 0.2) {
+	// 	return
+	// }
+
 	resultState := make(map[string]RelayState)
 	for _, key := range common.PossibleRelays {
 		//common.Printf("[Device] ID: %s Relay:%s => Mode=%s\n", dev.ID, key, dev.RelayStates[key].Mode)
@@ -169,7 +169,7 @@ func (dev *Device) UpdateState(data model.DeviceMessagePayload) {
 				}
 				newState := ""
 				//common.Printf("%v [%v] %v is %v\n", val, cond.Symbol, cond.Trigger, (cond.Symbol == "<") ==
-//(val < cond.Trigger))
+				//(val < cond.Trigger))
 				if (cond.Symbol == "<") == (val < cond.Trigger) {
 					newState = "on"
 				} else {
