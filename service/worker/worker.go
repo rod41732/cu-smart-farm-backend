@@ -42,26 +42,31 @@ func Work() {
 		toDevice := make(map[string]device.RelayState)
 		for _, dev := range storage.Devices {
 			for rID, state := range dev.RelayStates {
-				sched, ok := state.Detail.(device.ScheduleDetail)
+				var sched device.ScheduleDetail
+				detailMap, ok := state.Detail.(map[string]interface{})
 				if ok {
-					isOn := false
-					t := time.Now()
-					now := minutes(t.Hour(), t.Minute())
-					for _, entry := range sched.Schedules {
-						if minutes(entry.StartHour, entry.StartMin) <= now && now <= minutes(entry.EndHour, entry.EndMin) {
-							isOn = true
-							break
+					err := sched.FromMap(detailMap)
+					if err == nil {
+						isOn := false
+						t := time.Now()
+						now := minutes(t.Hour(), t.Minute())
+						for _, entry := range sched.Schedules {
+							if minutes(entry.StartHour, entry.StartMin) <= now && now <= minutes(entry.EndHour, entry.EndMin) {
+								isOn = true
+								break
+							}
 						}
-					}
-					toDevice[rID] = device.RelayState{
-						Mode:   "manual",
-						Detail: isOn,
+						toDevice[rID] = device.RelayState{
+							Mode:   "manual",
+							Detail: isOn,
+						}
 					}
 				}
 				// TODO: repeat=false logic
 			}
 			if len(toDevice) > 0 {
 				str, _ := json.Marshal(toDevice)
+				common.Printf("[Worker] >>> send message to %s\n", dev.ID)
 				dev.SendMsg(str)
 			}
 		}

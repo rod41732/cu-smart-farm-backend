@@ -17,7 +17,7 @@ func LoadDevice(deviceID string) error {
 	}
 	var tmp map[string]interface{}
 	var dev device.Device
-	common.Printf("[Worker-storage] before %v\n", Devices[deviceID])
+	// common.Printf("[Worker-storage] before %v\n", Devices[deviceID])
 	err = mdb.DB("CUSmartFarm").C("devices").Find(bson.M{
 		"id": deviceID,
 	}).One(&tmp)
@@ -26,7 +26,7 @@ func LoadDevice(deviceID string) error {
 	}
 	dev.FromMap(tmp)
 	Devices[deviceID] = &dev
-	common.Printf("[Worker-storage] after %v\n", Devices[deviceID])
+	// common.Printf("[Worker-storage] after %v\n", Devices[deviceID])
 	return nil
 }
 

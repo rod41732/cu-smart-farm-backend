@@ -64,6 +64,19 @@ type ScheduleDetail struct {
 	Repeat    bool            `json:"repeat"`
 }
 
+//FromMap is "constructor" for converting map[string]interface{} to Condition return error if can't convert
+func (scheduleDetail *ScheduleDetail) FromMap(val map[string]interface{}) error {
+	str, err := json.Marshal(val)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(str, scheduleDetail)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // shortcut to create time for today with just HH:MM
 func createTime(hour, min int) int64 {
 	now := time.Now()
