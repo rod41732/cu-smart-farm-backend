@@ -3,6 +3,7 @@ package device
 import (
 	"encoding/json"
 	"fmt"
+	"net/rpc"
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/model"
@@ -94,6 +95,11 @@ func (device *Device) SetRelay(relayID string, state RelayState) (bool, string) 
 	device.RelayStates[relayID] = state
 	device.PastStates[relayID][state.Mode] = state.Detail
 	device.BroadCast()
+	// Trigger reload
+	clnt, err := rpc.DialHTTP("tcp", "127.0.0.1:5555")
+	reply := new(string)
+	clnt.Call("Trigger.Update", device.ID, reply)
+	common.Println("[Caller] reply = ", *reply)
 	return true, "OK"
 }
 
@@ -129,7 +135,7 @@ func (device *Device) BroadCast() {
 		fmt.Println("  At Device::BroadCast")
 		return
 	}
-	device.sendMsg(mqttMsg)
+	device.SendMsg(mqttMsg)
 }
 
 // Poll : send "fetch" command to device
@@ -137,7 +143,7 @@ func (device *Device) Poll() {
 	mqttMsg, _ := json.Marshal(bson.M{
 		"cmd": "fetch",
 	})
-	device.sendMsg(mqttMsg)
+	device.SendMsg(mqttMsg)
 }
 
 // UpdateState update device state (from auto logic) according to data
@@ -192,7 +198,7 @@ func (dev *Device) UpdateState(data model.DeviceMessagePayload) {
 }
 
 // send message to device
-func (device *Device) sendMsg(payload []byte) {
+func (device *Device) SendMsg(payload []byte) {
 	mqtt.SendMessageToDevice(device.ID, payload)
 }
 

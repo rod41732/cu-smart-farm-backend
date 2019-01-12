@@ -61,6 +61,7 @@ func (condition *Condition) FromMap(val map[string]interface{}) error {
 // ScheduleDetail wraps schedule array
 type ScheduleDetail struct {
 	Schedules []scheduleEntry `json:"schedules"`
+	Repeat    bool            `json:"repeat"`
 }
 
 // shortcut to create time for today with just HH:MM

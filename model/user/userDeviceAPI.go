@@ -118,6 +118,7 @@ func (user *RealUser) SetDevice(state map[string]interface{}, device *device.Dev
 	if !user.ownsDevice(device.ID) {
 		return false, "Not your device"
 	}
+	fmt.Println("[User] state = ", msg.State)
 	if ok, errmsg := device.SetRelay(msg.RelayID, msg.State); ok {
 		return true, "OK"
 	} else {
