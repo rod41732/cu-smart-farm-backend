@@ -35,7 +35,7 @@ func (user *RealUser) AddDevice(param map[string]interface{}, device *device.Dev
 		return false, "Device already owned"
 	}
 	// Check Device
-	if device.SetOwner(user.Username, message.DeviceSecret) {
+	if ok, errmsg := device.SetOwner(user.Username, message.DeviceSecret); ok {
 		var temp map[string]interface{}
 		_, err = mdb.DB("CUSmartFarm").C("users").Find(bson.M{
 			"username": user.Username,
@@ -49,8 +49,9 @@ func (user *RealUser) AddDevice(param map[string]interface{}, device *device.Dev
 		user.Devices = append(user.Devices, device.ID)
 		device.SetName(message.DeviceName)
 		return true, "OK"
+	} else {
+		return false, "Device modify error " + errmsg
 	}
-	return false, "Device modify error"
 }
 
 // RemoveDevice removes device from user's device list
@@ -68,7 +69,7 @@ func (user *RealUser) RemoveDevice(device *device.Device) (bool, string) {
 		return false, "Can't connect to DB"
 	}
 
-	if device.RemoveOwner() {
+	if ok, errmsg := device.RemoveOwner(); ok {
 		var temp map[string]interface{}
 		_, err = mdb.DB("CUSmartFarm").C("users").Find(bson.M{
 			"username": user.Username,
@@ -81,8 +82,9 @@ func (user *RealUser) RemoveDevice(device *device.Device) (bool, string) {
 		}
 		common.RemoveStringFromSlice(device.ID, &user.Devices)
 		return true, "OK"
+	} else {
+		return false, "Device modify error " + errmsg
 	}
-	return false, "Device modify error"
 }
 
 // RenameDevice renames device
@@ -98,11 +100,12 @@ func (user *RealUser) RenameDevice(payload map[string]interface{}, device *devic
 		return false, "Bad Payload"
 	}
 
-	if device.SetName(message.Name) {
+	if ok, errmsg := device.SetName(message.Name); ok {
 		return true, "OK"
+	} else {
+		return false, "Device modify error" + errmsg
 	}
 
-	return false, "Device modify error"
 }
 
 // SetDevice : set relay state of device (specified via `state`)
@@ -115,10 +118,11 @@ func (user *RealUser) SetDevice(state map[string]interface{}, device *device.Dev
 	if !user.ownsDevice(device.ID) {
 		return false, "Not your device"
 	}
-	if device.SetRelay(msg.RelayID, msg.State) {
+	if ok, errmsg := device.SetRelay(msg.RelayID, msg.State); ok {
 		return true, "OK"
+	} else {
+		return false, "Device modify error " + errmsg
 	}
-	return false, "Device modify error"
 }
 
 // GetDeviceInfo returns devices state, if user owns the device, otherwise return nil
