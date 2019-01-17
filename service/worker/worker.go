@@ -6,7 +6,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/mongodb/mongo-go-driver/bson"
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/model/device"
 
