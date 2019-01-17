@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/mongodb/mongo-go-driver/bson"
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/model/device"
 
@@ -66,7 +67,10 @@ func Work() {
 				// TODO: repeat=false logic
 			}
 			if len(toDevice) > 0 {
-				str, _ := json.Marshal(toDevice)
+				str, _ := json.Marshal(bson.M{
+					"cmd":   "set",
+					"state": toDevice,
+				})
 				common.Printf("[Worker] >>> send message to %s\n", dev.ID)
 				dev.SendMsg(str)
 			}
