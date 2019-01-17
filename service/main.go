@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/rod41732/cu-smart-farm-backend/mqtt"
+	"github.com/rod41732/cu-smart-farm-backend/router"
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
 
@@ -24,7 +25,7 @@ func main() {
 	// common.InitializeKeyPair()
 	// middleware.Initialize()
 
-	// router.InitMQTT()
+	router.InitMQTTNull()
 	go mqtt.MQTT()
 	time.Sleep(2 * time.Second) // wait until MQTT connect
 	l, err := net.Listen("tcp", ":5555")

@@ -21,6 +21,15 @@ func InitMQTT() {
 	mqtt.SetHandler(handleMessage)
 }
 
+// InitMQTTNull sets handler to "nullHandler" which does nothing
+func InitMQTTNull() {
+	mqtt.SetHandler(nullHandler)
+}
+
+func nullHandler(msg *message.PublishMessage) error {
+	return nil
+}
+
 func handleMessage(msg *message.PublishMessage) error {
 	inMessage := []byte(string(msg.Payload()))
 	deviceID := idFromTopic(msg.Topic())
