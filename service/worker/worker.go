@@ -47,18 +47,19 @@ func Work() {
 				if ok {
 					err := sched.FromMap(detailMap)
 					if err == nil {
-						isOn := false
+						detialStr := "off"
+
 						t := time.Now()
 						now := minutes(t.Hour(), t.Minute())
 						for _, entry := range sched.Schedules {
 							if minutes(entry.StartHour, entry.StartMin) <= now && now <= minutes(entry.EndHour, entry.EndMin) {
-								isOn = true
+								detialStr = "on"
 								break
 							}
 						}
 						toDevice[rID] = device.RelayState{
 							Mode:   "manual",
-							Detail: isOn,
+							Detail: detialStr,
 						}
 					}
 				}
