@@ -183,9 +183,6 @@ func (dev *Device) UpdateState(data model.DeviceMessagePayload) {
 				}
 				resultState[key] = RelayState{Mode: "manual", Detail: newState}
 			}
-		} else {
-			resultState[key] = dev.RelayStates[key]
-			common.Println("[Device] mode isn't auto")
 		}
 	}
 	str, _ := json.Marshal(bson.M{

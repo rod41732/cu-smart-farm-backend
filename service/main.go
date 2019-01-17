@@ -7,9 +7,6 @@ import (
 	"net/rpc"
 	"time"
 
-	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
-	"github.com/rod41732/cu-smart-farm-backend/router"
-
 	"github.com/rod41732/cu-smart-farm-backend/mqtt"
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
@@ -24,10 +21,10 @@ func main() {
 	rpc.Register(trigger)
 	rpc.HandleHTTP()
 
-	common.InitializeKeyPair()
-	middleware.Initialize()
+	// common.InitializeKeyPair()
+	// middleware.Initialize()
 
-	router.InitMQTT()
+	// router.InitMQTT()
 	go mqtt.MQTT()
 	time.Sleep(2 * time.Second) // wait until MQTT connect
 	l, err := net.Listen("tcp", ":5555")
