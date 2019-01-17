@@ -151,9 +151,9 @@ func (user *RealUser) QueryDeviceLog(timeParams map[string]interface{}, device *
 	}
 	if msg.Limit <= 0 {
 		msg.Limit = 10
-	} else if msg.Limit > 100 {
+	} /*else if msg.Limit > 100 {
 		msg.Limit = 100
-	}
+	}*/
 	var res []client.Result
 	if msg.From.IsZero() || msg.To.IsZero() { // when user just want ot get latest
 		res = common.QueryInfluxDB(fmt.Sprintf(`SELECT *::field FROM deviceData WHERE "device"='%s' ORDER BY time DESC LIMIT %d`, device.ID, msg.Limit))
