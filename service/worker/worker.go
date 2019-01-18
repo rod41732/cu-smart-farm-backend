@@ -9,7 +9,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
-	"github.com/rod41732/cu-smart-farm-backend/model/device"
+	"github.com/rod41732/cu-smart-farm-backend/service/model/device"
 
 	"github.com/rod41732/cu-smart-farm-backend/service/storage"
 )

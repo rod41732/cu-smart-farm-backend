@@ -4,12 +4,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
 	"github.com/rod41732/cu-smart-farm-backend/common"
+	"github.com/rod41732/cu-smart-farm-backend/config"
 	"github.com/rod41732/cu-smart-farm-backend/mqtt"
 	"github.com/rod41732/cu-smart-farm-backend/router"
 )
 
 func main() {
-
+	config.Init()
 	common.ShouldPrintDebug = true
 	common.BatchWriteSize = 1
 	//	common.Secure = false

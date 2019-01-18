@@ -7,8 +7,7 @@ import (
 	"net/rpc"
 	"time"
 
-	"github.com/rod41732/cu-smart-farm-backend/mqtt"
-	"github.com/rod41732/cu-smart-farm-backend/router"
+	"github.com/rod41732/cu-smart-farm-backend/config"
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
 
@@ -17,6 +16,8 @@ import (
 )
 
 func main() {
+	config.Init()
+	print("[Debug] target: " + config.MQTT["address"])
 	common.ShouldPrintDebug = true
 	trigger := new(receiver.Trigger)
 	rpc.Register(trigger)
@@ -25,8 +26,7 @@ func main() {
 	// common.InitializeKeyPair()
 	// middleware.Initialize()
 
-	router.InitMQTTNull()
-	go mqtt.MQTT()
+	// go mqtt.MQTT()
 	time.Sleep(2 * time.Second) // wait until MQTT connect
 	l, err := net.Listen("tcp", ":5555")
 	if err != nil {

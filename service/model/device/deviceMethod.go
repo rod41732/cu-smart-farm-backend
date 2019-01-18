@@ -6,8 +6,8 @@ import (
 	"net/rpc"
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
-	"github.com/rod41732/cu-smart-farm-backend/model"
-	"github.com/rod41732/cu-smart-farm-backend/mqtt"
+	"github.com/rod41732/cu-smart-farm-backend/service/model"
+	"github.com/rod41732/cu-smart-farm-backend/service/mqtt"
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
