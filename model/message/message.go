@@ -61,6 +61,7 @@ func (message *AddDeviceMessage) FromMap(val map[string]interface{}) error {
 
 // FromMap is "constructor" for converting map[string]interface{} to DeviceCommandMessage  return error if can't convert
 func (message *DeviceCommandMessage) FromMap(val map[string]interface{}) error {
+	// TODO: move this verify code to each respective sub code
 	str, err := json.Marshal(val)
 	if err != nil {
 		return err
@@ -97,11 +98,6 @@ func (message *DeviceCommandMessage) FromMap(val map[string]interface{}) error {
 			} else {
 				// Check schedule
 				for _, entry := range sched.Schedules {
-					for _, dow := range entry.DayOfWeeks {
-						if !(0 <= dow && dow < 7) {
-							return errors.New("Invalid Detail - DOW")
-						}
-					}
 					for _, h := range []int{entry.EndHour, entry.StartHour} {
 						if !(0 <= h && h < 24) {
 							return errors.New("Invalid Detail - Hour")

@@ -49,24 +49,23 @@ func Work() {
 				detailMap, ok := state.Detail.(map[string]interface{})
 				if ok && state.Mode == "scheduled" {
 					err := sched.FromMap(detailMap)
-					if err == nil {
-						detialStr := "off"
+					if err == nil && (sched.Repeat == true || sched.CreatedAt.Sub(time.Now()) <= 24*time.Hour) {
+						detailStr := "off"
 
 						t := time.Now()
 						now := minutes(t.Hour(), t.Minute())
 						for _, entry := range sched.Schedules {
 							if minutes(entry.StartHour, entry.StartMin) <= now && now <= minutes(entry.EndHour, entry.EndMin) {
-								detialStr = "on"
+								detailStr = "on"
 								break
 							}
 						}
 						toDevice[rID] = device.RelayState{
 							Mode:   "manual",
-							Detail: detialStr,
+							Detail: detailStr,
 						}
 					}
 				}
-				// TODO: repeat=false logic
 			}
 			if len(toDevice) > 0 {
 				str, _ := json.Marshal(bson.M{
