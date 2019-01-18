@@ -46,7 +46,7 @@ func Work() {
 			for rID, state := range dev.RelayStates {
 				var sched device.ScheduleDetail
 				detailMap, ok := state.Detail.(map[string]interface{})
-				if ok {
+				if ok && state.Mode == "scheduled" {
 					err := sched.FromMap(detailMap)
 					if err == nil {
 						detialStr := "off"

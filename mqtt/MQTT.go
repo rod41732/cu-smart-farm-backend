@@ -15,6 +15,8 @@ var messageHandler service.OnPublishFunc
 
 func handleSubscriptionComplete(msg, ack message.Message, err error) error {
 	// fmt.Printf("Subscribed: %s\nAck: %s\n", msg.Decode([]byte("utf-8")), ack.Decode([]byte("utf-8")))
+	return nil
+
 	common.Println(msg)
 	common.Println(ack)
 	if common.PrintError(err) {
