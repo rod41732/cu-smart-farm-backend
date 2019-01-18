@@ -2,6 +2,7 @@ package mqtt
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/config"
@@ -13,6 +14,7 @@ var mqttClient *service.Client
 
 func connectToMQTTServer() error {
 	if mqttClient != nil {
+		time.Sleep(1 * time.Second)
 		mqttClient.Disconnect()
 	}
 	mqttClient = &service.Client{}
@@ -54,7 +56,6 @@ func publishToMQTT(topic, payload []byte) {
 	msg.SetQoS(1)
 	msg.SetPayload([]byte(payload))
 	mqttClient.Publish(msg, nil)
-	// mqttClient.Disconnect()
 }
 
 // // MQTT : intialize MQTT Client

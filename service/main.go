@@ -17,7 +17,7 @@ import (
 
 func main() {
 	config.Init()
-	print("[Debug] target: " + config.MQTT["address"])
+//	print("[Debug] target: " + config.MQTT["address"])
 	common.ShouldPrintDebug = true
 	trigger := new(receiver.Trigger)
 	rpc.Register(trigger)
@@ -26,7 +26,6 @@ func main() {
 	// common.InitializeKeyPair()
 	// middleware.Initialize()
 
-	// go mqtt.MQTT()
 	time.Sleep(2 * time.Second) // wait until MQTT connect
 	l, err := net.Listen("tcp", ":5555")
 	if err != nil {

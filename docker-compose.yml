@@ -1,19 +1,27 @@
 version: '3'
 services:
   backend:
-    image: intaniger/smartfarm_backend
-    volumes:
-     - "/etc/timezone:/etc/timezone:ro"
-     - "/etc/localtime:/etc/localtime:ro"
-     - ./:/go/src/github.com/rod41732/cu-smart-farm-backend
+    image: intaniger/smartfarm_backend:2.0
     environment:
-      - GIN_MODE=debug
-    command: ["sh","-c","go run main.go & go run ./service/main.go"]
+      - MQTT_ADDRESS=tcp://172.17.0.1:1883
+#     - ./:/go/src/github.com/rod41732/cu-smart-farm-backend
+#    environment:
+#      - GIN_MODE=debug
+#    command: ["sh","-c","go run main.go & go run ./service/main.go"]
     ports:
      - "3000:3000"
     links:
      - mongodb
      - iot_service_pack
+  auto_pilot:
+    image: intaniger/smartfarm_backend_auto_pilot:1.14
+    environment:
+     - MQTT_ADDRESS=tcp://172.17.0.1:1883
+    volumes:
+     - "/etc/timezone:/etc/timezone:ro"
+     - "/etc/localtime:/etc/localtime:ro"
+     - ./service:/go/src/github.com/rod41732/cu-smart-farm-backend/service
+    command: ["go", "run", "main.go"]
   mongodb:
     image: mongo
     volumes:
