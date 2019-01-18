@@ -135,7 +135,7 @@ func (state *RelayState) Verify() bool {
 		if ok {
 			var cond Condition
 			err := cond.FromMap(_map)
-			if err != nil {
+			if err == nil {
 				state.Detail = cond
 				return true
 			}
@@ -147,7 +147,7 @@ func (state *RelayState) Verify() bool {
 		if ok {
 			var sched ScheduleDetail
 			err := sched.FromMap(_map)
-			if err != nil {
+			if err == nil {
 				state.Detail = sched
 				return true
 			}
