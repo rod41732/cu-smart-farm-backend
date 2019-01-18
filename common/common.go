@@ -108,9 +108,6 @@ func QueryInfluxDB(query string) []client.Result {
 			Database: "SkyhawkPhase1",
 		})
 		PrintError(err)
-		if err == nil {
-			Printf("[Influx] Query Success. Result = %#v \n", resp)
-		}
 		return resp.Results
 	}
 	return make([]client.Result, 0)
