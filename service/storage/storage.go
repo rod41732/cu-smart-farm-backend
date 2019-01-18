@@ -15,6 +15,7 @@ func LoadDevice(deviceID string) error {
 	if err != nil {
 		return err
 	}
+	defer mdb.Close()
 	var tmp map[string]interface{}
 	var dev device.Device
 	// common.Printf("[Worker-storage] before %v\n", Devices[deviceID])

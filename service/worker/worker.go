@@ -22,6 +22,7 @@ func Init() {
 	if err != nil {
 		log.Fatalln(err.Error())
 	}
+	defer mdb.Close()
 
 	it := mdb.DB("CUSmartFarm").C("devices").Find(nil).Iter()
 	cnt := 0
