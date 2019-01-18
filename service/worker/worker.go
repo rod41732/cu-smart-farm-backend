@@ -49,9 +49,8 @@ func Work() {
 				detailMap, ok := state.Detail.(map[string]interface{})
 				if ok && state.Mode == "scheduled" {
 					err := sched.FromMap(detailMap)
+					detailStr := "off"
 					if err == nil && (sched.Repeat == true || sched.CreatedAt.Sub(time.Now()) <= 24*time.Hour) {
-						detailStr := "off"
-
 						t := time.Now()
 						now := minutes(t.Hour(), t.Minute())
 						for _, entry := range sched.Schedules {
@@ -60,10 +59,10 @@ func Work() {
 								break
 							}
 						}
-						toDevice[rID] = device.RelayState{
-							Mode:   "manual",
-							Detail: detailStr,
-						}
+					}
+					toDevice[rID] = device.RelayState{
+						Mode:   "manual",
+						Detail: detailStr,
 					}
 				}
 			}
