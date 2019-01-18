@@ -94,7 +94,7 @@ func (message *DeviceCommandMessage) FromMap(val map[string]interface{}) error {
 			}
 			err = json.Unmarshal(str, &sched)
 			if err != nil {
-				return errors.New("Invalid Detail - Struct")
+				return errors.New("Invalid Detail - Struct" + err.Error())
 			} else {
 				// Check schedule
 				for _, entry := range sched.Schedules {

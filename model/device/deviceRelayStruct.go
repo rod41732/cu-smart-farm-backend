@@ -94,7 +94,6 @@ func (state *RelayState) ToDeviceState() RelayState {
 		str, _ := json.Marshal(state.Detail)
 		json.Unmarshal(str, &schedules)
 		detailStr := "off"
-		schedArray := make([][2]int64, 0, 4)
 		now := time.Now().Unix()
 		for _, sched := range schedules.Schedules {
 			start := createTime(sched.StartHour, sched.StartMin)
@@ -102,9 +101,6 @@ func (state *RelayState) ToDeviceState() RelayState {
 			if start <= now && now <= end {
 				detailStr = "on"
 			}
-		}
-		if len(schedArray) == 0 && len(schedules.Schedules) != 0 {
-			common.Println("[DEBUG] device state converter: there's data in schedule but day doesn't match")
 		}
 		cpy.Mode = "manual"
 		cpy.Detail = detailStr
@@ -114,5 +110,6 @@ func (state *RelayState) ToDeviceState() RelayState {
 
 // Verify verifys validity of RelayState object
 func (state *RelayState) Verify() bool {
+	// TODO verify state logic
 	return true
 }

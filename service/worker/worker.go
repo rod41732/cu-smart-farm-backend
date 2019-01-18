@@ -48,9 +48,9 @@ func Work() {
 				var sched device.ScheduleDetail
 				detailMap, ok := state.Detail.(map[string]interface{})
 				if ok && state.Mode == "scheduled" {
-					err := sched.FromMap(detailMap)
 					detailStr := "off"
-					if err == nil && (sched.Repeat == true || sched.CreatedAt.Sub(time.Now()) <= 24*time.Hour) {
+					err := sched.FromMap(detailMap)
+					if diff := time.Now().Sub(sched.CreatedAt); err == nil && (sched.Repeat == true || (0 <= diff && diff <= 24*time.Hour)) {
 						t := time.Now()
 						now := minutes(t.Hour(), t.Minute())
 						for _, entry := range sched.Schedules {

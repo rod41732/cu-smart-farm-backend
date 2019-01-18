@@ -96,7 +96,7 @@ func (device *Device) SetRelay(relayID string, state RelayState) (bool, string) 
 	device.PastStates[relayID][state.Mode] = state.Detail
 	device.BroadCast()
 	// Trigger reload
-	clnt, err := rpc.DialHTTP("tcp", "auto_pilot:5555")
+	clnt, err := rpc.DialHTTP("tcp", config.AutoPilotAddr)
 	reply := new(string)
 	clnt.Call("Trigger.Update", device.ID, reply)
 	common.Println("[Caller] reply = ", *reply)
