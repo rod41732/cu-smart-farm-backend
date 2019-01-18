@@ -88,31 +88,15 @@ func (message *DeviceCommandMessage) FromMap(val map[string]interface{}) error {
 			}
 		case "scheduled":
 			var sched device.ScheduleDetail
-			str, err := json.Marshal(message.State.Detail)
-			if err != nil {
-				return err
+			_map, ok := message.State.Detail.(map[string]interface{})
+			if !ok {
+				return errors.New("Invalid detail : isn't map")
 			}
-			err = json.Unmarshal(str, &sched)
+			err = sched.FromMap(_map)
 			if err != nil {
 				return errors.New("Invalid Detail - Struct" + err.Error())
-			} else {
-				// Check schedule
-				for _, entry := range sched.Schedules {
-					for _, h := range []int{entry.EndHour, entry.StartHour} {
-						if !(0 <= h && h < 24) {
-							return errors.New("Invalid Detail - Hour")
-						}
-					}
-					for _, m := range []int{entry.EndMin, entry.StartMin} {
-						if !(0 <= m && m < 60) {
-							return errors.New("Invalid Detail - Min")
-						}
-					}
-					if 60*entry.StartHour+entry.StartMin >= 60*entry.EndHour+entry.EndMin {
-						return errors.New("Invalid Detail - Bad range")
-					}
-				}
 			}
+			return nil
 		default:
 			return errors.New("Invalid mode")
 		}

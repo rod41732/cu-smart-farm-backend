@@ -74,8 +74,25 @@ func (scheduleDetail *ScheduleDetail) FromMap(val map[string]interface{}) error 
 	if err != nil {
 		return err
 	}
+
+	// Verify
 	if scheduleDetail.CreatedAt.IsZero() {
 		return errors.New("Empty time specified")
+	}
+	for _, entry := range scheduleDetail.Schedules {
+		for _, h := range []int{entry.EndHour, entry.StartHour} {
+			if !(0 <= h && h < 24) {
+				return errors.New("Invalid Detail - Hour")
+			}
+		}
+		for _, m := range []int{entry.EndMin, entry.StartMin} {
+			if !(0 <= m && m < 60) {
+				return errors.New("Invalid Detail - Min")
+			}
+		}
+		if 60*entry.StartHour+entry.StartMin >= 60*entry.EndHour+entry.EndMin {
+			return errors.New("Invalid Detail - Bad range")
+		}
 	}
 	return nil
 }
@@ -110,6 +127,33 @@ func (state *RelayState) ToDeviceState() RelayState {
 
 // Verify verifys validity of RelayState object
 func (state *RelayState) Verify() bool {
-	// TODO verify state logic
-	return true
+	if state.Mode == "manual" {
+		str, ok := state.Detail.(string)
+		return ok && common.StringInSlice(str, []string{"on", "off"})
+	} else if state.Mode == "auto" {
+		_map, ok := state.Detail.(map[string]interface{})
+		if ok {
+			var cond Condition
+			err := cond.FromMap(_map)
+			if err != nil {
+				state.Detail = cond
+				return true
+			}
+			return false
+		}
+		return false
+	} else if state.Mode == "scheduled" {
+		_map, ok := state.Detail.(map[string]interface{})
+		if ok {
+			var sched ScheduleDetail
+			err := sched.FromMap(_map)
+			if err != nil {
+				state.Detail = sched
+				return true
+			}
+			return false
+		}
+		return false
+	}
+	return false
 }

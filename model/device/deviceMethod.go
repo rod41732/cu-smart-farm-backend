@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/rpc"
 
+	"github.com/rod41732/cu-smart-farm-backend/config"
+
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/model"
 	"github.com/rod41732/cu-smart-farm-backend/mqtt"
