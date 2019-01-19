@@ -47,7 +47,7 @@ func (user *RealUser) AddDevice(param map[string]interface{}, device *device.Dev
 			return false, "User modify Error"
 		}
 		user.Devices = append(user.Devices, device.ID)
-		device.SetName(message.DeviceName)
+		device.SetInfo(message.DeviceName, message.DeviceDesc)
 		return true, "OK"
 	} else {
 		return false, "Device modify error " + errmsg
@@ -87,20 +87,20 @@ func (user *RealUser) RemoveDevice(device *device.Device) (bool, string) {
 	}
 }
 
-// RenameDevice renames device
-func (user *RealUser) RenameDevice(payload map[string]interface{}, device *device.Device) (bool, string) {
+// EditDevice renames device
+func (user *RealUser) EditDevice(payload map[string]interface{}, device *device.Device) (bool, string) {
 	// owner check
 	if !user.ownsDevice(device.ID) {
 		return false, "Not your device"
 	}
 
-	var message mMessage.RenameDeviceMessage
+	var message mMessage.EditDeviceMessage
 	err := message.FromMap(payload)
 	if err != nil {
 		return false, "Bad Payload"
 	}
 
-	if ok, errmsg := device.SetName(message.Name); ok {
+	if ok, errmsg := device.SetInfo(message.Name, message.Description); ok {
 		return true, "OK"
 	} else {
 		return false, "Device modify error" + errmsg

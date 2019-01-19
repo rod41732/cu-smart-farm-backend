@@ -131,8 +131,9 @@ func setDevice(c *gin.Context) {
 
 func getDevicesList(c *gin.Context) {
 	type deviceShortInfo struct {
-		Name string `json:"name"`
-		ID   string `json:"deviceID"`
+		Name        string `json:"name"`
+		ID          string `json:"deviceID"`
+		Description string `json:"desc"`
 	}
 	var devices []string
 	var devShortInfo []deviceShortInfo
@@ -148,6 +149,7 @@ func getDevicesList(c *gin.Context) {
 			devInfo, _ := storage.GetDevice(device)
 			devShortInfo[i].ID = devInfo.ID
 			devShortInfo[i].Name = devInfo.Name
+			devShortInfo[i].Description = devInfo.Description
 		}
 	}
 
@@ -159,7 +161,7 @@ func getDevicesList(c *gin.Context) {
 }
 
 // TODO: change error repsonse
-func renameDevice(c *gin.Context) {
+func editDevice(c *gin.Context) {
 	ok, errmsg := true, "OK"
 	user, err := extractUser(c)
 	if err != nil {
@@ -169,7 +171,7 @@ func renameDevice(c *gin.Context) {
 		if err != nil {
 			ok, errmsg = false, err.Error()
 		} else {
-			ok, errmsg = user.RenameDevice(param, dev)
+			ok, errmsg = user.EditDevice(param, dev)
 		}
 	}
 

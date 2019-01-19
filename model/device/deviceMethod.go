@@ -105,11 +105,11 @@ func (device *Device) SetRelay(relayID string, state RelayState) (bool, string) 
 	return true, "OK"
 }
 
-// SetName sets name (display name) of device
-func (device *Device) SetName(name string) (bool, string) {
+// SetInfo sets name and description of device
+func (device *Device) SetInfo(name string, desc string) (bool, string) {
 	mdb, err := common.Mongo()
 	if common.PrintError(err) {
-		fmt.Println("  At Device::SetName -- Connecting to DB")
+		fmt.Println("  At Device::SetInfo -- Connecting to DB")
 		return false, "DB connection error"
 	}
 	defer mdb.Close()
@@ -117,12 +117,13 @@ func (device *Device) SetName(name string) (bool, string) {
 	var tmp map[string]interface{}
 	_, err = mdb.DB("CUSmartFarm").C("devices").Find(bson.M{
 		"id": device.ID,
-	}).Apply(mgo.Change{Update: bson.M{"$set": bson.M{"name": name}}}, &tmp)
+	}).Apply(mgo.Change{Update: bson.M{"$set": bson.M{"name": name, "desc": desc}}}, &tmp)
 	if common.PrintError(err) {
-		fmt.Println("  At Device::SetName -- Update name")
+		fmt.Println("  At Device::SetInfo -- Update name and desc")
 		return false, "Update name"
 	}
 	device.Name = name
+	device.Description = desc
 	return true, "OK"
 }
 

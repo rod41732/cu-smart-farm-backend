@@ -10,6 +10,7 @@ import (
 type Device struct {
 	ID          string                            `json:"id"`
 	Name        string                            `json:"name"`
+	Description string                            `json:"desc"`
 	Secret      string                            `json:"secret"`
 	Owner       string                            `json:"owner"`
 	RelayStates map[string]RelayState             `json:"state"`

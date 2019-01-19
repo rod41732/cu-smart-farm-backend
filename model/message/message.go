@@ -26,6 +26,7 @@ type Message struct {
 type AddDeviceMessage struct {
 	DeviceSecret string `json:"deviceSecret"`
 	DeviceName   string `json:"deviceName"`
+	DeviceDesc   string `json:"deviceDesc"`
 }
 
 // DeviceCommandMessage is payload format for setDevice API
@@ -34,9 +35,10 @@ type DeviceCommandMessage struct {
 	State   device.RelayState `json:"state"`
 }
 
-// RenameDeviceMessage is payload format for rename device API
-type RenameDeviceMessage struct {
-	Name string `json:"name"`
+// EditDeviceMessage is payload format for rename device API
+type EditDeviceMessage struct {
+	Name        string `json:"name"`
+	Description string `json:"desc"`
 }
 
 // TimeQuery is payload for querying sersnor logs
@@ -119,7 +121,7 @@ func (message *Message) FromMap(val map[string]interface{}) error {
 }
 
 //FromMap is "constructor" for converting map[string]interface{} to RenameDeviceMessage return error if can't convert
-func (message *RenameDeviceMessage) FromMap(val map[string]interface{}) error {
+func (message *EditDeviceMessage) FromMap(val map[string]interface{}) error {
 	str, err := json.Marshal(val)
 	if err != nil {
 		return err
