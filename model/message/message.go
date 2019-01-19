@@ -29,6 +29,12 @@ type AddDeviceMessage struct {
 	DeviceDesc   string `json:"deviceDesc"`
 }
 
+// RenameRelayMessage is payload format for renameRelay API
+type RenameRelayMessage struct {
+	RelayID     string `json:"relayID"`
+	Description string `json:"desc"`
+}
+
 // DeviceCommandMessage is payload format for setDevice API
 type DeviceCommandMessage struct {
 	RelayID string            `json:"relayID"`
@@ -135,6 +141,19 @@ func (message *EditDeviceMessage) FromMap(val map[string]interface{}) error {
 
 //FromMap is "constructor" for converting map[string]interface{} to TimeQuery return error if can't convert
 func (message *TimeQuery) FromMap(val map[string]interface{}) error {
+	str, err := json.Marshal(val)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(str, message)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+//FromMap is "constructor" for converting map[string]interface{} to RenameRelayMessage return error if can't convert
+func (message *RenameRelayMessage) FromMap(val map[string]interface{}) error {
 	str, err := json.Marshal(val)
 	if err != nil {
 		return err

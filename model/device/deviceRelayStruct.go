@@ -10,8 +10,9 @@ import (
 
 // RelayState : state of relay (ON/OFF/auto + extra detail of mode)
 type RelayState struct { // use when set relay mode
-	Mode   string      `json:"mode"`   // ON OFF auto SCHED ...
-	Detail interface{} `json:"detail"` // detail depending on mode
+	Mode        string      `json:"mode"`   // ON OFF auto SCHED ...
+	Detail      interface{} `json:"detail"` // detail depending on mode
+	Description string      `json:"desc"`   // relay description
 }
 
 // scheduleEntry represents user's schedule in scheduled mode

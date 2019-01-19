@@ -128,7 +128,7 @@ func wsRouter(w http.ResponseWriter, r *http.Request, clnt *user.RealUser) { // 
 					dev.Poll()
 					success, errmsg = true, "OK"
 				case "setDevice":
-					success, errmsg = clnt.SetDevice(param, dev)
+					success, errmsg = clnt.SetDeviceRelay(param, dev)
 				case "getLatestState":
 					var results []client.Result
 					success, errmsg, results = clnt.QueryDeviceLog(bson.M{"limit": 1}, dev)
