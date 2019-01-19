@@ -105,6 +105,35 @@ func (device *Device) SetRelay(relayID string, state RelayState) (bool, string) 
 	return true, "OK"
 }
 
+func (device *Device) SetRelayName(relayID string, name string) (bool, string) {
+	if !common.StringInSlice(relayID, common.PossibleRelays) {
+		return false, "Invalid Relay ID"
+	}
+	mdb, err := common.Mongo()
+	if common.PrintError(err) {
+		fmt.Println("  At Device::SetRelayName -- Connecting to DB")
+		return false, "DB connection error"
+	}
+	defer mdb.Close()
+	var tmp map[string]interface{}
+	_, err = mdb.DB("CUSmartFarm").C("devices").Find(bson.M{
+		"id": device.ID,
+	}).Apply(mgo.Change{
+		Update: bson.M{"$set": bson.M{
+			"state." + relayID + ".desc": name,
+		}},
+	}, &tmp)
+	if common.PrintError(err) {
+		fmt.Println("  At Device::SetRelayName -- Update relay desc")
+		return false, "Device modify error"
+	}
+	// cannot assign directly to struct field in map so I do this
+	cpy := device.RelayStates[relayID]
+	cpy.Description = name
+	device.RelayStates[relayID] = cpy
+	return true, "OK"
+}
+
 // SetInfo sets name and description of device
 func (device *Device) SetInfo(name string, desc string) (bool, string) {
 	mdb, err := common.Mongo()

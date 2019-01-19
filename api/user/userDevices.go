@@ -26,6 +26,7 @@ func status(ok bool) int {
 	return 500
 }
 
+// return userObject based on name stored in gin.Context
 func extractUser(c *gin.Context) (userObject *user.RealUser, err error) {
 	usr, ok := c.Get("user")
 	if !ok {
@@ -49,6 +50,7 @@ func checkStatus(c *gin.Context) {
 	})
 }
 
+// extract param from payload (post body), get device from storage
 func extractDeviceIDandParam(c *gin.Context) (dev *device.Device, param map[string]interface{}, err error) {
 	var payload message.Message
 	err = json.Unmarshal([]byte(c.PostForm("payload")), &payload)
@@ -109,7 +111,7 @@ func removeDevice(c *gin.Context) {
 	})
 }
 
-func setDevice(c *gin.Context) {
+func setRelay(c *gin.Context) {
 	ok, errmsg := true, "OK"
 	user, err := extractUser(c)
 	if err != nil {
@@ -119,7 +121,27 @@ func setDevice(c *gin.Context) {
 		if err != nil {
 			ok, errmsg = false, err.Error()
 		} else {
-			ok, errmsg = user.SetDevice(param, dev)
+			ok, errmsg = user.SetDeviceRelay(param, dev)
+		}
+	}
+
+	c.JSON(status(ok), gin.H{
+		"success": ok,
+		"message": errmsg,
+	})
+}
+
+func setRelayName(c *gin.Context) {
+	ok, errmsg := true, "OK"
+	user, err := extractUser(c)
+	if err != nil {
+		ok, errmsg = false, err.Error()
+	} else {
+		dev, param, err := extractDeviceIDandParam(c)
+		if err != nil {
+			ok, errmsg = false, err.Error()
+		} else {
+			ok, errmsg = user.SetDeviceRelayName(param, dev)
 		}
 	}
 

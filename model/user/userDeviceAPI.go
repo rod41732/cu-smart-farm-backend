@@ -87,7 +87,7 @@ func (user *RealUser) RemoveDevice(device *device.Device) (bool, string) {
 	}
 }
 
-// EditDevice renames device
+// EditDevice renames device and change description
 func (user *RealUser) EditDevice(payload map[string]interface{}, device *device.Device) (bool, string) {
 	// owner check
 	if !user.ownsDevice(device.ID) {
@@ -108,8 +108,8 @@ func (user *RealUser) EditDevice(payload map[string]interface{}, device *device.
 
 }
 
-// SetDevice : set relay state of device (specified via `state`)
-func (user *RealUser) SetDevice(state map[string]interface{}, device *device.Device) (bool, string) {
+// SetDeviceRelay : set relay state of device (specified via `state`)
+func (user *RealUser) SetDeviceRelay(state map[string]interface{}, device *device.Device) (bool, string) {
 	var msg mMessage.DeviceCommandMessage
 	if err := msg.FromMap(state); err != nil {
 		// common.PrintError(msg.FromMap(state))
@@ -120,6 +120,22 @@ func (user *RealUser) SetDevice(state map[string]interface{}, device *device.Dev
 	}
 	fmt.Println("[User] state = ", msg.State)
 	if ok, errmsg := device.SetRelay(msg.RelayID, msg.State); ok {
+		return true, "OK"
+	} else {
+		return false, "Device modify error " + errmsg
+	}
+}
+
+// SetDeviceRelayName : set relay's name
+func (user *RealUser) SetDeviceRelayName(payload map[string]interface{}, device *device.Device) (bool, string) {
+	var msg mMessage.RenameRelayMessage
+	if err := msg.FromMap(payload); err != nil {
+		return false, "Bad payload " + err.Error()
+	}
+	if !user.ownsDevice(device.ID) {
+		return false, "Not your device"
+	}
+	if ok, errmsg := device.SetRelayName(msg.RelayID, msg.Description); ok {
 		return true, "OK"
 	} else {
 		return false, "Device modify error " + errmsg

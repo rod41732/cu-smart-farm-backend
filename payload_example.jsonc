@@ -1,0 +1,42 @@
+/setRelayName // new API
+{
+  "deviceID":"n3r1ndh60",
+  "param": {
+  "relayID":"Relay5",
+  "desc": "Water Pump Kappa"
+  }
+}
+
+/setRelay // oldName = setDevice
+{
+  "deviceID":"n3r1ndh60", 
+  "param": {
+    "relayID":"Relay5",
+    "state": {
+      "mode":"auto",
+      "detail":{
+        "sensor":"humidity", "trigger": 444, "symbol":"<"
+    },
+    "desc":"Water Pump" // <-- add this 
+    }
+  }
+}
+
+/editDevice  // oldname = /renameDevice`
+{
+  "deviceID":"n3r1ndh60",
+  "param": {
+    "name":"Backyard",
+    "desc":"Device at backyard for controlling ....." 
+  }
+}
+
+/addDevice // updated API
+{
+  "deviceID":"Kappa", 
+  "param": {
+    "deviceSecret":"Kappa", 
+    "deviceName":"At backyard", 
+    "deviceDesc":"OMEGALUL OMEGALUL" // <-- add this
+  }
+}
