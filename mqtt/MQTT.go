@@ -36,6 +36,7 @@ func connectToMQTTServer() error {
 	msg.SetPassword([]byte(config.MQTT["password"]))
 	msg.SetWillQos(1)
 	msg.SetVersion(3)
+	msg.SetClientId([]byte(common.RandomString(32)))
 	msg.SetCleanSession(true)
 	msg.SetClientId([]byte("backend"))
 	msg.SetKeepAlive(45)
