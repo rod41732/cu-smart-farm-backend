@@ -84,7 +84,8 @@ func (device *Device) SetRelay(relayID string, state RelayState) (bool, string) 
 		"id": device.ID,
 	}).Apply(mgo.Change{
 		Update: bson.M{"$set": bson.M{
-			"state." + relayID:                        state,
+			"state." + relayID + ".mode":              state.Mode,
+			"state." + relayID + ".detail":            state.Detail,
 			"pastState." + relayID + "." + state.Mode: state.Detail,
 		}},
 	}, &temp)
