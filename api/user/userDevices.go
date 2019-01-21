@@ -225,6 +225,28 @@ func getDeviceInfo(c *gin.Context) {
 	})
 }
 
+func getRelayNames(c *gin.Context) {
+	ok, errmsg := true, "OK"
+	var names []string
+	user, err := extractUser(c)
+	if err != nil {
+		ok, errmsg = false, err.Error()
+	} else {
+		dev, _, err := extractDeviceIDandParam(c)
+		if err != nil {
+			ok, errmsg = false, err.Error()
+		} else {
+			ok, errmsg, names = user.GetRelayNames(dev)
+		}
+	}
+
+	c.JSON(status(ok), gin.H{
+		"success": ok,
+		"message": errmsg,
+		"data":    names,
+	})
+}
+
 func getDeviceLog(c *gin.Context) {
 	ok, errmsg := true, "OK"
 	var log interface{}

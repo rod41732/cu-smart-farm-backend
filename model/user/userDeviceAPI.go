@@ -156,6 +156,18 @@ func (user *RealUser) GetDeviceInfo(device *device.Device) (bool, string, map[st
 	return true, "OK", result
 }
 
+// GetRelayNames return all relay names as []string
+func (user *RealUser) GetRelayNames(device *device.Device) (bool, string, []string) {
+	if !user.ownsDevice(device.ID) {
+		return false, "Not your device", make([]string, 0)
+	}
+	result := make([]string, 5)
+	for idx, key := range common.PossibleRelays {
+		result[idx] = device.RelayStates[key].Description
+	}
+	return true, "OK", result
+}
+
 // QueryDeviceLog return device's log, if user owns the device, otherwise return empty array
 func (user *RealUser) QueryDeviceLog(timeParams map[string]interface{}, device *device.Device) (bool, string, []client.Result) {
 	if !user.ownsDevice(device.ID) {
