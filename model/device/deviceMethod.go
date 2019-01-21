@@ -94,7 +94,13 @@ func (device *Device) SetRelay(relayID string, state RelayState) (bool, string) 
 		fmt.Println("  At Device::SetRelay -- Update relay data")
 		return false, "Device modify error"
 	}
-	device.RelayStates[relayID] = state
+	device.RelayStates[relayID] = RelayState{
+		Mode:        state.Mode,
+		Detail:      state.Detail,
+		Description: device.RelayStates[relayID].Description,
+	}
+	// .Detail = state.Detail
+	// device.RelayStates[relayID].Mode = state.Mode
 	device.PastStates[relayID][state.Mode] = state.Detail
 	device.BroadCast()
 	// Trigger reload
