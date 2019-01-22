@@ -72,9 +72,9 @@ func newConnection() (*service.Client, error) {
 	msg.SetPassword([]byte(config.MQTT["password"]))
 	msg.SetWillQos(1)
 	msg.SetVersion(3)
-	msg.SetClientId([]byte(common.RandomString(32)))
+	msg.SetClientId([]byte("single-publish-" + common.RandomString(32)))
 	msg.SetCleanSession(true)
-	msg.SetKeepAlive(45)
+	msg.SetKeepAlive(15)
 	msg.SetWillTopic([]byte("CUSmartFarm"))
 	msg.SetWillMessage([]byte("backend: connecting.."))
 	common.Printf("monkaS %#v\n", msg)
@@ -99,6 +99,7 @@ func publishToMQTT(topic, payload []byte) {
 	}
 	common.Printf("result2 = CL=%#v ER=%#v\n", clnt, err)
 	clnt.Publish(msg, nil)
+	clnt.Disconnect()
 }
 
 func subAll() error {
