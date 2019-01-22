@@ -20,6 +20,6 @@ func main() {
 		ws.Use(middleware.UserAuth.MiddlewareFunc())
 	}
 	ws.GET("/ws", router.WebSocket)
-	r.Run(":3000")
+	r.Run(":3001")
 
 }
