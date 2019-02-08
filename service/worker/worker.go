@@ -42,8 +42,8 @@ func Init() {
 // Work loop fuunction for worker
 func Work() {
 	for true {
-		toDevice := make(map[string]device.RelayState)
 		for _, dev := range storage.Devices {
+			toDevice := make(map[string]device.RelayState)
 			for rID, state := range dev.RelayStates {
 				var sched device.ScheduleDetail
 				detailMap, ok := state.Detail.(map[string]interface{})
