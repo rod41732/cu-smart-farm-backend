@@ -11,10 +11,6 @@ import (
 
 func main() {
 	config.Init()
-	common.ShouldPrintDebug = true
-	common.BatchWriteSize = 1
-	//	common.Secure = false
-
 	common.InitializeKeyPair()
 	middleware.Initialize()
 
@@ -24,11 +20,14 @@ func main() {
 	r := gin.Default()
 
 	router.SetUpHTTPAPI(r)
-	ws := r.Group("/subscribe")
-	if common.Secure {
-		ws.Use(middleware.UserAuth.MiddlewareFunc())
-	}
-	ws.GET("/ws", router.WebSocket)
+	// seperated web socket service
+	/*
+		ws := r.Group("/subscribe")
+		if common.Secure {
+			ws.Use(middleware.UserAuth.MiddlewareFunc())
+		}
+		ws.GET("/ws", router.WebSocket)
+	*/
 	r.Run(":3000")
 
 }

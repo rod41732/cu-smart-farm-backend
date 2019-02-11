@@ -62,12 +62,43 @@ func SendMessageToDevice(deviceID string, payload []byte) {
 	// publishToMQTT([]byte("CUSmartFarm"), payload)
 }
 
+// create new connection to be used to publish
+func newConnection() (*service.Client, error) {
+
+	clnt := &service.Client{}
+
+	msg := message.NewConnectMessage()
+	msg.SetUsername([]byte(config.MQTT["username"]))
+	msg.SetPassword([]byte(config.MQTT["password"]))
+	msg.SetWillQos(1)
+	msg.SetVersion(3)
+	msg.SetClientId([]byte("single-publish-" + common.RandomString(6)))
+	msg.SetCleanSession(true)
+	msg.SetKeepAlive(15)
+	msg.SetWillTopic([]byte("CUSmartFarm"))
+	msg.SetWillMessage([]byte("backend: connecting.."))
+	err := clnt.Connect(config.MQTT["address"], msg)
+	if common.PrintError(err) {
+		fmt.Println("  At MQTT/connectToMQTTServer")
+		return nil, err
+	}
+	return clnt, nil
+}
+
 func publishToMQTT(topic, payload []byte) {
 	msg := message.NewPublishMessage()
 	msg.SetTopic([]byte(topic))
-	msg.SetQoS(0)
+	msg.SetQoS(1)
 	msg.SetPayload([]byte(payload))
-	mqttClient.Publish(msg, nil)
+	clnt, err := newConnection()
+	for ; err != nil; clnt, err = newConnection() {
+		fmt.Println("[MQTT] Can't connect to server, retrying...")
+		fmt.Println(" -- At mqtt/publishToMQTT")
+	}
+	clnt.Publish(msg, nil)
+	// TODO: if we disconnect now -> server will reject all connection from our IP
+	// as will close connection to our IP
+	// clnt.Disconnect()
 }
 
 func subAll() error {

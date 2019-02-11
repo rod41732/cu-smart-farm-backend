@@ -37,10 +37,10 @@ var (
 )
 
 // BatchWriteSize : How many points to write at once (set to 1 isn't a problem)
-var BatchWriteSize = 3
+var BatchWriteSize = 1
 
 // ShouldPrintDebug this flag control whether we should print debug
-var ShouldPrintDebug = false
+var ShouldPrintDebug = true
 
 // Secure this flag control whether we check token of request
 var Secure = true
