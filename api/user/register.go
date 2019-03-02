@@ -65,7 +65,7 @@ func Register(c *gin.Context) {
 	if ok && !common.StringInSlice(province, provincesList) {
 		ok, errmsg = false, "Province error"
 	}
-	if match, _ := regexp.MatchString("[a-zA-Z0-9_]{3,}@[a-zA-Z0-9_]{3,}.[a-zA-Z0-9_]{3,}", email); ok && !match {
+	if match, _ := regexp.MatchString(`^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$`, email); ok && !match {
 		ok, errmsg = false, "Email error"
 	}
 	if ok && !validateNationalID([]byte(nationalID)) {
