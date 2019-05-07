@@ -99,8 +99,11 @@ func (device *Device) SetRelay(relayID string, state RelayState) (bool, string) 
 		Detail:      state.Detail,
 		Description: device.RelayStates[relayID].Description,
 	}
-	// .Detail = state.Detail
-	// device.RelayStates[relayID].Mode = state.Mode
+
+	oldState := device.RelayStates[relayID]
+	oldState.Mode = state.Mode
+	oldState.Detail = state.Detail
+	device.RelayStates[relayID] = oldState
 	device.PastStates[relayID][state.Mode] = state.Detail
 	device.BroadCast()
 	// Trigger reload
