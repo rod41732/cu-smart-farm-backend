@@ -19,6 +19,7 @@ func main() {
 	if common.Secure {
 		ws.Use(middleware.UserAuth.MiddlewareFunc())
 	}
+	common.Println("[WS] Started successfully") 
 	ws.GET("/ws", router.WebSocket)
 	r.Run(":3001")
 
