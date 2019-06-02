@@ -103,8 +103,8 @@ func (device *Device) SetRelay(relayID string, state RelayState) (bool, string) 
 	oldState := device.RelayStates[relayID]
 	oldState.Mode = state.Mode
 	oldState.Detail = state.Detail
-	device.RelayStates[relayID] = oldState
-	device.PastStates[relayID][state.Mode] = state.Detail
+	device.PastStates[relayID][state.Mode] = oldState
+	device.RelayStates[relayID] = state
 	device.BroadCast()
 	// Trigger reload
 	clnt, err := rpc.DialHTTP("tcp", config.AutoPilotAddr)
