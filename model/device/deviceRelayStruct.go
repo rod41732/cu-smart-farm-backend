@@ -107,21 +107,23 @@ func createTime(hour, min int) int64 {
 // ToDeviceState convert time schedule to [][2]int if it's mode is scheduled
 func (state *RelayState) ToDeviceState() RelayState {
 	cpy := *state // copy it
-	if state.Mode == "scheduled" {
-		var schedules ScheduleDetail
-		str, _ := json.Marshal(state.Detail)
-		json.Unmarshal(str, &schedules)
+	if ok && state.Mode == "scheduled" {
 		detailStr := "off"
-		now := time.Now().Unix()
-		for _, sched := range schedules.Schedules {
-			start := createTime(sched.StartHour, sched.StartMin)
-			end := createTime(sched.EndHour, sched.EndMin)
-			if start <= now && now <= end {
-				detailStr = "on"
+		err := sched.FromMap(detailMap)
+		if diff := time.Now().Sub(sched.CreatedAt); err == nil && (sched.Repeat == true || (0 <= diff && diff <= 24*time.Hour)) {
+			t := time.Now()
+			now := minutes(t.Hour(), t.Minute())
+			for _, entry := range sched.Schedules {
+				if minutes(entry.StartHour, entry.StartMin) <= now && now <= minutes(entry.EndHour, entry.EndMin) {
+					detailStr = "on"
+					break
+				}
 			}
 		}
-		cpy.Mode = "manual"
-		cpy.Detail = detailStr
+		toDevice[rID] = device.RelayState{
+			Mode:   "manual",
+			Detail: detailStr,
+		}
 	}
 	return cpy
 }
