@@ -1,3 +1,4 @@
+// MQTT message Handler 
 package router
 
 import (
@@ -12,10 +13,15 @@ import (
 	"github.com/surgemq/message"
 )
 
+
+// topic is in format cufarm1.0/xxxxxx/(status/resp/command/normal)
 func idFromTopic(topic []byte) string {
-	return strings.TrimSuffix(strings.TrimPrefix(string(topic), "CUSmartFarm/"), "/svr_recv")
+	return strings.Split(string(topic), "/")[1]
 }
 
+func messageType(topic []byte) string {
+	return strings.Split(string(topic), "/")[2]
+}
 // InitMQTT sets handler of mqtt router
 func InitMQTT() {
 	mqtt.SetHandler(handleMessage)

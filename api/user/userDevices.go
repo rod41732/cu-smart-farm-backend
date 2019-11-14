@@ -6,7 +6,7 @@ import (
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
 
-	"github.com/influxdata/influxdb/client/v2"
+	"github.com/influxdata/influxdb1-client/v2"
 
 	"github.com/rod41732/cu-smart-farm-backend/model/device"
 	"gopkg.in/mgo.v2/bson"
