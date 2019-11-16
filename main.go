@@ -5,7 +5,6 @@ import (
 	"github.com/rod41732/cu-smart-farm-backend/api/middleware"
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/config"
-	"github.com/rod41732/cu-smart-farm-backend/mqtt"
 	"github.com/rod41732/cu-smart-farm-backend/router"
 )
 
@@ -14,8 +13,10 @@ func main() {
 	common.InitializeKeyPair()
 	middleware.Initialize()
 
-	router.InitMQTT()
-	go mqtt.MQTT()
+	// Move all MQTT things to Worker
+
+	// router.InitMQTT()
+	// go mqtt.MQTT()
 
 	r := gin.Default()
 

@@ -77,7 +77,7 @@ func ensureDevice(deviceID string) {
 func GetDevice(deviceID string) (dev *device.Device, err error) {
 	_, ok := mappedDeviceObject[deviceID]
 	if !ok { // then make the new device
-		ensureDevice(deviceID)
+		ensureDevice(deviceID) // load device from db if possible
 	}
 	res := mappedDeviceObject[deviceID]
 	if res == nil {

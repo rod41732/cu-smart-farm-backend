@@ -2,9 +2,11 @@
 package router
 
 import (
+	"github.com/rod41732/cu-smart-farm-backend/model/device"
 	"encoding/json"
 	"fmt"
 	"strings"
+	"errors"
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/model"
@@ -22,6 +24,12 @@ func idFromTopic(topic []byte) string {
 func messageType(topic []byte) string {
 	return strings.Split(string(topic), "/")[2]
 }
+
+func getVersion(topic []byte) string {
+	mainTopic := strings.Split(string(topic), "/")[0] // cufarmxxxx
+	return strings.TrimPrefix(mainTopic, "cufarm")
+}
+
 // InitMQTT sets handler of mqtt router
 func InitMQTT() {
 	mqtt.SetHandler(handleMessage)
@@ -36,33 +44,52 @@ func nullHandler(msg *message.PublishMessage) error {
 	return nil
 }
 
+
+var persistentDevice = make(map[string]bool) // true if must repeat sending
+
 func handleMessage(msg *message.PublishMessage) error {
-	inMessage := []byte(string(msg.Payload()))
-	deviceID := idFromTopic(msg.Topic())
-	common.Println("[MQTT] <<< ", string(inMessage))
-
-	var message model.DeviceMessage
-	err := json.Unmarshal(inMessage, &message)
-	common.Printf("[MQTT] <<< parsed Data=%#v\n", message)
-
-	if err == nil {
-		device, err := storage.GetDevice(deviceID)
-		if err != nil {
-			fmt.Println("  At handleMessage : handleMessage -> GetDevice")
-			return err
-		}
-		// common.Printf("[MQTT] --- deviceID=[%s]\n", deviceID)
-		user := storage.GetUserStateInfo(device.Owner)
-		// common.Printf("[MQTT] --- owner=%s\n", device.Owner)
-		switch message.Type {
-		case "greeting":
-			device.BroadCast()
-		case "data":
-			// device.UpdateState(message.Payload)
-			user.ReportStatus(message.Payload, device.ID)
-		}
-	} else {
-		common.Println("[MQTT] !!! Not a data message")
+	inMessage := msg.Payload()
+	common.Printf("[MQTT] topic: %s <<< %s",msg.Topic() ,inMessage)
+	version := getVersion(msg.Topic())
+	 
+	switch version {
+	case "1.0":
+		return handleV1Message(msg)
+	default:
+		common.Println("[MQTT] WARNING: unknown device message version")
+		return errors.New("Unknown message version")
 	}
-	return nil
 }
+
+func handleV1Message(msg *message.PublishMessage) error {
+	inMessage := msg.Payload()
+	deviceID := idFromTopic(msg.Topic())
+	msgType := messageType(msg.Topic())
+	
+	payload := &model.DeviceMessageV1_0{}
+	err := json.Unmarshal(inMessage, payload)
+	if common.PrintError(err) {
+		return err
+	}
+
+	dev, err := storage.GetDevice(deviceID)
+	// if common.PrintError(err) {
+	// 	return err
+	// }
+	
+
+	switch msgType {
+	case "response": // device now has response
+	device.UrgentFlag[deviceID] = false;
+	fallthrough
+	case "status": // just periodic report
+		user := storage.GetUserStateInfo(dev.Owner)
+		user.ReportStatus(payload, deviceID)
+	case "greeting": // greeting when device just connected server
+		fmt.Println("Get Greeting from", deviceID)
+		dev.BroadCast("1.0", true)
+	}
+	
+	return nil;
+}
+

@@ -1,6 +1,6 @@
 .vscode
 
-config/
+config/config.go
 config.txt
 key.rsa.pub
 key.rsa

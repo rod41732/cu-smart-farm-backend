@@ -57,10 +57,9 @@ func SetHandler(handler service.OnPublishFunc) {
 }
 
 // SendMessageToDevice : Shorthand for creating message and publish
-func SendMessageToDevice(deviceID string, payload []byte) {
-	common.Printf("[MQTT] >>> send message: %s to %s\n", string(payload), deviceID)
-	publishToMQTT([]byte("CUSmartFarm/"+deviceID+"/svr_out"), payload)
-	// publishToMQTT([]byte("CUSmartFarm"), payload)
+func SendMessageToDevice(version, deviceID, subTopic string, payload []byte) {
+	common.Printf("[MQTT-OUT] v%s d:%s %s: %s", version, deviceID, subTopic, payload)
+	publishToMQTT([]byte(fmt.Sprintf("cufarm%s/%s/%s", version, deviceID, subTopic)), payload) // TODO
 }
 
 // create new connection to be used to publish
@@ -105,8 +104,10 @@ func publishToMQTT(topic, payload []byte) {
 func subAll() error {
 	common.Println("[MQTT] ---- subscribing to all topic")
 	subMsg := message.NewSubscribeMessage()
-	subMsg.AddTopic([]byte("CUSmartFarm"), 2)
-	subMsg.AddTopic([]byte("CUSmartFarm/+/svr_recv"), 2)
+	subMsg.AddTopic([]byte("cufarm1.0"), 2)
+	subMsg.AddTopic([]byte("cufarm1.0/+/status"), 2)
+	subMsg.AddTopic([]byte("cufarm1.0/+/response"), 2)
+	subMsg.AddTopic([]byte("cufarm1.0/+/greeting"), 2)
 	err := mqttClient.Subscribe(subMsg, handleSubscriptionComplete, messageHandler)
 	return err
 }

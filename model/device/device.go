@@ -17,6 +17,12 @@ type Device struct {
 	PastStates  map[string]map[string]interface{} `json:"pastState"`
 }
 
+// Version return device's version
+// TODO: use actual version
+func (device *Device) Version() string {
+	return "1.0"
+}
+
 // FromMap initialize data using map[string]interface{}
 func (device *Device) FromMap(data map[string]interface{}) error {
 	str, _ := json.Marshal(data)

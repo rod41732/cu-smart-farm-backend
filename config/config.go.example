@@ -1,0 +1,25 @@
+package config
+
+// Influx store config for influxDB
+var Influx = map[string]string{
+	"address": "http://localhost:8086",
+	"username": "username",
+	"password": "password",
+}
+
+var Mongo = map[string]string{
+	"address": "localhost:27017",
+}
+
+var MQTT = map[string]string {
+	"address": "tcp://xxx.xxx.xxx.xxx:1883/", // usually port 1883
+	"username": "",
+	"password": "",
+}
+
+var AutoPilotAddr = "localhost:5555"
+var CookieDomain = "localhost:8000"
+
+func Init() {
+	// Init ?
+}

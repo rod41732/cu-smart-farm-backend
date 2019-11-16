@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/rod41732/cu-smart-farm-backend/router"
 	"log"
 	"net"
 	"net/http"
@@ -12,12 +13,18 @@ import (
 	"github.com/rod41732/cu-smart-farm-backend/common"
 
 	"github.com/rod41732/cu-smart-farm-backend/service/receiver"
+	"github.com/rod41732/cu-smart-farm-backend/mqtt"
 	"github.com/rod41732/cu-smart-farm-backend/service/worker"
 )
 
+// Process for worker 
 func main() {
 	config.Init()
-//	print("[Debug] target: " + config.MQTT["address"])
+
+
+	router.InitMQTT()
+	go mqtt.MQTT()
+
 	common.ShouldPrintDebug = true
 	trigger := new(receiver.Trigger)
 	rpc.Register(trigger)

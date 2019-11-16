@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/rpc"
+	"time"
+	"errors"
 
 	"github.com/rod41732/cu-smart-farm-backend/config"
 
@@ -105,7 +107,7 @@ func (device *Device) SetRelay(relayID string, state RelayState) (bool, string) 
 	oldState.Detail = state.Detail
 	device.PastStates[relayID][state.Mode] = oldState
 	device.RelayStates[relayID] = state
-	device.BroadCast()
+	device.BroadCast("1.0", true)
 	// Trigger reload
 	clnt, err := rpc.DialHTTP("tcp", config.AutoPilotAddr)
 	reply := new(string)
@@ -165,38 +167,71 @@ func (device *Device) SetInfo(name string, desc string) (bool, string) {
 	return true, "OK"
 }
 
-// BroadCast : send current state to device via MQTT
-func (device *Device) BroadCast() {
-	mqttMsg, err := json.Marshal(bson.M{
-		"cmd":   "set",
-		"state": toDeviceStateMap(device.RelayStates),
-	})
-	common.Printf("[BroadCast] deviceMap is %#v\n", toDeviceStateMap(device.RelayStates))
+// version tell how to send
+// urgent tell whether device need to response immediately and whether server will retry
+var UrgentFlag = make(map[string]bool) // when resp message is received should set this to false
+
+// BroadCast send device's current state
+func (device *Device) BroadCast(version string, urgent bool) {
+	common.Printf("[MQTT] >> Broadcast id:%s", device.ID)
+	devicePayload, err := convertStateToPayload("1.0",device.RelayStates)
 	if common.PrintError(err) {
-		fmt.Println("  At Device::BroadCast")
+		common.Println(" At Device::Broadcast")
 		return
 	}
-	device.SendMsg(mqttMsg)
+	mqttMsg, err := json.Marshal(devicePayload)
+	if common.PrintError(err) {
+		common.Println(" At Device::Broadcast")
+		return
+	}
+	
+	if (urgent) {
+		tries := 0
+		go func() {
+			UrgentFlag[device.ID] = true;
+			for tries < 5 && UrgentFlag[device.ID] { // max 5 tries
+				tries++
+				common.Println("Device %s: Retrying %d\n", device.ID, tries)
+				device.SendMsg("command", mqttMsg)
+				time.Sleep(5 * time.Second)
+			}
+			if (UrgentFlag[device.ID]) {
+				common.Println("[MQTT] broadcast to %s failed after 5 attempts", device.ID)
+			} else {
+				common.Println("[MQTT] broadcast to %s OK", device.ID)
+			}
+		}()
+	} else {
+		device.SendMsg("normal", mqttMsg)
+	}
 }
+
+
 
 // Poll : send "fetch" command to device
 func (device *Device) Poll() {
 	mqttMsg, _ := json.Marshal(bson.M{
 		"cmd": "fetch",
 	})
-	device.SendMsg(mqttMsg)
+	device.SendMsg("fetch", mqttMsg)
 }
 
-// send message to device
-func (device *Device) SendMsg(payload []byte) {
-	mqtt.SendMessageToDevice(device.ID, payload)
+// SendMsg send message to specified subTopic of this device
+func (device *Device) SendMsg(subTopic string, payload []byte) {
+	mqtt.SendMessageToDevice("1.0", device.ID, subTopic,payload)
 }
 
-// Utility function
-func toDeviceStateMap(relayStateMap map[string]RelayState) map[string]RelayState {
-	result := make(map[string]RelayState)
-	for k, v := range relayStateMap {
-		result[k] = v.ToDeviceState()
+// delegate func: convert relay state to MQTT payload that's send to device 
+func convertStateToPayload(version string, relayStateMap map[string]RelayState) (map[string]interface{}, error) {
+	switch version {
+	case "1.0":
+		return convertV1_0(relayStateMap)
+	default:
+		return nil, errors.New("Unknown device version: " + version)
 	}
-	return result
+}
+
+// TODO: use acual data from mongo
+func convertV1_0(relayStateMap map[string]RelayState) (map[string]interface{}, error) {
+	return map[string]interface{}{"r": []int{1, 0, 0, 0, 1}}, nil
 }
