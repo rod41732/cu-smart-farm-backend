@@ -3,14 +3,15 @@ package model
 import (
 	"fmt"
 )
+
 // ensure that DeviceMessageV1_0 implement the interface
-var _ DeviceMessageData = &DeviceMessageV1_0{} 
+var _ DeviceMessageData = &DeviceMessageV1_0{}
 
 // DeviceMessageV1_0 : mqtt message from device v1.0
 type DeviceMessageV1_0 struct {
-	Relay [5]int `json:"r"`
-	Temp float32 `json:"t"`
-	AirHumid float32 `json:"h"`
+	Relay     [5]int  `json:"r"`
+	Temp      float32 `json:"t"`
+	AirHumid  float32 `json:"h"`
 	SoilHumid float32 `json:"sh"`
 }
 
@@ -30,4 +31,3 @@ func (msg *DeviceMessageV1_0) ToInflux() map[string]interface{} {
 	out["soil"] = msg.SoilHumid
 	return out
 }
-

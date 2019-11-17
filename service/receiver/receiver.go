@@ -16,5 +16,6 @@ func (t *Trigger) Update(deviceID string, errmsg *string) error {
 		*errmsg = "LoadDevice Error"
 		return err
 	}
+	storage.Devices[deviceID].BroadCast("1.0", true)
 	return nil
 }
