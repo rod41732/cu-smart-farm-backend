@@ -3,6 +3,7 @@ package storage
 import (
 	"errors"
 	"fmt"
+	"github.com/rod41732/cu-smart-farm-backend/model"
 
 	"github.com/rod41732/cu-smart-farm-backend/model/device"
 
@@ -51,7 +52,7 @@ func GetUserStateInfo(username string) *user.RealUser {
 	return mappedUserObject[username]
 }
 
-var mappedDeviceObject = make(map[string]*device.Device)
+var Devices = make(map[string]*device.Device)
 
 func ensureDevice(deviceID string) {
 	common.Println("[Storage] make new device for", deviceID)
@@ -70,19 +71,53 @@ func ensureDevice(deviceID string) {
 	}
 	dev := device.Device{}
 	dev.FromMap(tmp)
-	mappedDeviceObject[deviceID] = &dev
+	Devices[deviceID] = &dev
+}
+
+// LoadDevice : loads device from Database
+func LoadDevice(deviceID string) error {
+	mdb, err := common.Mongo()
+	if err != nil {
+		return err
+	}
+	defer mdb.Close()
+	var tmp map[string]interface{}
+	var dev device.Device
+	// common.Printf("[Worker-storage] before %v\n", Devices[deviceID])
+	err = mdb.DB("CUSmartFarm").C("devices").Find(bson.M{
+		"id": deviceID,
+	}).One(&tmp)
+	if err != nil {
+		return err
+	}
+	lastSensorValue := model.DeviceMessageV1_0{} 
+	if (Devices[deviceID] != nil){
+		lastSensorValue = Devices[deviceID].LastSensorValues
+	}
+	dev.FromMap(tmp)
+	dev.LastSensorValues = lastSensorValue
+	// Too
+	Devices[deviceID] = &dev
+	// common.Printf("[Worker-storage] after %v\n", Devices[deviceID])
+	return nil
 }
 
 // GetDevice get device object
 func GetDevice(deviceID string) (dev *device.Device, err error) {
-	_, ok := mappedDeviceObject[deviceID]
+	_, ok := Devices[deviceID]
 	if !ok { // then make the new device
 		ensureDevice(deviceID) // load device from db if possible
 	}
-	res := mappedDeviceObject[deviceID]
+	res := Devices[deviceID]
 	if res == nil {
 		return res, errors.New("Device Not found")
 	} else {
 		return res, nil
 	}
+}
+
+func SetDevice(deviceID string, sensorData model.DeviceMessageV1_0) {
+	fmt.Printf("\nset sensor %s: %#v\n", deviceID, sensorData)
+	Devices[deviceID].LastSensorValues = sensorData
+	fmt.Printf("\nset sensor %s: %#v\n", deviceID, Devices[deviceID].LastSensorValues)
 }

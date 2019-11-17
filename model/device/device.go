@@ -2,19 +2,21 @@ package device
 
 import (
 	"encoding/json"
+	"github.com/rod41732/cu-smart-farm-backend/model"
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
 )
 
 // Device : device connected ti
 type Device struct {
-	ID          string                            `json:"id"`
-	Name        string                            `json:"name"`
-	Description string                            `json:"desc"`
-	Secret      string                            `json:"secret"`
-	Owner       string                            `json:"owner"`
-	RelayStates map[string]RelayState             `json:"state"`
-	PastStates  map[string]map[string]interface{} `json:"pastState"`
+	ID               string                            `json:"id"`
+	Name             string                            `json:"name"`
+	Description      string                            `json:"desc"`
+	Secret           string                            `json:"secret"`
+	Owner            string                            `json:"owner"`
+	RelayStates      map[string]RelayState             `json:"state"`
+	LastSensorValues model.DeviceMessageV1_0           `json:"-"`
+	PastStates       map[string]map[string]interface{} `json:"pastState"` // store
 }
 
 // Version return device's version

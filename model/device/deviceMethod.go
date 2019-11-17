@@ -70,8 +70,8 @@ func (device *Device) RemoveOwner() (bool, string) {
 
 // SetRelay set state of relay, and broadcast change to device
 func (device *Device) SetRelay(relayID string, state RelayState) (bool, string) {
-	if !state.Verify() {
-		return false, "Invaid relay data"
+	if err := state.Verify(); err != nil {
+		return false, "Invalid relay data " + err.Error()
 	}
 
 	mdb, err := common.Mongo()
@@ -173,7 +173,7 @@ var UrgentFlag = make(map[string]bool) // when resp message is received should s
 // BroadCast send device's current state
 func (device *Device) BroadCast(version string, urgent bool) {
 	common.Printf("[MQTT] >> Broadcast id:%s", device.ID)
-	devicePayload, err := convertStateToPayload("1.0", device.RelayStates)
+	devicePayload, err := device.convertStateToPayload(device.RelayStates)
 	if common.PrintError(err) {
 		common.Println(" At Device::Broadcast")
 		return
@@ -219,12 +219,12 @@ func (device *Device) SendMsg(subTopic string, payload []byte) {
 }
 
 // delegate func: convert relay state to MQTT payload that's send to device
-func convertStateToPayload(version string, relayStateMap map[string]RelayState) (map[string]interface{}, error) {
-	switch version {
+func (device *Device) convertStateToPayload(relayStateMap map[string]RelayState) (map[string]interface{}, error) {
+	switch device.Version() {
 	case "1.0":
-		return convertV1_0(relayStateMap)
+		return device.convertV1_0(relayStateMap)
 	default:
-		return nil, errors.New("Unknown device version: " + version)
+		return nil, errors.New("Unknown device version: " + device.Version())
 	}
 }
 
@@ -234,46 +234,76 @@ func minutes(hour, min int) int {
 }
 
 // TODO: use acual data from mongo
-func convertV1_0(relayStateMap map[string]RelayState) (map[string]interface{}, error) {
+func (device *Device) convertV1_0(relayStateMap map[string]RelayState) (map[string]interface{}, error) {
 	out := make(map[string]interface{})
-	outR := make([]int, 5)
+	outRelays := make([]int, 5)
+
 	for i := 1; i <= 5; i++ {
 		key := fmt.Sprintf("Relay%d", i)
-		fmt.Printf("Relay%d mode = %s\n",i, relayStateMap[key].Mode)
+		fmt.Printf("Relay%d mode = %s\n", i, relayStateMap[key].Mode)
 		switch relayStateMap[key].Mode {
 		case "manual":
 			if v := relayStateMap[key].Detail.(string); v == "on" {
-				outR[i-1] = 1
+				outRelays[i-1] = 1
 			} else {
-				outR[i-1] = 0
+				outRelays[i-1] = 0
 			}
-		case "scheduled": // TODO changename  
-			for i := 1; i <= 5; i++ {
-				state := relayStateMap[fmt.Sprintf("Relay%d", i)]
-				var sched ScheduleDetail
-				detailMap, ok := state.Detail.(map[string]interface{})
-				if ok && state.Mode == "scheduled" {
-					outR[i-1] = 10  
-					err := sched.FromMap(detailMap)
-					fmt.Printf("Sche = %v\n", sched)
-					if diff := time.Now().Sub(sched.CreatedAt); err == nil && (sched.Repeat == true || (0 <= diff && diff <= 24*time.Hour)) {
-						t := time.Now()
-						now := minutes(t.Hour(), t.Minute())
-						fmt.Printf("Now = %d\n", now)
-						for _, entry := range sched.Schedules {
-							if minutes(entry.StartHour, entry.StartMin) <= now && now <= minutes(entry.EndHour, entry.EndMin) {
-								outR[i-1] = 11
-								break
-							}
-						}
+		case "auto": // TODO changename
+			state := relayStateMap[fmt.Sprintf("Relay%d", i)]
+			var sched ScheduleDetail
+			detailMap, ok := state.Detail.(map[string]interface{}) // because go unmarshal it into "JSON"
+
+			if ok {
+				outRelays[i-1] = 10
+				err := sched.FromMap(detailMap) // convert to actual asched
+				if err != nil {
+					continue
+				}
+
+				cond := sched.Condition
+				fmt.Printf("\n\nCondition = %#v\n", cond)
+				// select correct sensor and then compare
+				if (cond != Condition{}) {
+					var currentSensorValue float32
+					switch cond.Sensor {
+					case "temp":
+						currentSensorValue = device.LastSensorValues.Temp
+					case "soilHumid":
+						currentSensorValue = device.LastSensorValues.SoilHumid
+					case "airHumid":
+						currentSensorValue = device.LastSensorValues.Temp
+					}
+					var resultSymbol string
+					if currentSensorValue < cond.Trigger {
+						resultSymbol = "<"
+					} else {
+						resultSymbol = ">"
+					}
+					fmt.Printf("device sensor value is %#v", device.LastSensorValues)
+					// skip time check if condition is false
+					if resultSymbol != cond.Symbol {
+						continue
 					}
 				}
+
+				fmt.Printf("Sche = %v\n", sched)
+				t := time.Now()
+				now := minutes(t.Hour(), t.Minute())
+				fmt.Printf("Now = %d\n", now)
+				for _, entry := range sched.Schedules {
+					if minutes(entry.StartHour, entry.StartMin) <= now && now <= minutes(entry.EndHour, entry.EndMin) {
+						outRelays[i-1] = 11
+						break
+					}
+				}
+			} else {
+				fmt.Printf("[ERR] Malforme auto detail")
 			}
 			// TODO: no auto-sensor yet
 		default:
-			outR[i-1] = -1
+			outRelays[i-1] = -1
 		}
 	}
-	out["r"] = outR
+	out["r"] = outRelays
 	return out, nil
 }

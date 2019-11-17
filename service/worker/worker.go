@@ -8,7 +8,7 @@ import (
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/model/device"
 
-	"github.com/rod41732/cu-smart-farm-backend/service/storage"
+	"github.com/rod41732/cu-smart-farm-backend/storage"
 )
 
 // Init : start worker
@@ -40,6 +40,7 @@ func Init() {
 func Work() {
 	for true {
 		for _, dev := range storage.Devices {
+			fmt.Printf("WORKER: Device %s has value of %#v", dev.ID, dev.LastSensorValues)
 			dev.BroadCast("1.0", true)
 			common.Println("Send message to", dev.ID)
 		}

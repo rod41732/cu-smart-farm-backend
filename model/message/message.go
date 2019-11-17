@@ -88,22 +88,20 @@ func (message *DeviceCommandMessage) FromMap(val map[string]interface{}) error {
 				return errors.New("Invalid Detail for manual")
 			}
 		case "auto":
-			str, _ := json.Marshal(message.State.Detail)
-			var thresArray device.Condition
-			err := json.Unmarshal(str, &thresArray)
-			if err != nil || !thresArray.Validate() {
-				return errors.New("Invalid detail for auto")
-			}
-		case "scheduled":
 			var sched device.ScheduleDetail
 			_map, ok := message.State.Detail.(map[string]interface{})
 			if !ok {
-				return errors.New("Invalid detail : isn't map")
+				return errors.New("Invalid detail for auto, it must be a json object")
 			}
 			err = sched.FromMap(_map)
 			if err != nil {
 				return errors.New("Invalid Detail - Struct" + err.Error())
 			}
+
+			if sched.Condition != (device.Condition{}) && !common.StringInSlice(sched.Condition.Sensor, common.PossibleSensors) {
+				return errors.New("Invalid Detail - Invalid sensor name in condition" + err.Error())
+			}
+
 			return nil
 		default:
 			return errors.New("Invalid mode")

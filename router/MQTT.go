@@ -77,6 +77,8 @@ func handleV1Message(msg *message.PublishMessage) error {
 		device.UrgentFlag[deviceID] = false
 		fallthrough
 	case "status": // just periodic report
+		storage.SetDevice(deviceID, *payload)
+		fmt.Print("Received sensor value = ", *payload)
 		user := storage.GetUserStateInfo(dev.Owner)
 		user.ReportStatus(payload, deviceID)
 	case "greeting": // greeting when device just connected server

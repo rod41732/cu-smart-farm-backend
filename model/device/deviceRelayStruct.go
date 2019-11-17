@@ -32,7 +32,11 @@ type Condition struct {
 
 // Validate validate value of Condition
 func (condition *Condition) Validate() bool {
-	if !(common.StringInSlice(condition.Sensor, []string{"soil", "temp", "humidity"})) {
+	common.Printf("Condition is %#v", condition)
+	if (*condition == Condition{}) {
+		return true
+	}
+	if !(common.StringInSlice(condition.Sensor, common.PossibleSensors)) {
 		return false
 	}
 	if !(common.StringInSlice(condition.Symbol, []string{"<", ">"})) {
@@ -54,15 +58,14 @@ func (condition *Condition) FromMap(val map[string]interface{}) error {
 	if condition.Validate() {
 		return nil
 	} else {
-		return errors.New("Validation Error")
+		return errors.New("invalid condition")
 	}
 }
 
-// ScheduleDetail wraps schedule array
+// ScheduleDetail is for mode auto, with optionally an condition
 type ScheduleDetail struct {
 	Schedules []scheduleEntry `json:"schedules"`
-	Repeat    bool            `json:"repeat"`
-	CreatedAt time.Time       `json:"createdAt"`
+	Condition Condition       `json:"condition"`
 }
 
 //FromMap is "constructor" for converting map[string]interface{} to Condition return error if can't convert
@@ -75,11 +78,6 @@ func (scheduleDetail *ScheduleDetail) FromMap(val map[string]interface{}) error 
 	if err != nil {
 		return err
 	}
-
-	// Verify
-	// if scheduleDetail.CreatedAt.IsZero() {
-	// 	return errors.New("Empty time specified")
-	// }
 	for _, entry := range scheduleDetail.Schedules {
 		for _, h := range []int{entry.EndHour, entry.StartHour} {
 			if !(0 <= h && h < 24) {
@@ -104,57 +102,48 @@ func createTime(hour, min int) int64 {
 	return time.Date(now.Year(), now.Month(), now.Day(), hour, min, 0, 0, now.Location()).Unix()
 }
 
-// ToDeviceState convert time schedule to [][2]int if it's mode is scheduled
-func (state *RelayState) ToDeviceState() RelayState {
-	cpy := *state // copy it
-	if state.Mode == "scheduled" {
-		var schedules ScheduleDetail
-		str, _ := json.Marshal(state.Detail)
-		json.Unmarshal(str, &schedules)
-		detailStr := "off"
-		now := time.Now().Unix()
-		for _, sched := range schedules.Schedules {
-			start := createTime(sched.StartHour, sched.StartMin)
-			end := createTime(sched.EndHour, sched.EndMin)
-			if start <= now && now <= end {
-				detailStr = "on"
-			}
-		}
-		cpy.Mode = "manual"
-		cpy.Detail = detailStr
-	}
-	return cpy
-}
+// // ToDeviceState convert time schedule to [][2]int if it's mode is scheduled
+// func (state *RelayState) ToDeviceState() RelayState {
+// 	cpy := *state // copy it
+// 	if state.Mode == "auto" {
+// 		var schedules ScheduleDetail
+// 		str, _ := json.Marshal(state.Detail)
+// 		json.Unmarshal(str, &schedules)
+// 		detailStr := "off"
+// 		now := time.Now().Unix()
+// 		for _, sched := range schedules.Schedules {
+// 			start := createTime(sched.StartHour, sched.StartMin)
+// 			end := createTime(sched.EndHour, sched.EndMin)
+// 			if start <= now && now <= end {
+// 				detailStr = "on"
+// 			}
+// 		}
+// 		cpy.Mode = "manual"
+// 		cpy.Detail = detailStr
+// 	}
+// 	return cpy
+// }
 
 // Verify verifys validity of RelayState object
-func (state *RelayState) Verify() bool {
+func (state *RelayState) Verify() error {
 	if state.Mode == "manual" {
 		str, ok := state.Detail.(string)
-		return ok && common.StringInSlice(str, []string{"on", "off"})
-	} else if state.Mode == "auto" {
-		_map, ok := state.Detail.(map[string]interface{})
-		if ok {
-			var cond Condition
-			err := cond.FromMap(_map)
-			if err == nil {
-				state.Detail = cond
-				return true
-			}
-			return false
+		if ok && common.StringInSlice(str, []string{"on", "off"}) {
+			return nil
 		}
-		return false
-	} else if state.Mode == "scheduled" {
+		return errors.New("detail isn't on or off")
+	} else if state.Mode == "auto" {
 		_map, ok := state.Detail.(map[string]interface{})
 		if ok {
 			var sched ScheduleDetail
 			err := sched.FromMap(_map)
 			if err == nil {
 				state.Detail = sched
-				return true
+				return nil
 			}
-			return false
+			return err
 		}
-		return false
+		return errors.New("Bad map structure")
 	}
-	return false
+	return errors.New("Bad relay mode")
 }
