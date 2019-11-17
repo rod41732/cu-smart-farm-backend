@@ -1,12 +1,12 @@
-// MQTT message Handler 
+// MQTT message Handler
 package router
 
 import (
-	"github.com/rod41732/cu-smart-farm-backend/model/device"
 	"encoding/json"
-	"fmt"
-	"strings"
 	"errors"
+	"fmt"
+	"github.com/rod41732/cu-smart-farm-backend/model/device"
+	"strings"
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/model"
@@ -14,7 +14,6 @@ import (
 	"github.com/rod41732/cu-smart-farm-backend/storage"
 	"github.com/surgemq/message"
 )
-
 
 // topic is in format cufarm1.0/xxxxxx/(status/resp/command/normal)
 func idFromTopic(topic []byte) string {
@@ -44,14 +43,13 @@ func nullHandler(msg *message.PublishMessage) error {
 	return nil
 }
 
-
 var persistentDevice = make(map[string]bool) // true if must repeat sending
 
 func handleMessage(msg *message.PublishMessage) error {
 	inMessage := msg.Payload()
-	common.Printf("[MQTT] topic: %s <<< %s",msg.Topic() ,inMessage)
+	common.Printf("[MQTT] topic: %s <<< %s", msg.Topic(), inMessage)
 	version := getVersion(msg.Topic())
-	 
+
 	switch version {
 	case "1.0":
 		return handleV1Message(msg)
@@ -65,7 +63,7 @@ func handleV1Message(msg *message.PublishMessage) error {
 	inMessage := msg.Payload()
 	deviceID := idFromTopic(msg.Topic())
 	msgType := messageType(msg.Topic())
-	
+
 	payload := &model.DeviceMessageV1_0{}
 	err := json.Unmarshal(inMessage, payload)
 	if common.PrintError(err) {
@@ -73,15 +71,11 @@ func handleV1Message(msg *message.PublishMessage) error {
 	}
 
 	dev, err := storage.GetDevice(deviceID)
-	// if common.PrintError(err) {
-	// 	return err
-	// }
-	
 
 	switch msgType {
 	case "response": // device now has response
-	device.UrgentFlag[deviceID] = false;
-	fallthrough
+		device.UrgentFlag[deviceID] = false
+		fallthrough
 	case "status": // just periodic report
 		user := storage.GetUserStateInfo(dev.Owner)
 		user.ReportStatus(payload, deviceID)
@@ -89,7 +83,6 @@ func handleV1Message(msg *message.PublishMessage) error {
 		fmt.Println("Get Greeting from", deviceID)
 		dev.BroadCast("1.0", true)
 	}
-	
-	return nil;
-}
 
+	return nil
+}

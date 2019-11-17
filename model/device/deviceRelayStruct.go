@@ -77,9 +77,9 @@ func (scheduleDetail *ScheduleDetail) FromMap(val map[string]interface{}) error 
 	}
 
 	// Verify
-	if scheduleDetail.CreatedAt.IsZero() {
-		return errors.New("Empty time specified")
-	}
+	// if scheduleDetail.CreatedAt.IsZero() {
+	// 	return errors.New("Empty time specified")
+	// }
 	for _, entry := range scheduleDetail.Schedules {
 		for _, h := range []int{entry.EndHour, entry.StartHour} {
 			if !(0 <= h && h < 24) {

@@ -12,15 +12,14 @@ import (
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
 
-	"github.com/rod41732/cu-smart-farm-backend/service/receiver"
 	"github.com/rod41732/cu-smart-farm-backend/mqtt"
+	"github.com/rod41732/cu-smart-farm-backend/service/receiver"
 	"github.com/rod41732/cu-smart-farm-backend/service/worker"
 )
 
-// Process for worker 
+// Process for worker
 func main() {
 	config.Init()
-
 
 	router.InitMQTT()
 	go mqtt.MQTT()

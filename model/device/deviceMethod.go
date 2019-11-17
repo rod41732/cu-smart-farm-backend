@@ -2,10 +2,10 @@ package device
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/rpc"
 	"time"
-	"errors"
 
 	"github.com/rod41732/cu-smart-farm-backend/config"
 
@@ -107,7 +107,6 @@ func (device *Device) SetRelay(relayID string, state RelayState) (bool, string) 
 	oldState.Detail = state.Detail
 	device.PastStates[relayID][state.Mode] = oldState
 	device.RelayStates[relayID] = state
-	device.BroadCast("1.0", true)
 	// Trigger reload
 	clnt, err := rpc.DialHTTP("tcp", config.AutoPilotAddr)
 	reply := new(string)
@@ -174,7 +173,7 @@ var UrgentFlag = make(map[string]bool) // when resp message is received should s
 // BroadCast send device's current state
 func (device *Device) BroadCast(version string, urgent bool) {
 	common.Printf("[MQTT] >> Broadcast id:%s", device.ID)
-	devicePayload, err := convertStateToPayload("1.0",device.RelayStates)
+	devicePayload, err := convertStateToPayload("1.0", device.RelayStates)
 	if common.PrintError(err) {
 		common.Println(" At Device::Broadcast")
 		return
@@ -184,18 +183,18 @@ func (device *Device) BroadCast(version string, urgent bool) {
 		common.Println(" At Device::Broadcast")
 		return
 	}
-	
-	if (urgent) {
+
+	if urgent {
 		tries := 0
 		go func() {
-			UrgentFlag[device.ID] = true;
+			UrgentFlag[device.ID] = true
 			for tries < 5 && UrgentFlag[device.ID] { // max 5 tries
 				tries++
 				common.Println("Device %s: Retrying %d\n", device.ID, tries)
 				device.SendMsg("command", mqttMsg)
 				time.Sleep(5 * time.Second)
 			}
-			if (UrgentFlag[device.ID]) {
+			if UrgentFlag[device.ID] {
 				common.Println("[MQTT] broadcast to %s failed after 5 attempts", device.ID)
 			} else {
 				common.Println("[MQTT] broadcast to %s OK", device.ID)
@@ -205,8 +204,6 @@ func (device *Device) BroadCast(version string, urgent bool) {
 		device.SendMsg("normal", mqttMsg)
 	}
 }
-
-
 
 // Poll : send "fetch" command to device
 func (device *Device) Poll() {
@@ -218,10 +215,10 @@ func (device *Device) Poll() {
 
 // SendMsg send message to specified subTopic of this device
 func (device *Device) SendMsg(subTopic string, payload []byte) {
-	mqtt.SendMessageToDevice("1.0", device.ID, subTopic,payload)
+	mqtt.SendMessageToDevice("1.0", device.ID, subTopic, payload)
 }
 
-// delegate func: convert relay state to MQTT payload that's send to device 
+// delegate func: convert relay state to MQTT payload that's send to device
 func convertStateToPayload(version string, relayStateMap map[string]RelayState) (map[string]interface{}, error) {
 	switch version {
 	case "1.0":
@@ -231,7 +228,52 @@ func convertStateToPayload(version string, relayStateMap map[string]RelayState) 
 	}
 }
 
+// return 60*hour + min
+func minutes(hour, min int) int {
+	return 60*hour + min
+}
+
 // TODO: use acual data from mongo
 func convertV1_0(relayStateMap map[string]RelayState) (map[string]interface{}, error) {
-	return map[string]interface{}{"r": []int{1, 0, 0, 0, 1}}, nil
+	out := make(map[string]interface{})
+	outR := make([]int, 5)
+	for i := 1; i <= 5; i++ {
+		key := fmt.Sprintf("Relay%d", i)
+		fmt.Printf("Relay%d mode = %s\n",i, relayStateMap[key].Mode)
+		switch relayStateMap[key].Mode {
+		case "manual":
+			if v := relayStateMap[key].Detail.(string); v == "on" {
+				outR[i-1] = 1
+			} else {
+				outR[i-1] = 0
+			}
+		case "scheduled": // TODO changename  
+			for i := 1; i <= 5; i++ {
+				state := relayStateMap[fmt.Sprintf("Relay%d", i)]
+				var sched ScheduleDetail
+				detailMap, ok := state.Detail.(map[string]interface{})
+				if ok && state.Mode == "scheduled" {
+					outR[i-1] = 10  
+					err := sched.FromMap(detailMap)
+					fmt.Printf("Sche = %v\n", sched)
+					if diff := time.Now().Sub(sched.CreatedAt); err == nil && (sched.Repeat == true || (0 <= diff && diff <= 24*time.Hour)) {
+						t := time.Now()
+						now := minutes(t.Hour(), t.Minute())
+						fmt.Printf("Now = %d\n", now)
+						for _, entry := range sched.Schedules {
+							if minutes(entry.StartHour, entry.StartMin) <= now && now <= minutes(entry.EndHour, entry.EndMin) {
+								outR[i-1] = 11
+								break
+							}
+						}
+					}
+				}
+			}
+			// TODO: no auto-sensor yet
+		default:
+			outR[i-1] = -1
+		}
+	}
+	out["r"] = outR
+	return out, nil
 }

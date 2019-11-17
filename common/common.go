@@ -105,7 +105,7 @@ func QueryInfluxDB(query string) []client.Result {
 	if err == nil {
 		resp, err := clnt.Query(client.Query{
 			Command:  query,
-			Database: "SkyhawkPhase1",
+			Database: config.Influx["dbname"],
 		})
 		PrintError(err)
 		return resp.Results
@@ -114,7 +114,7 @@ func QueryInfluxDB(query string) []client.Result {
 }
 
 var deferredPoints, err = client.NewBatchPoints(client.BatchPointsConfig{
-	Database:  "SkyhawkPhase1",
+	Database:  config.Influx["dbname"],
 	Precision: "ms",
 })
 
@@ -141,7 +141,7 @@ func WriteInfluxDB(measurement string, tags map[string]string, fields map[string
 			}
 			// create new batch to remove all points
 			deferredPoints, err = client.NewBatchPoints(client.BatchPointsConfig{
-				Database:  "SkyhawkPhase1",
+				Database:  config.Influx["dbname"],
 				Precision: "ms",
 			})
 			if PrintError(err) {

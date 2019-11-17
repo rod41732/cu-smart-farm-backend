@@ -5,12 +5,12 @@ import (
 	"log"
 	"time"
 
-
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/model/device"
 
 	"github.com/rod41732/cu-smart-farm-backend/service/storage"
 )
+
 // Init : start worker
 func Init() {
 	fmt.Println("[Worker] Starting worker")
