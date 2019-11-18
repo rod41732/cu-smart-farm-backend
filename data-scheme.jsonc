@@ -1,25 +1,30 @@
 [
   // ============================ Server to Device Message
   { // type 1: set state
-  "cmd": "set",
-  "state": {
-    "1": { // set schedule
-      "mode": "time",
-      "detail": [[1543817375897, 1543817385237],] // schedule
-    },
-    "2": { // set on-off
-      "mode": "manual",
-      "detail": "on/off" // this is optional
-    },
-    "3": { // auto (sensor)
-      "mode": "auto",
-      "detail": {
-	"sensor":"soil/humidity/temp",
-	"trigger": 30,
-	"symbol": "<"
-	}
+    "cmd": "set",
+    "state": {
+      "1": { // set schedule
+        "mode": "time",
+        "detail": [
+          [
+            1543817375897,
+            1543817385237
+          ],
+        ] // schedule
+      },
+      "2": { // set on-off
+        "mode": "manual",
+        "detail": "on/off" // this is optional
+      },
+      "3": { // auto (sensor)
+        "mode": "auto",
+        "detail": {
+          "sensor": "soil/humidity/temp",
+          "trigger": 30,
+          "symbol": "<"
+        }
+      }
     }
-  }
   },
   {
     "cmd": "fetch"
@@ -51,7 +56,11 @@
               "startMin": 30,
               "endHour": 4,
               "endMin": 0,
-              "dows": [0, 1, 3]
+              "dows": [
+                0,
+                1,
+                3
+              ]
             }
           ]
         }

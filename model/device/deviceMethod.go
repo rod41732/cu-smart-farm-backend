@@ -254,7 +254,7 @@ func (device *Device) convertV1_0(relayStateMap map[string]RelayState) (map[stri
 			detailMap, ok := state.Detail.(map[string]interface{}) // because go unmarshal it into "JSON"
 
 			if ok {
-				outRelays[i-1] = 10
+				outRelays[i-1] = 0
 				err := sched.FromMap(detailMap) // convert to actual asched
 				if err != nil {
 					continue
@@ -279,7 +279,7 @@ func (device *Device) convertV1_0(relayStateMap map[string]RelayState) (map[stri
 					} else {
 						resultSymbol = ">"
 					}
-					fmt.Printf("device sensor value is %#v", device.LastSensorValues)
+					fmt.Printf("device sensor value is %v", device.LastSensorValues)
 					// skip time check if condition is false
 					if resultSymbol != cond.Symbol {
 						continue
@@ -292,7 +292,7 @@ func (device *Device) convertV1_0(relayStateMap map[string]RelayState) (map[stri
 				fmt.Printf("Now = %d\n", now)
 				for _, entry := range sched.Schedules {
 					if minutes(entry.StartHour, entry.StartMin) <= now && now <= minutes(entry.EndHour, entry.EndMin) {
-						outRelays[i-1] = 11
+						outRelays[i-1] = 1
 						break
 					}
 				}
@@ -304,6 +304,7 @@ func (device *Device) convertV1_0(relayStateMap map[string]RelayState) (map[stri
 			outRelays[i-1] = -1
 		}
 	}
+	device.LastRelays = outRelays
 	out["r"] = outRelays
 	return out, nil
 }

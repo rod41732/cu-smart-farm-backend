@@ -2,6 +2,7 @@ package device
 
 import (
 	"encoding/json"
+
 	"github.com/rod41732/cu-smart-farm-backend/model"
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
@@ -16,6 +17,7 @@ type Device struct {
 	Owner            string                            `json:"owner"`
 	RelayStates      map[string]RelayState             `json:"state"`
 	LastSensorValues model.DeviceMessageV1_0           `json:"-"`
+	LastRelays        []int                             `json:"-"`
 	PastStates       map[string]map[string]interface{} `json:"pastState"` // store
 }
 

@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/rod41732/cu-smart-farm-backend/model/device"
 	"strings"
+
+	"github.com/rod41732/cu-smart-farm-backend/model/device"
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/model"
@@ -73,7 +74,7 @@ func handleV1Message(msg *message.PublishMessage) error {
 	dev, err := storage.GetDevice(deviceID)
 
 	switch msgType {
-	case "response": // device now has response
+	case "resp": // device now has response
 		device.UrgentFlag[deviceID] = false
 		fallthrough
 	case "status": // just periodic report

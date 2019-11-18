@@ -1,8 +1,8 @@
 version: '3'
 services:
   backend:
-#    image: intaniger/smartfarm_backend:2.4.3-release
-    image: intaniger/smartfarm_backend:2.4.2-release
+    image: intaniger/smartfarm_backend:2.4.5-release
+    # image: intaniger/smartfarm_backend:2.4.2-release
     environment:
       - MQTT_ADDRESS=tcp://172.17.0.1:1883
 #      - GIN_MODE=debug
@@ -12,10 +12,10 @@ services:
     links:
      - mongodb
      - iot_service_pack
-  websocket:
-    image: intaniger/smartfarm_backend_websocket:0.1-release
+  # websocket:
+  #   image: intaniger/smartfarm_backend_websocket:0.1-release
   auto_pilot:
-    image: intaniger/smartfarm_backend_auto_pilot:1.3.2-release
+    image: intaniger/smartfarm_backend_auto_pilot:1.3.3-release
     environment:
      - MQTT_ADDRESS=tcp://172.17.0.1:1883
     volumes:

@@ -44,7 +44,7 @@ func Work() {
 			dev.BroadCast("1.0", true)
 			common.Println("Send message to", dev.ID)
 		}
-		time.Sleep(15 * time.Second)
+		time.Sleep(300 * time.Second)
 	}
 }
 
