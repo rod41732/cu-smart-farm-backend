@@ -6,6 +6,7 @@ import (
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/config"
 	"github.com/rod41732/cu-smart-farm-backend/router"
+	"github.com/gin-contrib/cors"
 )
 
 func main() {
@@ -19,7 +20,8 @@ func main() {
 	// go mqtt.MQTT()
 
 	r := gin.Default()
-
+	r.Use(cors.Default())
+	
 	router.SetUpHTTPAPI(r)
 	// seperated web socket service
 	/*

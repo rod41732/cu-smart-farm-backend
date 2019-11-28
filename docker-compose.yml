@@ -1,7 +1,7 @@
 version: '3'
 services:
   backend:
-    image: intaniger/smartfarm_backend:2.4.5-release
+    image: intaniger/smartfarm_backend:2.4.6-release
     # image: intaniger/smartfarm_backend:2.4.2-release
     environment:
       - MQTT_ADDRESS=tcp://172.17.0.1:1883
