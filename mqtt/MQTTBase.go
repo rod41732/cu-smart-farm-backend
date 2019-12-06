@@ -106,7 +106,7 @@ func subAll() error {
 	subMsg := message.NewSubscribeMessage()
 	subMsg.AddTopic([]byte("cufarm1.0"), 2)
 	subMsg.AddTopic([]byte("cufarm1.0/+/status"), 2)
-	subMsg.AddTopic([]byte("cufarm1.0/+/resp"), 2)
+	subMsg.AddTopic([]byte("cufarm1.0/+/response"), 2)
 	subMsg.AddTopic([]byte("cufarm1.0/+/greeting"), 2)
 	err := mqttClient.Subscribe(subMsg, handleSubscriptionComplete, messageHandler)
 	return err

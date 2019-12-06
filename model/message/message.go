@@ -99,7 +99,7 @@ func (message *DeviceCommandMessage) FromMap(val map[string]interface{}) error {
 			}
 
 			if sched.Condition != (device.Condition{}) && !common.StringInSlice(sched.Condition.Sensor, common.PossibleSensors) {
-				return errors.New("Invalid Detail - Invalid sensor name in condition" + err.Error())
+				return errors.New("Invalid Detail - Sensor name is invalid")
 			}
 
 			return nil

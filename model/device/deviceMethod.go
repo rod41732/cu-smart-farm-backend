@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sync"
 	"net/rpc"
 	"time"
 
@@ -168,11 +169,14 @@ func (device *Device) SetInfo(name string, desc string) (bool, string) {
 
 // version tell how to send
 // urgent tell whether device need to response immediately and whether server will retry
+
 var UrgentFlag = make(map[string]bool) // when resp message is received should set this to false
+var UrgentFlagMux sync.Mutex;
 
 // BroadCast send device's current state
 func (device *Device) BroadCast(version string, urgent bool) {
 	common.Printf("[MQTT] >> Broadcast id:%s", device.ID)
+	lastValues := device.LastRelays
 	devicePayload, err := device.convertStateToPayload(device.RelayStates)
 	if common.PrintError(err) {
 		common.Println(" At Device::Broadcast")
@@ -184,13 +188,18 @@ func (device *Device) BroadCast(version string, urgent bool) {
 		return
 	}
 
+	fmt.Printf("[%s] broadcast: Last values = %#v Current values = %#v\n", device.ID, lastValues, devicePayload)
+
 	if urgent {
 		tries := 0
 		go func() {
+			UrgentFlagMux.Lock();
+			fmt.Printf("Writing monkaS\n")
 			UrgentFlag[device.ID] = true
-			for tries < 5 && UrgentFlag[device.ID] { // max 5 tries
+			UrgentFlagMux.Unlock();
+			for tries < 5 { // max 5 tries
 				tries++
-				common.Println("Device %s: Retrying %d\n", device.ID, tries)
+				common.Printf("Device %s: Retrying %d\n", device.ID, tries)
 				device.SendMsg("command", mqttMsg)
 				time.Sleep(5 * time.Second)
 			}
@@ -261,7 +270,6 @@ func (device *Device) convertV1_0(relayStateMap map[string]RelayState) (map[stri
 				}
 
 				cond := sched.Condition
-				fmt.Printf("\n\nCondition = %#v\n", cond)
 				// select correct sensor and then compare
 				if (cond != Condition{}) {
 					var currentSensorValue float32
@@ -279,8 +287,7 @@ func (device *Device) convertV1_0(relayStateMap map[string]RelayState) (map[stri
 					} else {
 						resultSymbol = ">"
 					}
-					fmt.Printf("device sensor value is %v", device.LastSensorValues)
-					// skip time check if condition is false
+					fmt.Printf("---- device sensor value is %v\n", device.LastSensorValues)
 					if resultSymbol != cond.Symbol {
 						continue
 					}

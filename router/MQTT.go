@@ -74,14 +74,17 @@ func handleV1Message(msg *message.PublishMessage) error {
 	dev, err := storage.GetDevice(deviceID)
 
 	switch msgType {
-	case "resp": // device now has response
+	case "response": // device now has response
+		device.UrgentFlagMux.Lock();
 		device.UrgentFlag[deviceID] = false
+		device.UrgentFlagMux.Unlock();
 		fallthrough
 	case "status": // just periodic report
 		storage.SetDevice(deviceID, *payload)
 		fmt.Print("Received sensor value = ", *payload)
 		user := storage.GetUserStateInfo(dev.Owner)
 		user.ReportStatus(payload, deviceID)
+		dev.BroadCast("1.0", false);
 	case "greeting": // greeting when device just connected server
 		fmt.Println("Get Greeting from", deviceID)
 		dev.BroadCast("1.0", true)
