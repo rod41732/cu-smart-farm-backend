@@ -4,6 +4,7 @@ package mqtt
 import (
 	"fmt"
 	"time"
+	"sync"
 
 	"github.com/rod41732/cu-smart-farm-backend/common"
 	"github.com/rod41732/cu-smart-farm-backend/config"
@@ -62,6 +63,9 @@ func SendMessageToDevice(version, deviceID, subTopic string, payload []byte) {
 	publishToMQTT([]byte(fmt.Sprintf("cufarm%s/%s/%s", version, deviceID, subTopic)), payload) // TODO
 }
 
+// fix concurrent map write when connecting
+var connectMux sync.Mutex
+
 // create new connection to be used to publish
 func newConnection() (*service.Client, error) {
 
@@ -77,7 +81,9 @@ func newConnection() (*service.Client, error) {
 	msg.SetKeepAlive(15)
 	msg.SetWillTopic([]byte("CUSmartFarm"))
 	msg.SetWillMessage([]byte("backend: connecting.."))
+	connectMux.Lock()
 	err := clnt.Connect(config.MQTT["address"], msg)
+	connectMux.Unlock()
 	if common.PrintError(err) {
 		fmt.Println("  At MQTT/connectToMQTTServer")
 		return nil, err

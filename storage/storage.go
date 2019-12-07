@@ -96,9 +96,7 @@ func LoadDevice(deviceID string) error {
 	}
 	dev.FromMap(tmp)
 	dev.LastSensorValues = lastSensorValue
-	// Too
 	Devices[deviceID] = &dev
-	// common.Printf("[Worker-storage] after %v\n", Devices[deviceID])
 	return nil
 }
 
