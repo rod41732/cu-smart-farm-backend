@@ -35,9 +35,9 @@ func InitMQTT() {
 	mqtt.SetHandler(handleMessage)
 }
 
-// InitMQTTNull sets handler to "nullHandler" which does nothing
-func InitMQTTNull() {
-	mqtt.SetHandler(nullHandler)
+// InitMQTTWithoutPublish sets handler that only pass message to user via WS
+func InitMQTTWithoutPublish() {
+	mqtt.SetHandler(handleV1MessageWithoutPublish)
 }
 
 func nullHandler(msg *message.PublishMessage) error {
@@ -45,6 +45,21 @@ func nullHandler(msg *message.PublishMessage) error {
 }
 
 var persistentDevice = make(map[string]bool) // true if must repeat sending
+
+
+func handleMessageWithoutPublish(msg *message.PublishMessage) error {
+	inMessage := msg.Payload()
+	common.Printf("[MQTT] topic: %s <<< %s", msg.Topic(), inMessage)
+	version := getVersion(msg.Topic())
+
+	switch version {
+	case "1.0":
+		return handleV1MessageWithoutPublish(msg)
+	default:
+		common.Println("[MQTT] WARNING: unknown device message version")
+		return errors.New("Unknown message version")
+	}
+}
 
 func handleMessage(msg *message.PublishMessage) error {
 	inMessage := msg.Payload()
@@ -59,6 +74,32 @@ func handleMessage(msg *message.PublishMessage) error {
 		return errors.New("Unknown message version")
 	}
 }
+
+
+func handleV1MessageWithoutPublish(msg *message.PublishMessage) error {
+	inMessage := msg.Payload()
+	deviceID := idFromTopic(msg.Topic())
+	msgType := messageType(msg.Topic())
+
+	payload := &model.DeviceMessageV1_0{}
+	err := json.Unmarshal(inMessage, payload)
+	if common.PrintError(err) {
+		return err
+	}
+
+	dev, err := storage.GetDevice(deviceID)
+
+	switch msgType {
+	case "response": // device now has response
+	fallthrough
+	case "status": // just periodic report
+		user := storage.GetUserStateInfo(dev.Owner)
+		user.ReportStatus(payload, deviceID)
+	}
+
+	return nil
+}
+
 
 func handleV1Message(msg *message.PublishMessage) error {
 	inMessage := msg.Payload()

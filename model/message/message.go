@@ -41,6 +41,7 @@ type DeviceCommandMessage struct {
 	State   device.RelayState `json:"state"`
 }
 
+
 // EditDeviceMessage is payload format for rename device API
 type EditDeviceMessage struct {
 	Name        string `json:"name"`
