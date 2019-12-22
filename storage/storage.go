@@ -114,8 +114,7 @@ func GetDevice(deviceID string) (dev *device.Device, err error) {
 	}
 }
 
+// SetDevice set sensor value to device, will calculate command to sent to device later on broadcast
 func SetDevice(deviceID string, sensorData model.DeviceMessageV1_0) {
-	fmt.Printf("\nset sensor %s: %#v\n", deviceID, sensorData)
 	Devices[deviceID].LastSensorValues = sensorData
-	fmt.Printf("\nset sensor %s: %#v\n", deviceID, Devices[deviceID].LastSensorValues)
 }

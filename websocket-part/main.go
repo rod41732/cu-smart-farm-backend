@@ -18,7 +18,7 @@ func main() {
 	middleware.Initialize()
 
 
-	maniRouter.InitMQTTWithoutPublish() //s et handler eefore 
+	maniRouter.InitMQTTWithoutPublish("ws-server") //s et handler eefore 
 	go mqtt.MQTT()/// then connect and use that handler
 
 	r := gin.Default()

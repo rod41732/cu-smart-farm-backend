@@ -14,10 +14,10 @@ import (
 
 var mqttClient *service.Client
 var messageHandler service.OnPublishFunc
+var clientID = "backend";
 
 func handleSubscriptionComplete(msg, ack message.Message, err error) error {
 	// fmt.Printf("Subscribed: %s\nAck: %s\n", msg.Decode([]byte("utf-8")), ack.Decode([]byte("utf-8")))
-	return nil
 
 	common.Println(msg)
 	common.Println(ack)
@@ -39,7 +39,7 @@ func connectToMQTTServer() error {
 	msg.SetWillQos(1)
 	msg.SetVersion(3)
 	msg.SetCleanSession(true)
-	msg.SetClientId([]byte("backend-main-service"))
+	msg.SetClientId([]byte(clientID))
 	msg.SetKeepAlive(45)
 	msg.SetWillTopic([]byte("CUSmartFarm"))
 	msg.SetWillMessage([]byte("backend: connecting.."))
@@ -52,9 +52,14 @@ func connectToMQTTServer() error {
 	return nil
 }
 
-// SetHandler sets handler for mqtt message, must be called before connection
+// SetHandler is ised for setting handler for message before connecting
 func SetHandler(handler service.OnPublishFunc) {
 	messageHandler = handler
+}
+
+// SetClientID is used for setting clientID, must be different for each client 
+func SetClientID(id string) {
+	clientID = id;
 }
 
 // SendMessageToDevice : Shorthand for creating message and publish

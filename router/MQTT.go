@@ -31,13 +31,15 @@ func getVersion(topic []byte) string {
 }
 
 // InitMQTT sets handler of mqtt router
-func InitMQTT() {
+func InitMQTT(clientID string) {
 	mqtt.SetHandler(handleMessage)
+	mqtt.SetClientID(clientID);
 }
 
 // InitMQTTWithoutPublish sets handler that only pass message to user via WS
-func InitMQTTWithoutPublish() {
+func InitMQTTWithoutPublish(clientID string) {
 	mqtt.SetHandler(handleV1MessageWithoutPublish)
+	mqtt.SetClientID(clientID);
 }
 
 func nullHandler(msg *message.PublishMessage) error {

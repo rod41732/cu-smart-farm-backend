@@ -21,7 +21,7 @@ import (
 func main() {
 	config.Init()
 
-	router.InitMQTT()
+	router.InitMQTT("worker")
 	go mqtt.MQTT()
 
 	common.ShouldPrintDebug = true
